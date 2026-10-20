@@ -1,0 +1,28 @@
+{
+  "_source": "Order 66 Podcast — \"Star Wars Vehicle Weapons for Genesys Rules\" conversion table (Order_66_Conversion_Guide_Genesys_Vehicle_Rules_in_Star_Wars.pdf), cross-checked against Genesys Vehicle Combat Rules and Lessons.md",
+  "_notes": [
+    "These are the Genesys-converted stats — do not use unconverted Star Wars FFG vehicle weapon stat blocks alongside this table.",
+    "General conversion rules for any vehicle weapon NOT in this table: reduce damage by 2; reduce Blast/Breach ratings by 2; increase Guided rating by 1; lasers trend Long range, ion cannons Long-to-Extreme, torpedoes/missiles Extreme, turbolasers/planetary-strike weapons Extreme-to-Strategic.",
+    "Range bands use the Genesys vehicle set: Engaged, Short, Medium, Long, Extreme, Strategic (Close is renamed Engaged)."
+  ],
+  "weapons": [
+    { "name": "Auto-Blaster", "range": "Medium", "damage": 2, "crit": 5, "qualities": "Auto-fire" },
+    { "name": "Blaster Cannon (Light)", "range": "Long", "damage": 2, "crit": 4, "qualities": "" },
+    { "name": "Blaster Cannon (Heavy)", "range": "Long", "damage": 3, "crit": 4, "qualities": "" },
+    { "name": "Concussion Missile Launcher", "range": "Extreme", "damage": 4, "crit": 3, "qualities": "Blast 3, Breach 3, Guided 4, Limited Ammo 3 (or as desired), Slow-Firing 1" },
+    { "name": "Ion Cannon (Light)", "range": "Long", "damage": 3, "crit": 4, "qualities": "Ion" },
+    { "name": "Ion Cannon (Medium)", "range": "Extreme", "damage": 4, "crit": 4, "qualities": "Ion" },
+    { "name": "Ion Cannon (Heavy)", "range": "Extreme", "damage": 5, "crit": 4, "qualities": "Ion, Slow-Firing 1" },
+    { "name": "Laser Cannon (Light)", "range": "Long", "damage": 3, "crit": 3, "qualities": "" },
+    { "name": "Laser Cannon (Medium)", "range": "Long", "damage": 4, "crit": 3, "qualities": "" },
+    { "name": "Laser Cannon (Heavy)", "range": "Extreme", "damage": 5, "crit": 3, "qualities": "" },
+    { "name": "Proton Torpedo Launcher", "range": "Extreme", "damage": 6, "crit": 2, "qualities": "Blast 4, Breach 4, Guided 3, Limited Ammo 3 (or as desired), Slow-Firing 1" },
+    { "name": "Quad Laser Cannon", "range": "Long", "damage": 3, "crit": 3, "qualities": "Accurate, Linked 3" },
+    { "name": "Tractor Beam (Light)", "range": "Medium", "damage": null, "crit": null, "qualities": "Tractor 2" },
+    { "name": "Tractor Beam (Medium)", "range": "Long", "damage": null, "crit": null, "qualities": "Tractor 4" },
+    { "name": "Tractor Beam (Heavy)", "range": "Long", "damage": null, "crit": null, "qualities": "Tractor 6" },
+    { "name": "Turbolaser (Light)", "range": "Extreme", "damage": 7, "crit": 3, "qualities": "Breach 1, Slow-Firing 1" },
+    { "name": "Turbolaser (Medium)", "range": "Strategic", "damage": 8, "crit": 3, "qualities": "Breach 2, Slow-Firing 1" },
+    { "name": "Turbolaser (Heavy)", "range": "Strategic", "damage": 9, "crit": 3, "qualities": "Breach 3, Slow-Firing 2" }
+  ]
+}

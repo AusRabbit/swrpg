@@ -1,0 +1,15 @@
+# The wiki's built page is produced by GitHub Actions (.github/workflows/wiki.yml).
+# Run `python3 wiki/build.py` locally to preview it; never commit the output.
+wiki/docs/
+
+# Obsidian's per-machine settings for the wiki vault.
+wiki/content/.obsidian/
+.obsidian/
+
+# GM-only drafts that must never reach the public wiki.
+wiki/gm/
+wiki/private/
+*.gm.md
+
+__pycache__/
+*.pyc

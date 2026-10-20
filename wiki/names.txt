@@ -1,0 +1,3 @@
+# Canonical names only - pass to the transcriber with --names.
+# Do NOT add misspellings here; they belong in corrections.json.
+

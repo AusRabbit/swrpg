@@ -1,0 +1,793 @@
+[
+  {
+    "name": "Adverse Environment Gear",
+    "soak": 1,
+    "defence": 0,
+    "note": "Player Characters with proper environment gear may ignore ⬛ imposed by the environment that they are in, this only applies if their gear is appropriate for the current environment",
+    "category": "Armour And Clothing"
+  },
+  {
+    "name": "Armoured Clothing",
+    "soak": 1,
+    "defence": 1,
+    "note": "Requires a Average (dd) Perception Check to detect that a individual is wearing armoured clothing.",
+    "category": "Armour And Clothing"
+  },
+  {
+    "name": "Heavy Battle Armour",
+    "soak": 2,
+    "defence": 1,
+    "note": "N/A",
+    "category": "Armour And Clothing"
+  },
+  {
+    "name": "Heavy Clothing",
+    "soak": 1,
+    "defence": 0,
+    "note": "N/A",
+    "category": "Armour And Clothing"
+  },
+  {
+    "name": "Laminate Armour",
+    "soak": 2,
+    "defence": 0,
+    "note": "N/A",
+    "category": "Armour And Clothing"
+  },
+  {
+    "name": "Personal Deflector Shield",
+    "soak": 0,
+    "defence": 2,
+    "note": "Completely deflects/blocks sustained blaster fire but can only be used for short periods, Typically, a PDS can be used for 10 minutes and then requires a 3 hour recharge at a proper facility. When in use the GM may spend any y the user has generated to have the shield run out of power for the remainder of the encounter",
+    "category": "Armour And Clothing"
+  },
+  {
+    "name": "Padded Armour",
+    "soak": 2,
+    "defence": 0,
+    "note": "N/A",
+    "category": "Armour And Clothing"
+  },
+  {
+    "name": "Banal Apparel",
+    "soak": 0,
+    "defence": 0,
+    "note": "Opposing character upgrade the difficulty of any checks made to identify the wearer once",
+    "category": "Armour And Clothing"
+  },
+  {
+    "name": "Cargo Clothing",
+    "soak": 0,
+    "defence": 0,
+    "note": "May carry up to three items of encumbrance 1 or lower without those items counting towards his encumbrance value",
+    "category": "Armour And Clothing"
+  },
+  {
+    "name": "Diplomat's Robes",
+    "soak": 0,
+    "defence": 0,
+    "note": "when claiming diplomatic authority, accessing classified data and using organizational status to bypass normal protocol add ⬜ .",
+    "category": "Armour And Clothing"
+  },
+  {
+    "name": "Flare Jacket",
+    "soak": 1,
+    "defence": 0,
+    "note": "Once per encounter a character can trigger charges in the jacket as a manoeuvre, each character within short range (besides the wearer) must make a Hard (ddd) Vigilance check, each character who fails is staggered for 1 round, plus 1 additional round per ttt.",
+    "category": "Armour And Clothing"
+  },
+  {
+    "name": "Hauling Harness",
+    "soak": 1,
+    "defence": 1,
+    "note": "Increases Encumbrance capacity by 6, also upgrade the difficulty of any combat check the wearer makes twice",
+    "category": "Armour And Clothing"
+  },
+  {
+    "name": "Holographic Costume",
+    "soak": 0,
+    "defence": 1,
+    "note": "Can imitate the look of up to 10 preloaded outfits, recording a new outfit that is on hand takes 10 minutes and a Easy (d) Computers check, a outfit not on hand requires a Daunting (dddd) Computers Check",
+    "category": "Armour And Clothing"
+  },
+  {
+    "name": "Lector's Outfit",
+    "soak": 1,
+    "defence": 0,
+    "note": "Add ⬜ to any social check involving a large group of listeners, characters words can be heard clearly at considerable distances",
+    "category": "Armour And Clothing"
+  },
+  {
+    "name": "Noble Regalia",
+    "soak": 0,
+    "defence": 0,
+    "note": "Downgrade the difficulty of any social checks when interacting with nobility and their subordinates once",
+    "category": "Armour And Clothing"
+  },
+  {
+    "name": "Performer's Attire",
+    "soak": 0,
+    "defence": 0,
+    "note": "Add ⬜ to any checks to perform or otherwise attract attention.",
+    "category": "Armour And Clothing"
+  },
+  {
+    "name": "Powered Capacitive Armour",
+    "soak": 1,
+    "defence": 1,
+    "note": "Gain +1 soak and +1 defence but wearer loses their free manoeuvre during each of their turns",
+    "category": "Armour And Clothing"
+  },
+  {
+    "name": "Resplendent Robes",
+    "soak": 1,
+    "defence": 0,
+    "note": "As long as a character wearing resplendent robes purposefully draws attention to themselves, each of his allies in medium range adds ⬜ to Perception, Skulduggery and Stealth checks.",
+    "category": "Armour And Clothing"
+  },
+  {
+    "name": "Second Skin Armour",
+    "soak": 1,
+    "defence": 1,
+    "note": "Add ⬛⬛ to a character's Perception checks to notice second skin armour on the wearer",
+    "category": "Armour And Clothing"
+  },
+  {
+    "name": "A/KT Shockrider Crash Suit",
+    "soak": 2,
+    "defence": 0,
+    "note": "Reduces any strain received from Critical Hits dealt to the wearer's vehicle by 1 (to a minimum of 1), reduces damage dealt to wearer by fires and weapons with Burn quality 1.",
+    "category": "Armour And Clothing"
+  },
+  {
+    "name": "A/KT Wing commander Armoured Flight Suit",
+    "soak": 1,
+    "defence": 1,
+    "note": "Reduces any strain received from Critical Hits dealt to the wearer's vehicle by 1 (to a minimum of 1), reduces damage dealt to wearer by fires and weapons with Burn quality 1.",
+    "category": "Armour And Clothing"
+  },
+  {
+    "name": "Polis Massan bodysuit",
+    "soak": 1,
+    "defence": 0,
+    "note": "Increases Encumbrance capacity by 1, contains a head mounted multidirectional glow rod.",
+    "category": "Armour And Clothing"
+  },
+  {
+    "name": "Leviathan Power Armour",
+    "soak": 2,
+    "defence": 2,
+    "note": "Any character wearing this when it was not made for them upgrades the difficulty of Agility and Brawn based checks once. A leviathan suit is fully sealed and has an integrated respirator and automatically possesses the following attachments: A heating system, Enhanced optics suite, strength enhancement system, one Mon Cal Defences Mini torpedo launcher and one Salus DF-D1 Duo-Flechette rifle. These attachments cannot be removed",
+    "category": "Armour And Clothing"
+  },
+  {
+    "name": "Verpine Fiber Ultramesh Armour",
+    "soak": 1,
+    "defence": 0,
+    "note": "As a manoeuvre the wearer may power up or down the armour, while powered up the wearer gains +2 defence. However, any character may spend aa or x from a combat check to cause it to run out of power and cannot be powered back up until the end of the encounter",
+    "category": "Armour And Clothing"
+  },
+  {
+    "name": "Beast-Hide Armour",
+    "soak": 1,
+    "defence": 0,
+    "note": "When wearing this armour the character gains a automatic a on Coercion checks and a automatic t on charm checks, GM may prevent wearer from attending high society events on high culture worlds such as Coruscant but automatically invited to events on a Rim world",
+    "category": "Armour And Clothing"
+  },
+  {
+    "name": "Charge Suit",
+    "soak": 2,
+    "defence": 0,
+    "note": "Any attacks made against a wearer of this suit that generate y are automatically hit back dealing 8 damage to the original attackers strain threshold, if the original attack generates tt the attacker is disoriented for one round. Wearing a charge suit counts as being equipped with chock gloves (Brawl; Damage +0; Critical 5; Range [Engaged]; Stun 3).",
+    "category": "Armour And Clothing"
+  },
+  {
+    "name": "MK III Flak Vest",
+    "soak": 1,
+    "defence": 0,
+    "note": "Wearer gains +1 soak whenever the wearer suffers from a Blast quality",
+    "category": "Armour And Clothing"
+  },
+  {
+    "name": "Powered Armour",
+    "soak": 3,
+    "defence": 1,
+    "note": "Increases Brawn by 1 (does not increase soak or wound threshold) and also increases Athletics by 1. Deduct ⬛⬛ from all Perception, Surveillance, Vigilance, and combat checks due to darkness, Smoke, or similar environmental factors that obscure vision. Comes equipped with Vacuum-Sealed life support system for 1 hour of protection to vacuum or toxic environments and a inbuilt commlink. Armour has enough power for 12 hours of use, should the suit run out of power for any reason its encumbrance becomes 12 and defence becomes 0 and loses all previously mentioned benefits, takes 5 minutes to equip the armour or 2.5 if assisted by another character",
+    "category": "Armour And Clothing"
+  },
+  {
+    "name": "Protector 1 Combat Armour",
+    "soak": 2,
+    "defence": 1,
+    "note": "N/A",
+    "category": "Armour And Clothing"
+  },
+  {
+    "name": "MK II \"Steelskin\" Anti-Concussive Armour",
+    "soak": 3,
+    "defence": 0,
+    "note": "All Brawn and agility based checks while wearing this armour gain ⬛. If Staggered or disoriented from a weapon quality, reduce the rounds staggered or disoriented by 1",
+    "category": "Armour And Clothing"
+  },
+  {
+    "name": "Enviro-suit",
+    "soak": 2,
+    "defence": 0,
+    "note": "Suffer ⬛ to any Agility or Perception based checks while wearing the suit, Sealed suit eight hours survivability in hostile environments e.g. vacuum",
+    "category": "Armour And Clothing"
+  },
+  {
+    "name": "Shockrider Crash Suit",
+    "soak": 2,
+    "defence": 0,
+    "note": "reduces any strain received from Critical Hits dealt to the wearer's vehicle by 1 (to a minimum of 1), reduces damage dealt to wearer by fires by 1.",
+    "category": "Armour And Clothing"
+  },
+  {
+    "name": "Tracker Utility Vest",
+    "soak": 0,
+    "defence": 0,
+    "note": "Increases wearers encumbrance threshold by 2",
+    "category": "Armour And Clothing"
+  },
+  {
+    "name": "Mountaineer Armour",
+    "soak": 1,
+    "defence": 1,
+    "note": "Grants ⬜⬜ to all Athletics skill checks made to climb or rappel",
+    "category": "Armour And Clothing"
+  },
+  {
+    "name": "Creshaldyne Riot Armour",
+    "soak": 1,
+    "defence": 1,
+    "note": "Comes with a breath mask to filter airborne toxins and gases, in addition when staggered or disoriented, the wearer reduces the duration of the effect by one round, to a minimum of one",
+    "category": "Armour And Clothing"
+  },
+  {
+    "name": "Kamperdine Armoured Jackets",
+    "soak": 2,
+    "defence": 0,
+    "note": "Add a to any successful Charm, Deception or Negotiation check the character makes",
+    "category": "Armour And Clothing"
+  },
+  {
+    "name": "Reinforced Environment Gear",
+    "soak": 1,
+    "defence": 0,
+    "note": "Ignore ⬛ imposed by environmental conditions, Grants ⬜ to Resilience checks to resist toxic atmospheres or airborne toxins",
+    "category": "Armour And Clothing"
+  },
+  {
+    "name": "Blast Vest",
+    "soak": 1,
+    "defence": 0,
+    "note": "Armour gains +2 soak when the wearer suffers damage from a slugthrower or other projectile.",
+    "category": "Armour And Clothing"
+  },
+  {
+    "name": "Mimetic Suit",
+    "soak": 1,
+    "defence": 1,
+    "note": "Upgrade ability of stealth checks twice while worn and active, GM may spend ttt or y to have the suit run out of power and stop functioning until it is replaced",
+    "category": "Armour And Clothing"
+  },
+  {
+    "name": "Smuggler's Trenchcoat",
+    "soak": 1,
+    "defence": 1,
+    "note": "Checks to find hidden items in the trenchcoat while being worn are opposed by skulduggery of wearer. Coat can conceal up to 2 encumbrance worth of items.",
+    "category": "Armour And Clothing"
+  },
+  {
+    "name": "Hutt Shell Armour",
+    "soak": 2,
+    "defence": 2,
+    "note": "Hutt Shell armour allows a Hutt to ignore the effects of the Awkward and Ponderous abilities (if he possess either or both of these), does not have to spend additional manoeuvres when navigating difficult terrain due to use of repulsorlift technology.",
+    "category": "Armour And Clothing"
+  },
+  {
+    "name": "Sakiyan Shadowsuit",
+    "soak": 1,
+    "defence": 0,
+    "note": "Grants ⬜⬜ to Stealth checks",
+    "category": "Armour And Clothing"
+  },
+  {
+    "name": "Cloaking Coat",
+    "soak": 1,
+    "defence": 0,
+    "note": "Upgrade the difficulty of all checks to detect an individual wearing a cloaking coat using sensors or electronic forms of detection twice, Droids with an intellect characteristic lower than the character's ranks in the computers skill are also affected in the same way when trying to detect the character.",
+    "category": "Armour And Clothing"
+  },
+  {
+    "name": "Mechanics Utility Suit",
+    "soak": 2,
+    "defence": 0,
+    "note": "Wearing counts as having a tool kit",
+    "category": "Armour And Clothing"
+  },
+  {
+    "name": "Merr-Sonn N-57 Armour",
+    "soak": 2,
+    "defence": 0,
+    "note": "As a manoeuvre the wearer may recharge an energy weapon or device that has run out of power or ammunition in the manner of an extra reload/power pack",
+    "category": "Armour And Clothing"
+  },
+  {
+    "name": "SoroSuub p-14 Hazardous Industry Suit",
+    "soak": 2,
+    "defence": 0,
+    "note": "Counts as a breath mask. Adds ⬜⬜ to Resilience checks to resist heat, cold, radiation and other hostile environmental conditions. Wearer does not suffer the effects of burn or disorient item qualities. When wearer suffers strain in order to take an extra manoeuvre, he suffers 1 additional strain.",
+    "category": "Armour And Clothing"
+  },
+  {
+    "name": "Catch Vest",
+    "soak": 2,
+    "defence": 0,
+    "note": "Soak value of 2 against damage from energy based weapons only. Provides 1 soak from all other forms of damage",
+    "category": "Armour And Clothing"
+  },
+  {
+    "name": "Nomad Greatcoat",
+    "soak": 1,
+    "defence": 0,
+    "note": "Deduces the difficulty of resilience checks made to resist the effects of extreme cold by one and removes ⬛ added to checks due to extreme cold",
+    "category": "Armour And Clothing"
+  },
+  {
+    "name": "Type III \"Berethron\" Armour",
+    "soak": 1,
+    "defence": 1,
+    "note": "N/A",
+    "category": "Armour And Clothing"
+  },
+  {
+    "name": "Combat Flight Suit",
+    "soak": 0,
+    "defence": 1,
+    "note": "can survive up to 24 hours in hard vacuum",
+    "category": "Armour And Clothing"
+  },
+  {
+    "name": "Armoured Robes",
+    "soak": 2,
+    "defence": 1,
+    "note": "Highly illegal on any imperial world",
+    "category": "Armour And Clothing"
+  },
+  {
+    "name": "Concealing Robes",
+    "soak": 1,
+    "defence": 0,
+    "note": "Add ⬛ to notice or recognize someone wearing these robes",
+    "category": "Armour And Clothing"
+  },
+  {
+    "name": "Cresh Luck Armour",
+    "soak": 2,
+    "defence": 0,
+    "note": "The wearer of Cresh luck armour adds automatic a to Vigilance checks.",
+    "category": "Armour And Clothing"
+  },
+  {
+    "name": "Jedi Battle Armour",
+    "soak": 2,
+    "defence": 1,
+    "note": "A character wearing Jedi battle armour fitted for somebody else adds ⬛⬛ to all Combat checks. A suit of Jedi battle armour can be fitted to a new wearer with a Hard (ddd) Mechanics check that takes an hour to complete. Jedi battle armour is eligible to be sealed against the vacuum and other hazardous environments.",
+    "category": "Armour And Clothing"
+  },
+  {
+    "name": "Jedi Temple Guard Armour",
+    "soak": 1,
+    "defence": 2,
+    "note": "The armoured mask contains a helmet comlink and an in helmet scanner.",
+    "category": "Armour And Clothing"
+  },
+  {
+    "name": "Jedi Training Suit",
+    "soak": 2,
+    "defence": 0,
+    "note": "Unless the integrated weights are removed, a Jedi training suit has an encumbrance of 6. Removal of these weights, which requires an Easy (d) Mechanics check, reduces the suit's encumbrance to 4. At the GM's discretion, training while wearing the weights might help a character develop physical fitness or adapt to high-gravity environments.",
+    "category": "Armour And Clothing"
+  },
+  {
+    "name": "Kav-Dann Power Armour",
+    "soak": 2,
+    "defence": 2,
+    "note": "Like many other varieties of powered armour. a Kav-Dann suit is space worthy and includes a full life support suite that can be modified for most alien physiologies. A wearer can survive for four hours in a vacuum or unbreathable atmosphere. and gains ⬜ to checks to resist the effects of radiation. The helmet incorporates a long range comlink and a basic visual package that allows the wearer to remove ⬛ caused by to darkness. smoke, or other environmental factors that might affect vision from all Perception. Vigilance. and Combat checks. Kav -Dann power armour increases the wearer's Brawn by 1 so long as it remains powered, though this bonus does not increase the user's soak or wound threshold. The listed encumbrance of 4 reflects the bulk of the armour when powered. If the suit loses power for any reason. the encumbrance increases to 12. defence is reduced to 0. and the bonus to Brawn is lost. Donning a suit of Kav-Dann power armour takes ten minutes, though this time can halved if the wearer is assisted.",
+    "category": "Armour And Clothing"
+  },
+  {
+    "name": "Koromondian Half-Vest",
+    "soak": 1,
+    "defence": 1,
+    "note": "Whenever a character wearing a Koromondain half-vest suffers a Critical Injury. the armour suffers minor damage (or becomes damaged by one additional step if it is already damaged",
+    "category": "Armour And Clothing"
+  },
+  {
+    "name": "Riot Armour",
+    "soak": 2,
+    "defence": 0,
+    "note": "N/A",
+    "category": "Armour And Clothing"
+  },
+  {
+    "name": "Alliance Light Stealth Armour",
+    "soak": 2,
+    "defence": 0,
+    "note": "Adds ⬜ to the wearer's stealth checks",
+    "category": "Armour And Clothing"
+  },
+  {
+    "name": "Imperial Hazard Trooper Armour",
+    "soak": 3,
+    "defence": 0,
+    "note": "Provides protection against radiation, acids, toxic chemicals, extreme pressures or vacuums, once active the armours internal life support and power systems allow the wearer to survive for 24 hours. Armour incorporates a high powered comlink able to communicate from the ground to low orbit and is equipped with a multi-frequency targeting and acquisition system which removes ⬛ due to darkness, smoke or similar environmental factors that obscure vision from the wearers perception, vigilance and combat checks. Due to description of armour, I suggest GM's impose a increased difficulty on all strength and athletics checks for characters without a brawn of 4 or a cybernetic enhancement increasing brawn and/or a Neuromachine Interface.",
+    "category": "Armour And Clothing"
+  },
+  {
+    "name": "Imperial Storm Commando Armour",
+    "soak": 2,
+    "defence": 0,
+    "note": "Removes ⬛ due to darkness, smoke or similar environmental factors that obscure vision from all perception, vigilance and combat checks. Additionally, storm commando armour adds ⬛ to other characters perception checks to detect the wearer",
+    "category": "Armour And Clothing"
+  },
+  {
+    "name": "Karflo Thinsuit",
+    "soak": 1,
+    "defence": 0,
+    "note": "a character equipped with a thinsuit removes ⬛⬛ imposed by the environment in which they are currently operating their checks, Purifies standard atmosphere for up to six hours and provides one hour of internal power.",
+    "category": "Armour And Clothing"
+  },
+  {
+    "name": "Rebel Heavy Battle Armour",
+    "soak": 2,
+    "defence": 1,
+    "note": "comes pre equipped with a helmet mounted breath mask and respirator",
+    "category": "Armour And Clothing"
+  },
+  {
+    "name": "Crash Gear",
+    "soak": 1,
+    "defence": 0,
+    "note": "",
+    "category": "Armour And Clothing"
+  },
+  {
+    "name": "G-Suit",
+    "soak": 1,
+    "defence": 0,
+    "note": "A character wearing a G-suit reduces the strain cost to perform a second Pilot Only manoeuvre during a turn by 1",
+    "category": "Armour And Clothing"
+  },
+  {
+    "name": "Pit Crew Coveralls",
+    "soak": 1,
+    "defence": 0,
+    "note": "Reduces damage suffered from fires and weapons with the Burn quality by 1. In addition increases the characters encumbrance threshold by 1",
+    "category": "Armour And Clothing"
+  },
+  {
+    "name": "Zephyr Stealth Suit",
+    "soak": 1,
+    "defence": 1,
+    "note": "Upgrades the ability of any stealth checks made once.",
+    "category": "Armour And Clothing"
+  },
+  {
+    "name": "Chitin Armour",
+    "soak": 2,
+    "defence": 0,
+    "note": "A character wearing a suit of chitin armour adds automatic a to their coercion checks and automatic t on their charm checks. The Game Master may determine that the armour provides further benefits or drawbacks depending on the situation.",
+    "category": "Armour And Clothing"
+  },
+  {
+    "name": "Creshaldyne Survivalist Armour",
+    "soak": 1,
+    "defence": 0,
+    "note": "Wearing a suit of Survivalist armour increases the wearer's encumbrance threshold by 1.",
+    "category": "Armour And Clothing"
+  },
+  {
+    "name": "Armoured Drop Suit",
+    "soak": 1,
+    "defence": 1,
+    "note": "THIS ARMOR CAN FLY!, As a manoeuvre the wearer of this armour can engage his flight systems to function as a Silhouette 0, Speed 2, Handling +2, System strain Threshold 3 vehicle that requires Piloting (Planetary) to operate. Further, while the wearer is conscious to guide them self down the wearer does not suffer any fall damage.",
+    "category": "Armour And Clothing"
+  },
+  {
+    "name": "Hunter's Trophy Armour (Completed)",
+    "soak": 2,
+    "defence": 0,
+    "note": "This Version is if a character wishes to buy this armour outright. A character wearing trophy armour suffers ⬛ to Charm checks, but gains ⬜⬜ to Coercion checks due to intimidating appearance. At GM Discretion, Charm checks made to impress or persuade other characters of wearer's prowess may receive ⬜⬜ instead of ⬛",
+    "category": "Armour And Clothing"
+  },
+  {
+    "name": "Hunter's Trophy Armour (Custom Made)",
+    "soak": 2,
+    "defence": 0,
+    "note": "This Version is if a character has a suitable hide already and wishes a artisan to craft the armour. A character wearing trophy armour suffers ⬛ to Charm checks, but gains ⬜⬜ to Coercion checks due to intimidating appearance. At GM Discretion, Charm checks made to impress or persuade other characters of wearer's prowess may receive ⬜⬜ instead of ⬛",
+    "category": "Armour And Clothing"
+  },
+  {
+    "name": "Mandalorian Armour",
+    "soak": 2,
+    "defence": 1,
+    "note": "Can be bought as standard armour or can be purchased with specific attachments already installed, if so increase the rarity by 1 or to the rarity of the rarest installed attachment if it would be higher, also the base price of the suit is increased by the cost of the attachments.",
+    "category": "Armour And Clothing"
+  },
+  {
+    "name": "Biogel Suit",
+    "soak": 2,
+    "defence": 0,
+    "note": "`+1 soak when wearer suffers damage from Brawl weapons or Bludgeoning Melee Weapons, Character also adds ⬛ to any Brawn or Agility based checks while wearing this armour.",
+    "category": "Armour And Clothing"
+  },
+  {
+    "name": "Formal Council Armour",
+    "soak": 2,
+    "defence": 0,
+    "note": "Add aa to Negotiation checks when interacting with individuals who hold Jedi in high regards. At the GM's discretion the character may add aa to Coercion checks when interacting with individuals who hate or fear the Jedi (like representatives of the Galactic Empire)",
+    "category": "Armour And Clothing"
+  },
+  {
+    "name": "Individual Field Disruptor",
+    "soak": 0,
+    "defence": 1,
+    "note": "If the field of the field disruptor contacts another energy field the other field ceases to offer any defence as long as the two fields intersect. If a character wearing an active field enters engaged range with a droid, the droid suffers 5 Stun damage. If the field enters engaged range with any other electronic device, the device shorts out and becomes inactive for the remainder of the encounter. If the wearer makes a melee attack while the field is active the wearer counts as being armed with a Melee weapon with +2 damage and the Stun Damage item quality.",
+    "category": "Armour And Clothing"
+  },
+  {
+    "name": "Reflect Body Glove",
+    "soak": 3,
+    "defence": 0,
+    "note": "After a successful combat check against the wearer has been resolved the reflect body glove's soak is reduced by one to a minimum of zero. The reflect body glove's soak may be restored to its original value after making a successful Average (dd) Mechanics check",
+    "category": "Armour And Clothing"
+  },
+  {
+    "name": "SeaScape Diving Suit",
+    "soak": 2,
+    "defence": 0,
+    "note": "Can provide six hours of Atmosphere to an air breather as well as water and nutrition supplements, wearer does not duffer movement penalties for traveling through water.",
+    "category": "Armour And Clothing"
+  },
+  {
+    "name": "Alliance Engineer's Helmet and Vest",
+    "soak": 1,
+    "defence": 0,
+    "note": "While worn counts as having 1 rank or an additional rank in the Durable Talent",
+    "category": "Armour And Clothing"
+  },
+  {
+    "name": "EOD-Mk II Armour",
+    "soak": 4,
+    "defence": 0,
+    "note": "Due to its extremely thick padding and ponderous form, characters wearing EOD-MK II armour lose their free movement. UPGRADE OPTIONS (no hard points used) Integrated load-bearing gear reduces the suit's encumbrance by 3, and costs an additional 700 credits with a rarity of 3. The data link allows the wearer to control a single EOD remote (for controlling a EOD-MK IV Explosives Disposal remote droid), and costs an extra 300 credits with a rarity of 4.",
+    "category": "Armour And Clothing"
+  },
+  {
+    "name": "Fabricators' Protective Gear",
+    "soak": 1,
+    "defence": 0,
+    "note": "Soak value of 3 against weapons with the Blast quality (only when quality is activated) and can ignore the effects of fires or acids of rating 1 or 2",
+    "category": "Armour And Clothing"
+  },
+  {
+    "name": "Pioneer Armour",
+    "soak": 1,
+    "defence": 0,
+    "note": "Pioneer armour increases a wearer's encumbrance threshold by 3.",
+    "category": "Armour And Clothing"
+  },
+  {
+    "name": "Sith Pain Harness",
+    "soak": 2,
+    "defence": 0,
+    "note": "As an incidental, suffer one wound to add an automatic s to the next Discipline check during the current round, then suffer 1 Conflict",
+    "category": "Armour And Clothing"
+  },
+  {
+    "name": "Timber Cuirass",
+    "soak": 2,
+    "defence": 1,
+    "note": "",
+    "category": "Armour And Clothing"
+  },
+  {
+    "name": "Waterweave",
+    "soak": 1,
+    "defence": 2,
+    "note": "While submerged the armour's encumbrance changes to 0",
+    "category": "Armour And Clothing"
+  },
+  {
+    "name": "Ancient Battle Armour",
+    "soak": 2,
+    "defence": 0,
+    "note": "While worn by a force sensitive character this armour gains Defence 1",
+    "category": "Armour And Clothing"
+  },
+  {
+    "name": "MK 1 Katarn-Class Commando Armour",
+    "soak": 2,
+    "defence": 1,
+    "note": "Helmet is equipped with an integrated combat scanner, an encrypted communications suite and an on board combat computer that monitors the conditions of any nearby allies wearing Katarn-class armour. It also has an integrated breath mask and six hours oxygen supply. Also increases the wearer's encumbrance threshold by 3. In addition remove ⬛ from all perception and survival checks made by the wearer",
+    "category": "Armour And Clothing"
+  },
+  {
+    "name": "Phase 1 ARC trooper Armour",
+    "soak": 2,
+    "defence": 1,
+    "note": "Remove ⬛ from all perception checks made by the wearer and this armour provides all the benefits of a hardened comlink. In addition increase the wearer's encumbrance threshold by 3",
+    "category": "Armour And Clothing"
+  },
+  {
+    "name": "Climbsuit",
+    "soak": 1,
+    "defence": 0,
+    "note": "Comes with integrated harness that includes load bearing straps and 300-meter retractable spool of high-tensile climbing line, wearing this suit upgrades the ability to climb or rappel down a surface once, it also reduces the damage and strain suffered rom falling by 5 and reduces any related critical injury results from falling by 10.",
+    "category": "Armour And Clothing"
+  },
+  {
+    "name": "Mk 1 NightStalker Suit",
+    "soak": 2,
+    "defence": 0,
+    "note": "Adds a automatic s to Stealth checks and adds a t to social skill checks",
+    "category": "Armour And Clothing"
+  },
+  {
+    "name": "Mk IX Personal Mimetic Concealment Suit",
+    "soak": 1,
+    "defence": 1,
+    "note": "Requires power to gain any effects, power lasts for an hour of use until recharged, Upgrade the ability of all Stealth checks made by the wearer twice. In addition, the Game master may spend ttt or y on any Stealth check made by the wearer while it is active to have the power pack run dry",
+    "category": "Armour And Clothing"
+  },
+  {
+    "name": "CF-9 Republic Naval Flight Suit",
+    "soak": 1,
+    "defence": 1,
+    "note": "Built in Respirator, remove ⬛ from piloting checks added due to danger or physical stress of an action.",
+    "category": "Armour And Clothing"
+  },
+  {
+    "name": "\"Gundark\" Scav-Suit",
+    "soak": 1,
+    "defence": 1,
+    "note": "Inbuilt sensor array on a \"Gundark\" Scav-suit adds ⬜ to the wearer's perception checks, and additional ⬜ to all checks to detect or analyze technological parts and items, if the suit is damaged by a critical injury, aimed shot or other reason the wearer suffers a ⬛ to these checks instead",
+    "category": "Armour And Clothing"
+  },
+  {
+    "name": "Heavy Robes",
+    "soak": 0,
+    "defence": 1,
+    "note": "",
+    "category": "Armour And Clothing"
+  },
+  {
+    "name": "HT-77 Cold Assault Armor",
+    "soak": 2,
+    "defence": 0,
+    "note": "Built in Comlink, Adds ⬜⬜ to wearers checks to avoid adverse effects from exposure to cold temperatures and weather. Additionally the wearer removes ⬛ imposed by cold weather conditions on their perception checks",
+    "category": "Armour And Clothing"
+  },
+  {
+    "name": "Jedi Commander Armor",
+    "soak": 2,
+    "defence": 1,
+    "note": "Does not have any special benefits but if used outside the republic era this would probably draw a lot of unwanted attention from those in the empire era… have fun",
+    "category": "Armour And Clothing"
+  },
+  {
+    "name": "MK II \"Hotspot\" Insulated Armor",
+    "soak": 2,
+    "defence": 0,
+    "note": "Built in comlink, Adds ⬜⬜ to wearers checks to avoid adverse effects from exposure to extreme heat or toxic gases and reduces the damage the wearer takes from fire and hazardous environments by 1. Additionally attackers must spend 1 additonal a to activate the burn item quality against a wearer of this armor and treat the quality's rating as one lower",
+    "category": "Armour And Clothing"
+  },
+  {
+    "name": "Phase 1 ARC trooper Armour",
+    "soak": 2,
+    "defence": 1,
+    "note": "Rise of the Separatists era version, includes comlink, removes ⬛ from perception checks made by the wearer, and increases the wearer's encumberance threshold by three.",
+    "category": "Armour And Clothing"
+  },
+  {
+    "name": "Phase 1 Clone Trooper Armor",
+    "soak": 2,
+    "defence": 0,
+    "note": "Built in comlink. At the GM's discretion, characts not used to moving in this armor may suffer ⬛ to Coordination checks until the acclimatize to the armor",
+    "category": "Armour And Clothing"
+  },
+  {
+    "name": "Scavenged Clone Armor",
+    "soak": 2,
+    "defence": 0,
+    "note": "Wearing this armor results in a ⬛ being added to all coordination and stealth checks while wearing it, as well as suffering a ⬛ with interactions with republic (and maybe even imperial) officials and representatives (all at GM's discretion of course)",
+    "category": "Armour And Clothing"
+  },
+  {
+    "name": "Clone Dive Armor",
+    "soak": 2,
+    "defence": 0,
+    "note": "Provides 12 hours of Oxygen, as well as fresh water, nutrition suplements and other biological necessities. Characters don’t suffer movement penalties for traveling through water and removes up to one ⬛ from perception checks due to underwater conditions.",
+    "category": "Armour And Clothing"
+  },
+  {
+    "name": "Clone Reconnaissance Armor",
+    "soak": 2,
+    "defence": 9,
+    "note": "Characters wearing clone reconaissance armor add ⬜ to stealth checks they make. These suits incorporate visors with intergrated thermal and low-light sensors, allowing wearers to remove ⬛ from visual Perception checks they make.",
+    "category": "Armour And Clothing"
+  },
+  {
+    "name": "Jedi Reconnaissance Armor",
+    "soak": 1,
+    "defence": 1,
+    "note": "Characters wearing Jedi Reconaissance armor add ⬜ to stealth checks they make.",
+    "category": "Armour And Clothing"
+  },
+  {
+    "name": "Phase II ARC Trooper Armor",
+    "soak": 2,
+    "defence": 1,
+    "note": "Includes an intergrated comlink with scrambler capable of using all standard republic communications protocols. The survival pack incorporates emergency rations, a water filtration system, microfiber line and a distress beacon.",
+    "category": "Armour And Clothing"
+  },
+  {
+    "name": "Phase II Clone Trooper Armor",
+    "soak": 2,
+    "defence": 0,
+    "note": "Includes an intergrated comlink with scrambler capable of using all standard republic communications protocols.",
+    "category": "Armour And Clothing"
+  },
+  {
+    "name": "Boba Fett's Armor",
+    "soak": 3,
+    "defence": 2,
+    "note": "Comes with Enahnced optics suit (remove bb from Perception, Vigilance and Combat checks due to environmental effects that obscure vision), an integrated jetpack with rocket and Range-Finder (adds automatic a on all integrated weapon attacks) Integrated Weapons: Flamethrower (Ranged [Light]; Damage 5; Critical 2; Range [Short]; Blast 2, Burn 2, Pierce 2, Vicious 3), Jetpack Missile Tube (Gunnery; Damage 20; Critical 2; Range [Extreme] Blast 10, Breach 1, Cumbersome 3, Guided 3, Limited Ammo 1, Prepare 1), Whipcord (Ranged [Light]; Damage 1; Critical -; Range [Short]; Ensnare 3, Knockdown, Limited Ammo 1) \"Premeditated Contingency\": Once per encounter as a maneuver, a character wearing Boba Fett's armor may make an Average (dd) Vigilance Check to draw out any weapon or item of rarity equal to or less than the total number of net s and a at the GM's discretion",
+    "category": "Armour And Clothing"
+  },
+  {
+    "name": "Darth Vader's Armor",
+    "soak": 2,
+    "defence": 1,
+    "note": "Comes with Enahnced optics suit (remove bb from Perception, Vigilance and Combat checks due to environmental effects that obscure vision), Integrated Medical System (Add B to all Medicine checks to heal Vader; Once per session, may activate this attachment as an incidental; this counts as using a stimpack), Vacuum-sealed (Can ignore the effects of vacuum for up to an hour) \"Peerless Armor\": Once per encounter as an out of turn incidental, the wearer of Darth Vader's armor may spend a Destiny Point to increase the soak provided by this armor to +6 until the end of the wearer's next turn.",
+    "category": "Armour And Clothing"
+  },
+  {
+    "name": "Caballerin-Series Riding Tack",
+    "soak": 0,
+    "defence": 0,
+    "note": "Can be only be equipped to bestial riding animals, using it allows the character to ride the beast without suffering bareback riding penalties.",
+    "category": "Tack"
+  },
+  {
+    "name": "Capari-series Padded Beast Armour",
+    "soak": 2,
+    "defence": 0,
+    "note": "Can be only be equipped to bestial riding animals, using it allows the character to ride the beast without suffering bareback riding penalties.",
+    "category": "Tack"
+  },
+  {
+    "name": "Destri-series Laminate Beast Armour",
+    "soak": 4,
+    "defence": 0,
+    "note": "Can be only be equipped to bestial riding animals, using it allows the character to ride the beast without suffering bareback riding penalties. Lowers the Agility of the beast by 1 to a minimum of 1.",
+    "category": "Tack"
+  },
+  {
+    "name": "H-Series Megafauna Carriage",
+    "soak": 0,
+    "defence": 1,
+    "note": "Can be only be equipped to bestial riding animals, using it allows the character to ride the beast without suffering bareback riding penalties. Can only be equipped on a beast with a silhouette of at least 3 and brawn of at least 5, can be equipped with one or 2 Gunnery or vehicle scale weapons following usual restrictions for silhouettes",
+    "category": "Tack"
+  },
+  {
+    "name": "Anipro Layered Beast Armour",
+    "soak": 1,
+    "defence": 1,
+    "note": "",
+    "category": "Tack"
+  }
+]

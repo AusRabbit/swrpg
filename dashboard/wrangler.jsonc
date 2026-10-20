@@ -1,0 +1,103 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "swrpg-beta", // TEMPLATE: rename per campaign (lowercase letters, numbers and dashes)
+  "compatibility_date": "2026-07-30",
+  "main": "worker/index.js",
+  "keep_vars": true,
+  "assets": {
+    "directory": "./dist",
+    "binding": "ASSETS",
+    "not_found_handling": "single-page-application"
+  },
+  "observability": {
+    "enabled": true
+  },
+  "compatibility_flags": [
+    "nodejs_compat"
+  ],
+  // Shared dice-roller log (see worker/index.js /rolls route + the RollLog
+  // class). Runs as a Durable Object rather than the previous shared KV
+  // namespace, so writes are serialized (no more lost rolls from two people
+  // posting at once) and reads are strongly consistent (no more up-to-a-
+  // minute lag). new_sqlite_classes provisions it on the SQLite storage
+  // backend, which is available on the Workers Free plan.
+  // BIO_LOG (see worker/index.js /bio route + the BioLog class) is the
+  // shared, player-editable "Description" field on the Character tab (size,
+  // colour, appearance etc) — one upsert-by-character entry rather than an
+  // append-only log, but the same Durable Object / SQLite-backend reasoning
+  // as ROLL_LOG and NOTES_LOG above.
+  // CREW_LOG (see worker/index.js /crew route + the CrewLog class) is the
+  // shared, player-editable Vehicle tab crew assignments (who's in which
+  // seat on the party's ship) — same upsert-by-key pattern as BIO_LOG,
+  // keyed by crew position id instead of character id.
+  // VISIBILITY_LOG (see worker/index.js /visibility route + the
+  // VisibilityLog class) holds live GM overrides of a weapon/armor/
+  // inventory item's hidden state, on top of whatever ledger.json itself
+  // says — lets the GM tab reveal/hide gear mid-session without a
+  // redeploy. GM key required to write (see GM_PASSWORD below); read is
+  // open, same as every other shared log here.
+  //
+  // GM_PASSWORD is a Worker *secret*, not a var — set it with
+  // `wrangler secret put GM_PASSWORD` (prompts for the value, never goes in
+  // this file or git). Gates every /gm/* route and any write to
+  // /visibility. The GM tab itself is also hidden behind a UI gesture (five
+  // quick clicks on the campaign name) — that gesture is just a curtain so
+  // players don't stumble onto a login form; GM_PASSWORD is the actual lock.
+  // MANUAL_LOG (see worker/index.js /manual route + the ManualLog class) is
+  // the shared live session state — Wounds/Strain/Destiny/Critical Injuries/
+  // Vehicle Hull-Trauma-System-Strain-Critical-Hits/Initiative. Every browser
+  // reads and writes it directly (this replaced the old data/live.json +
+  // /live GitHub proxy). Open write, same trust model as ROLL_LOG/NOTES_LOG/
+  // BIO_LOG/CREW_LOG — no GM key required.
+  // ENEMY_LOG (see worker/index.js /enemies + /gm/enemies routes) is the
+  // GM's combat tracker: Minion/Rival/Nemesis, Wound Threshold, Soak, and
+  // (Nemesis only) Strain Threshold. GM key required to write; the public
+  // read strips Soak and is redacted the same way VISIBILITY_LOG's items are.
+  // MAP_LOG (see worker/index.js /map + /gm/map routes) is the zone-based
+  // battle map — a GM-editable set of zone cells (each with its own 5x5
+  // sub-grid) plus token positions. Adding/removing a zone and moving an
+  // enemy token both require the GM key; moving a PC token is open to
+  // anyone at the table.
+  // GEAR_LOG (see worker/index.js /gear + /gm/gear routes) is the
+  // Field-Acquired Gear board — GM-added weapons/armor/equipment for a
+  // specific character, staged hidden until revealed, same pattern as
+  // ENEMY_LOG. GM key required to write; the public read drops hidden items
+  // entirely rather than just flagging them.
+  "durable_objects": {
+    "bindings": [
+      { "name": "ROLL_LOG", "class_name": "RollLog" },
+      { "name": "NOTES_LOG", "class_name": "NotesLog" },
+      { "name": "BIO_LOG", "class_name": "BioLog" },
+      { "name": "CREW_LOG", "class_name": "CrewLog" },
+      { "name": "VISIBILITY_LOG", "class_name": "VisibilityLog" },
+      { "name": "MANUAL_LOG", "class_name": "ManualLog" },
+      { "name": "ENEMY_LOG", "class_name": "EnemyLog" },
+      { "name": "MAP_LOG", "class_name": "ZoneMapLog" },
+      { "name": "GEAR_LOG", "class_name": "GearLog" },
+      { "name": "CAMPAIGN_LOG", "class_name": "CampaignLog" }
+    ]
+  },
+  // A brand-new Worker gets every Durable Object class in one migration.
+  // If you later add a class, append a new tagged migration (v2, v3, ...)
+  // rather than editing this one.
+  "migrations": [
+    {
+      "tag": "v1",
+      "new_sqlite_classes": [
+        "RollLog", "NotesLog", "BioLog", "CrewLog",
+        "VisibilityLog", "ManualLog", "EnemyLog", "ZoneMapLog"
+      ]
+    },
+    {
+      "tag": "v2",
+      "new_sqlite_classes": ["GearLog"]
+    },
+    // CAMPAIGN_LOG (see worker/index.js /campaign + /gm/campaign routes) is
+    // the campaign itself: characters, vehicle, NPCs, locations. It replaces
+    // public/data/ledger.json. Loaded with Import on the GM page.
+    {
+      "tag": "v3",
+      "new_sqlite_classes": ["CampaignLog"]
+    }
+  ]
+}

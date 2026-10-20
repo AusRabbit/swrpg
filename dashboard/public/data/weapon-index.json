@@ -1,0 +1,3584 @@
+[
+  {
+    "name": "\"Precision-X\" Marksman Rifle",
+    "skill": "Ranged (Heavy)",
+    "damage": 9,
+    "crit": 3,
+    "range": "Long",
+    "special": "Pierce 1, Stun Setting",
+    "category": "Energy Weapons"
+  },
+  {
+    "name": "\"Renegade\" Heavy Blaster Pistol",
+    "skill": "Ranged (Light)",
+    "damage": 8,
+    "crit": 3,
+    "range": "Medium",
+    "special": "Inaccurate 1, Stun Setting",
+    "category": "Energy Weapons"
+  },
+  {
+    "name": "\"Subduer-9\" Riot Blaster",
+    "skill": "Ranged (Heavy)",
+    "damage": 10,
+    "crit": 6,
+    "range": "Short",
+    "special": "Blast 6, Cumbersome 3, Stun Damage",
+    "category": "Energy Weapons"
+  },
+  {
+    "name": "12 Defender",
+    "skill": "Ranged (Light)",
+    "damage": 5,
+    "crit": 5,
+    "range": "Short",
+    "special": "Inferior, Limited Ammo 2",
+    "category": "Energy Weapons"
+  },
+  {
+    "name": "A280 Blaster Rifle",
+    "skill": "Ranged (Heavy)",
+    "damage": 9,
+    "crit": 3,
+    "range": "Long",
+    "special": "Stun Setting",
+    "category": "Energy Weapons"
+  },
+  {
+    "name": "A280 C Heavy Blaster Rifle",
+    "skill": "Ranged (Heavy)",
+    "damage": 9,
+    "crit": 4,
+    "range": "Long",
+    "special": "Accurate 1, Cumbersome 3, Stun Setting",
+    "category": "Energy Weapons"
+  },
+  {
+    "name": "ACP Array Gun",
+    "skill": "Ranged (Heavy)",
+    "damage": 6,
+    "crit": 3,
+    "range": "Short",
+    "special": "Blast 5, Stun Setting",
+    "category": "Energy Weapons"
+  },
+  {
+    "name": "ACP Repeater Gun",
+    "skill": "Ranged (Heavy)",
+    "damage": 7,
+    "crit": 3,
+    "range": "Medium",
+    "special": "Auto-Fire, Stun Setting",
+    "category": "Energy Weapons"
+  },
+  {
+    "name": "AJ-23 Concussive Rifle",
+    "skill": "Ranged (Heavy)",
+    "damage": 8,
+    "crit": 5,
+    "range": "Short",
+    "special": "Blast 7, Concussive 2, Inaccurate 2, Knockdown, Stun Damage",
+    "category": "Energy Weapons"
+  },
+  {
+    "name": "Atgar SpaceDefense 1.8 FD Autoturret",
+    "skill": "Gunnery",
+    "damage": 17,
+    "crit": 2,
+    "range": "Extreme",
+    "special": "Auto-fire, Slow firing 1, Limited Ammo 8",
+    "category": "Energy Weapons"
+  },
+  {
+    "name": "BlasTech DL-19C Blaster Pistol",
+    "skill": "Ranged (Light)",
+    "damage": 5,
+    "crit": 4,
+    "range": "Medium",
+    "special": "Stun Setting",
+    "category": "Energy Weapons"
+  },
+  {
+    "name": "Blastech DLS-12 Heavy Blaster Carbine",
+    "skill": "Ranged (Heavy)",
+    "damage": 10,
+    "crit": 3,
+    "range": "Medium",
+    "special": "Auto-Fire, Cumbersome 2",
+    "category": "Energy Weapons"
+  },
+  {
+    "name": "BlasTech M-300 Hunting Blaster",
+    "skill": "Ranged (Heavy)",
+    "damage": 8,
+    "crit": 3,
+    "range": "Extreme",
+    "special": "Accurate 1, cumbersome 2, Pierce 2, Stun Damage",
+    "category": "Energy Weapons"
+  },
+  {
+    "name": "Blaster Carbine",
+    "skill": "Ranged (Heavy)",
+    "damage": 9,
+    "crit": 3,
+    "range": "Medium",
+    "special": "Stun Setting",
+    "category": "Energy Weapons"
+  },
+  {
+    "name": "Blaster Pistol",
+    "skill": "Ranged (Light)",
+    "damage": 6,
+    "crit": 3,
+    "range": "Medium",
+    "special": "Stun Setting",
+    "category": "Energy Weapons"
+  },
+  {
+    "name": "Blaster Rifle",
+    "skill": "Ranged (Heavy)",
+    "damage": 9,
+    "crit": 3,
+    "range": "Long",
+    "special": "Stun Setting",
+    "category": "Energy Weapons"
+  },
+  {
+    "name": "Bola Carbine",
+    "skill": "Ranged (Heavy)",
+    "damage": 8,
+    "crit": 3,
+    "range": "Medium",
+    "special": "Accurate 1, Ensnare",
+    "category": "Energy Weapons"
+  },
+  {
+    "name": "Boonta Blaster",
+    "skill": "Ranged (Light)",
+    "damage": 6,
+    "crit": 3,
+    "range": "Short",
+    "special": "Stun Setting",
+    "category": "Energy Weapons"
+  },
+  {
+    "name": "Bowcaster",
+    "skill": "Ranged (Heavy)",
+    "damage": 10,
+    "crit": 3,
+    "range": "Medium",
+    "special": "Cumbersome 3, Knockdown",
+    "category": "Energy Weapons"
+  },
+  {
+    "name": "BR-219 Heavy Blaster Pistol",
+    "skill": "Ranged (Light)",
+    "damage": 8,
+    "crit": 3,
+    "range": "Short",
+    "special": "Stun setting, Vicious 2",
+    "category": "Energy Weapons"
+  },
+  {
+    "name": "CDEF Pistol",
+    "skill": "Ranged (Light)",
+    "damage": 5,
+    "crit": 4,
+    "range": "Medium",
+    "special": "Inferior, Stun Setting",
+    "category": "Energy Weapons"
+  },
+  {
+    "name": "Corellian Arms CR-8 Takedown Rifle",
+    "skill": "Ranged (Heavy)",
+    "damage": 9,
+    "crit": 3,
+    "range": "Extreme",
+    "special": "Accurate 2, Prepare 2, Pierce 2, Slow Firing 1",
+    "category": "Energy Weapons"
+  },
+  {
+    "name": "Corondexx VES-700 Pulse Rifle",
+    "skill": "Ranged (Heavy)",
+    "damage": 8,
+    "crit": 3,
+    "range": "Medium",
+    "special": "Blast 6, Stun Setting",
+    "category": "Energy Weapons"
+  },
+  {
+    "name": "CR-2 Heavy Blaster Pistol",
+    "skill": "Ranged (Light)",
+    "damage": 7,
+    "crit": 4,
+    "range": "Medium",
+    "special": "Stun Setting",
+    "category": "Energy Weapons"
+  },
+  {
+    "name": "CryoBan Rifle",
+    "skill": "Ranged (Light)",
+    "damage": 6,
+    "crit": 0,
+    "range": "Medium",
+    "special": "Ensnare 1, Pierce 5, Stun Damage",
+    "category": "Energy Weapons"
+  },
+  {
+    "name": "Czerka Arms 411 Holdout Blaster",
+    "skill": "Ranged (Light)",
+    "damage": 4,
+    "crit": 4,
+    "range": "Medium",
+    "special": "Stun Setting",
+    "category": "Energy Weapons"
+  },
+  {
+    "name": "Czerka Arms A95 Stingbeam",
+    "skill": "Ranged (Light)",
+    "damage": 5,
+    "crit": 3,
+    "range": "Engaged",
+    "special": "Stun setting, Vicious 1",
+    "category": "Energy Weapons"
+  },
+  {
+    "name": "Czerka Arms C-10 \"Dragoneye Repeater\" Heavy Blaster Pistol",
+    "skill": "Ranged (Light)",
+    "damage": 8,
+    "crit": 3,
+    "range": "Medium",
+    "special": "Stun Setting",
+    "category": "Energy Weapons"
+  },
+  {
+    "name": "DDC MR6 Modular Rifle",
+    "skill": "Ranged (Heavy)",
+    "damage": 7,
+    "crit": 3,
+    "range": "Medium",
+    "special": "Stun Setting",
+    "category": "Energy Weapons"
+  },
+  {
+    "name": "Defender Sporting Blaster Pistol",
+    "skill": "Ranged (Light)",
+    "damage": 5,
+    "crit": 3,
+    "range": "Medium",
+    "special": "Stun Setting, Accurate 1",
+    "category": "Energy Weapons"
+  },
+  {
+    "name": "DH-17 Blaster Carbine",
+    "skill": "Ranged (Heavy)",
+    "damage": 8,
+    "crit": 3,
+    "range": "Medium",
+    "special": "Auto-Fire, Inaccurate 1, Stun Setting",
+    "category": "Energy Weapons"
+  },
+  {
+    "name": "DH-X Heavy Blaster Rifle",
+    "skill": "Ranged (Heavy)",
+    "damage": 10,
+    "crit": 3,
+    "range": "Long",
+    "special": "Cumbersome 3, Pierce 2",
+    "category": "Energy Weapons"
+  },
+  {
+    "name": "Disruptor Pistol",
+    "skill": "Ranged (Light)",
+    "damage": 10,
+    "crit": 2,
+    "range": "Short",
+    "special": "Vicious 4",
+    "category": "Energy Weapons"
+  },
+  {
+    "name": "Disruptor Rifle",
+    "skill": "Ranged (Heavy)",
+    "damage": 10,
+    "crit": 2,
+    "range": "Long",
+    "special": "Cumbersome 2, Vicious 5",
+    "category": "Energy Weapons"
+  },
+  {
+    "name": "DL-44 Heavy Blaster Pistol",
+    "skill": "Ranged (Light)",
+    "damage": 6,
+    "crit": 3,
+    "range": "Medium",
+    "special": "Stun Setting",
+    "category": "Energy Weapons"
+  },
+  {
+    "name": "DL-7H Heavy Blaster Pistol",
+    "skill": "Ranged (Light)",
+    "damage": 8,
+    "crit": 3,
+    "range": "Medium",
+    "special": "",
+    "category": "Energy Weapons"
+  },
+  {
+    "name": "DLT-19",
+    "skill": "Ranged (Heavy)",
+    "damage": 10,
+    "crit": 3,
+    "range": "Long",
+    "special": "Auto-Fire, Cumbersome 3",
+    "category": "Energy Weapons"
+  },
+  {
+    "name": "DR-45 Dragoon",
+    "skill": "Ranged (Light)",
+    "damage": 8,
+    "crit": 3,
+    "range": "Medium",
+    "special": "Accurate 1, Stun Setting",
+    "category": "Energy Weapons"
+  },
+  {
+    "name": "Droid Disruptor",
+    "skill": "Ranged (Light)",
+    "damage": 6,
+    "crit": 3,
+    "range": "Short",
+    "special": "Vicious 3 (Droids Only)",
+    "category": "Energy Weapons"
+  },
+  {
+    "name": "Duelling Pistol",
+    "skill": "Ranged (Light)",
+    "damage": 9,
+    "crit": 2,
+    "range": "Short",
+    "special": "Accurate 1, Limited Ammo 1, Pierce 1",
+    "category": "Energy Weapons"
+  },
+  {
+    "name": "E-11 Blaster Rifle",
+    "skill": "Ranged (Heavy)",
+    "damage": 9,
+    "crit": 3,
+    "range": "Long",
+    "special": "Stun Setting",
+    "category": "Energy Weapons"
+  },
+  {
+    "name": "E-11s",
+    "skill": "Ranged (Heavy)",
+    "damage": 10,
+    "crit": 3,
+    "range": "Extreme",
+    "special": "Accurate 1, Cumbersome 3, Pierce 2, Slow Firing 1",
+    "category": "Energy Weapons"
+  },
+  {
+    "name": "E5 Blaster Carbine",
+    "skill": "Ranged (Heavy)",
+    "damage": 9,
+    "crit": 3,
+    "range": "Medium",
+    "special": "Inaccurate 1, Stun Setting",
+    "category": "Energy Weapons"
+  },
+  {
+    "name": "ELG-3A",
+    "skill": "Ranged (Light)",
+    "damage": 6,
+    "crit": 4,
+    "range": "Short",
+    "special": "Stun Setting",
+    "category": "Energy Weapons"
+  },
+  {
+    "name": "Energy Slingshot",
+    "skill": "Ranged (Light)",
+    "damage": 3,
+    "crit": 0,
+    "range": "Short",
+    "special": "Disorient 2, Stun Damage",
+    "category": "Energy Weapons"
+  },
+  {
+    "name": "Felebreck Droid Disabler",
+    "skill": "Ranged (Light)",
+    "damage": 12,
+    "crit": 3,
+    "range": "Short",
+    "special": "Concussive 1, Ion, Limited Ammo 3",
+    "category": "Energy Weapons"
+  },
+  {
+    "name": "GLX Firelance",
+    "skill": "Ranged (Heavy)",
+    "damage": 7,
+    "crit": 3,
+    "range": "Long",
+    "special": "Auto-fire, Disorient 2, Stun Setting",
+    "category": "Energy Weapons"
+  },
+  {
+    "name": "Greff-Timms ATA Pulse-Wave Blaster",
+    "skill": "Ranged (Light)",
+    "damage": 5,
+    "crit": 3,
+    "range": "Short",
+    "special": "Vicious 3",
+    "category": "Energy Weapons"
+  },
+  {
+    "name": "H-7 \"Equalizer\" Blaster Pistol",
+    "skill": "Ranged (Light)",
+    "damage": 7,
+    "crit": 2,
+    "range": "Medium",
+    "special": "Stun Setting, Superior",
+    "category": "Energy Weapons"
+  },
+  {
+    "name": "Heavy Blaster Pistol",
+    "skill": "Ranged (Light)",
+    "damage": 7,
+    "crit": 3,
+    "range": "Medium",
+    "special": "Stun Setting",
+    "category": "Energy Weapons"
+  },
+  {
+    "name": "Heavy Blaster Rifle",
+    "skill": "Ranged (Heavy)",
+    "damage": 10,
+    "crit": 3,
+    "range": "Long",
+    "special": "Auto-Fire, Cumbersome 3",
+    "category": "Energy Weapons"
+  },
+  {
+    "name": "Heavy Repeating Blaster",
+    "skill": "Gunnery",
+    "damage": 15,
+    "crit": 2,
+    "range": "Long",
+    "special": "Auto-Fire, Cumbersome 5, Pierce 2, Vicious 1",
+    "category": "Energy Weapons"
+  },
+  {
+    "name": "Herloss HBt-4 Hunting Blaster",
+    "skill": "Ranged (Heavy)",
+    "damage": 10,
+    "crit": 3,
+    "range": "Medium",
+    "special": "Cumbersome 2, Stun setting",
+    "category": "Energy Weapons"
+  },
+  {
+    "name": "HH-50 Heavy Blaster Pistol",
+    "skill": "Ranged (Light)",
+    "damage": 7,
+    "crit": 3,
+    "range": "Short",
+    "special": "Linked 1, Stun setting, Vicious 1",
+    "category": "Energy Weapons"
+  },
+  {
+    "name": "HL-27 Light Blaster Pistol",
+    "skill": "Ranged (Light)",
+    "damage": 5,
+    "crit": 3,
+    "range": "Medium",
+    "special": "Accurate 1, Stun Setting",
+    "category": "Energy Weapons"
+  },
+  {
+    "name": "HOB Heavy Repeating Blaster",
+    "skill": "Gunnery",
+    "damage": 15,
+    "crit": 3,
+    "range": "Extreme",
+    "special": "Auto-Fire, Cumbersome 6, Pierce 2, Vicious 1",
+    "category": "Energy Weapons"
+  },
+  {
+    "name": "Holdout Blaster",
+    "skill": "Ranged (Light)",
+    "damage": 5,
+    "crit": 4,
+    "range": "Short",
+    "special": "Stun Setting",
+    "category": "Energy Weapons"
+  },
+  {
+    "name": "IDX-9 Ion Stunner",
+    "skill": "Ranged (Light)",
+    "damage": 7,
+    "crit": 0,
+    "range": "Medium",
+    "special": "Ion, Stun Damage",
+    "category": "Energy Weapons"
+  },
+  {
+    "name": "Ion Blaster",
+    "skill": "Ranged (Light)",
+    "damage": 10,
+    "crit": 5,
+    "range": "Short",
+    "special": "Disorient 5, Ion",
+    "category": "Energy Weapons"
+  },
+  {
+    "name": "IR-5 Blaster Pistol",
+    "skill": "Ranged (Light)",
+    "damage": 5,
+    "crit": 3,
+    "range": "Medium",
+    "special": "Auto-Fire, Inaccurate 1",
+    "category": "Energy Weapons"
+  },
+  {
+    "name": "J-10 Dual Blaster Cannon",
+    "skill": "Gunnery",
+    "damage": 13,
+    "crit": 2,
+    "range": "Long",
+    "special": "Cumbersome 5, Inaccurate 1, Linked 1",
+    "category": "Energy Weapons"
+  },
+  {
+    "name": "Kyuzo Energy Bow",
+    "skill": "Ranged (Heavy)",
+    "damage": 9,
+    "crit": 4,
+    "range": "Long",
+    "special": "Cumbersome 3, Knockdown, Pierce 5",
+    "category": "Energy Weapons"
+  },
+  {
+    "name": "LBR-9 Stun Rifle",
+    "skill": "Ranged (Heavy)",
+    "damage": 10,
+    "crit": 0,
+    "range": "Long",
+    "special": "Disorient 2, Stun Damage",
+    "category": "Energy Weapons"
+  },
+  {
+    "name": "LD-1 Target Rifle",
+    "skill": "Ranged (Heavy)",
+    "damage": 9,
+    "crit": 4,
+    "range": "Extreme",
+    "special": "Accurate 2, Cumbersome 3, Pierce 3, Slow-Firing 1",
+    "category": "Energy Weapons"
+  },
+  {
+    "name": "Light Blaster Pistol",
+    "skill": "Ranged (Light)",
+    "damage": 5,
+    "crit": 4,
+    "range": "Medium",
+    "special": "Stun Setting",
+    "category": "Energy Weapons"
+  },
+  {
+    "name": "Light Repeating Blaster",
+    "skill": "Ranged (Heavy)",
+    "damage": 11,
+    "crit": 3,
+    "range": "Long",
+    "special": "Auto-Fire, Cumbersome 4, Pierce 1",
+    "category": "Energy Weapons"
+  },
+  {
+    "name": "Liquidsilver L7 Light Blaster Pistol",
+    "skill": "Ranged (Light)",
+    "damage": 6,
+    "crit": 3,
+    "range": "Medium",
+    "special": "Stun Setting",
+    "category": "Energy Weapons"
+  },
+  {
+    "name": "LJ-50 Concussion Rifle",
+    "skill": "Ranged (Heavy)",
+    "damage": 10,
+    "crit": 2,
+    "range": "Medium",
+    "special": "Blast 4, Concussive 2, Cumbersome 3, Knockdown, Limited Ammo 4",
+    "category": "Energy Weapons"
+  },
+  {
+    "name": "Merr-Sonn Model 53 \"Quick trigger\" Blaster Pistol",
+    "skill": "Ranged (Light)",
+    "damage": 6,
+    "crit": 3,
+    "range": "Medium",
+    "special": "Stun Setting",
+    "category": "Energy Weapons"
+  },
+  {
+    "name": "Military Holdout Blaster",
+    "skill": "Ranged (Light)",
+    "damage": 6,
+    "crit": 3,
+    "range": "Short",
+    "special": "Stun Setting",
+    "category": "Energy Weapons"
+  },
+  {
+    "name": "Model 44 Blaster Pistol",
+    "skill": "Ranged (Light)",
+    "damage": 6,
+    "crit": 3,
+    "range": "Medium",
+    "special": "Stun Setting",
+    "category": "Energy Weapons"
+  },
+  {
+    "name": "Model 80 Blaster Pistol",
+    "skill": "Ranged (Light)",
+    "damage": 6,
+    "crit": 2,
+    "range": "Medium",
+    "special": "Stun Setting",
+    "category": "Energy Weapons"
+  },
+  {
+    "name": "Mon Cal Battle Baton",
+    "skill": "Ranged (Light)",
+    "damage": 5,
+    "crit": 4,
+    "range": "Medium",
+    "special": "Stun Setting",
+    "category": "Energy Weapons"
+  },
+  {
+    "name": "Mon Cal Spear Blaster (Blaster)",
+    "skill": "Ranged (Heavy)",
+    "damage": 8,
+    "crit": 3,
+    "range": "Long",
+    "special": "Stun Setting",
+    "category": "Energy Weapons"
+  },
+  {
+    "name": "Night sister Energy Bow",
+    "skill": "Ranged (Light)",
+    "damage": 8,
+    "crit": 2,
+    "range": "Medium",
+    "special": "Pierce 4, Unwieldy 3, Vicious 2",
+    "category": "Energy Weapons"
+  },
+  {
+    "name": "OK-98 Blaster Carbine",
+    "skill": "Ranged (Heavy)",
+    "damage": 9,
+    "crit": 3,
+    "range": "Medium",
+    "special": "Stun Setting",
+    "category": "Energy Weapons"
+  },
+  {
+    "name": "Palandrix KO 2 Heavy Stun Pistol",
+    "skill": "Ranged (Light)",
+    "damage": 8,
+    "crit": 0,
+    "range": "Short",
+    "special": "Stun Damage",
+    "category": "Energy Weapons"
+  },
+  {
+    "name": "Pulse Cannon",
+    "skill": "Ranged (Heavy)",
+    "damage": 9,
+    "crit": 3,
+    "range": "Extreme",
+    "special": "Cumbersome 3, Pierce 2, Slow-Firing 1",
+    "category": "Energy Weapons"
+  },
+  {
+    "name": "Quickfire",
+    "skill": "Ranged (Light)",
+    "damage": 5,
+    "crit": 3,
+    "range": "Short",
+    "special": "Stun Setting",
+    "category": "Energy Weapons"
+  },
+  {
+    "name": "Raider Arms Model-1 \"Nova Viper\" Blaster Pistol",
+    "skill": "Ranged (Light)",
+    "damage": 7,
+    "crit": 3,
+    "range": "Medium",
+    "special": "Accurate 2, Pierce 2, Stun setting",
+    "category": "Energy Weapons"
+  },
+  {
+    "name": "Reciprocating Quad Blaster Cannon",
+    "skill": "Gunnery",
+    "damage": 10,
+    "crit": 2,
+    "range": "Long",
+    "special": "Auto-fire (Only), Breach 1, Cumbersome 4, Inaccurate 1, Prepare 2",
+    "category": "Energy Weapons"
+  },
+  {
+    "name": "SakTek D-29 Repulsor Rifle",
+    "skill": "Gunnery",
+    "damage": 8,
+    "crit": 4,
+    "range": "Medium",
+    "special": "Disorient 3, Knockdown, Stun Damage",
+    "category": "Energy Weapons"
+  },
+  {
+    "name": "SE-14C Blaster Pistol",
+    "skill": "Ranged (Heavy)",
+    "damage": 5,
+    "crit": 4,
+    "range": "Short",
+    "special": "Auto-Fire, Stun Setting",
+    "category": "Energy Weapons"
+  },
+  {
+    "name": "SE-14r Light Repeating Blaster",
+    "skill": "Ranged (Light)",
+    "damage": 6,
+    "crit": 3,
+    "range": "Medium",
+    "special": "Auto-Fire, Stun Setting",
+    "category": "Energy Weapons"
+  },
+  {
+    "name": "Security S-5 Heavy Blaster Pistol",
+    "skill": "Ranged (Light)",
+    "damage": 7,
+    "crit": 3,
+    "range": "Medium",
+    "special": "Stun Setting",
+    "category": "Energy Weapons"
+  },
+  {
+    "name": "Site-145 Replica Blaster Pistol",
+    "skill": "Ranged (Light)",
+    "damage": 6,
+    "crit": 3,
+    "range": "Medium",
+    "special": "Stun Setting",
+    "category": "Energy Weapons"
+  },
+  {
+    "name": "SKZ Sporting Blaster",
+    "skill": "Ranged (Heavy)",
+    "damage": 8,
+    "crit": 4,
+    "range": "Long",
+    "special": "Stun Setting",
+    "category": "Energy Weapons"
+  },
+  {
+    "name": "SWE/2 Sonic Rifle",
+    "skill": "Ranged (Heavy)",
+    "damage": 8,
+    "crit": 6,
+    "range": "Long",
+    "special": "Concussive 1, slow-firing 1, stun damage",
+    "category": "Energy Weapons"
+  },
+  {
+    "name": "Spukami Pocket Blaster Pistol",
+    "skill": "Ranged (Light)",
+    "damage": 5,
+    "crit": 3,
+    "range": "Short",
+    "special": "Stun Setting",
+    "category": "Energy Weapons"
+  },
+  {
+    "name": "SSG Mk-II Paladin",
+    "skill": "Ranged (Heavy)",
+    "damage": 8,
+    "crit": 3,
+    "range": "Long",
+    "special": "Auto-fire, Pierce 1, Stun setting, Superior",
+    "category": "Energy Weapons"
+  },
+  {
+    "name": "T-7 Ion Disruptor",
+    "skill": "Ranged (Heavy)",
+    "damage": 12,
+    "crit": 2,
+    "range": "Long",
+    "special": "Blast 6, Breach 2, Cumbersome 3, Slow firing 1, Vicious 6",
+    "category": "Energy Weapons"
+  },
+  {
+    "name": "Variable Holdout",
+    "skill": "Ranged (Light)",
+    "damage": 0,
+    "crit": 4,
+    "range": "Short",
+    "special": "Limited Ammo 12",
+    "category": "Energy Weapons"
+  },
+  {
+    "name": "VX Sidewinder Repeating Blaster",
+    "skill": "Gunnery",
+    "damage": 12,
+    "crit": 3,
+    "range": "Long",
+    "special": "Auto-Fire, Cumbersome 5, Pierce 1, Vicious 1",
+    "category": "Energy Weapons"
+  },
+  {
+    "name": "Weequay Blaster Lance",
+    "skill": "Ranged (Heavy)",
+    "damage": 8,
+    "crit": 3,
+    "range": "Extreme",
+    "special": "Accurate 1, Cumbersome 2",
+    "category": "Energy Weapons"
+  },
+  {
+    "name": "X-30 Lancer Precision Blaster Pistol",
+    "skill": "Ranged (Light)",
+    "damage": 5,
+    "crit": 4,
+    "range": "Long",
+    "special": "Accurate 1, Pierce 2",
+    "category": "Energy Weapons"
+  },
+  {
+    "name": "XL-2 \"Flashfire\" Blaster Pistol",
+    "skill": "Ranged (Light)",
+    "damage": 5,
+    "crit": 3,
+    "range": "Medium",
+    "special": "Disorient 1, Stun Setting",
+    "category": "Energy Weapons"
+  },
+  {
+    "name": "Z-6 Rotary Blaster Cannon",
+    "skill": "Ranged (Heavy)",
+    "damage": 12,
+    "crit": 4,
+    "range": "Long",
+    "special": "Auto-fire (Only) cumbersome 3, Prepare 1",
+    "category": "Energy Weapons"
+  },
+  {
+    "name": "DLT-19D Heavy Blaster Rifle",
+    "skill": "Ranged (Heavy)",
+    "damage": 10,
+    "crit": 3,
+    "range": "Long",
+    "special": "Accurate 2, Auto-fire, Cumbersome 3, Pierce 2",
+    "category": "Energy Weapons"
+  },
+  {
+    "name": "E-11D Blaster Carbine",
+    "skill": "Ranged (Heavy)",
+    "damage": 9,
+    "crit": 3,
+    "range": "Medium",
+    "special": "Stun Setting",
+    "category": "Energy Weapons"
+  },
+  {
+    "name": "E-22 Blaster Rifle",
+    "skill": "Ranged (Heavy)",
+    "damage": 8,
+    "crit": 3,
+    "range": "Medium",
+    "special": "Cumbersome 2, Linked 1, Stun Setting",
+    "category": "Energy Weapons"
+  },
+  {
+    "name": "Lightbow",
+    "skill": "Ranged (Heavy)",
+    "damage": 11,
+    "crit": 3,
+    "range": "Long",
+    "special": "Blast 4, Knockdown, Pierce 3, Slow-Firing 1",
+    "category": "Energy Weapons"
+  },
+  {
+    "name": "MWC-35c Repeating Cannon (Standard Mode)",
+    "skill": "Gunnery",
+    "damage": 9,
+    "crit": 3,
+    "range": "Long",
+    "special": "Auto-Fire, Cumbersome 3, Pierce 2, Vicious 1",
+    "category": "Energy Weapons"
+  },
+  {
+    "name": "MWC-35c Repeating Cannon (Single Shot Mode)",
+    "skill": "Gunnery",
+    "damage": 13,
+    "crit": 3,
+    "range": "Medium",
+    "special": "Cumbersome 3, Pierce 4, Prepare 1, Vicious 2",
+    "category": "Energy Weapons"
+  },
+  {
+    "name": "PB08 Heavy Blaster Pistol",
+    "skill": "Ranged (Light)",
+    "damage": 6,
+    "crit": 3,
+    "range": "Medium",
+    "special": "Stun Setting",
+    "category": "Energy Weapons"
+  },
+  {
+    "name": "Arakyd LJ-40 Concussion Carbine",
+    "skill": "Ranged (Heavy)",
+    "damage": 8,
+    "crit": 3,
+    "range": "Short",
+    "special": "Blast 4, Concussive 1, Knockdown, Limited Ammo 3",
+    "category": "Energy Weapons"
+  },
+  {
+    "name": "BlasTech DH-17c Short Carbine",
+    "skill": "Ranged (Heavy)",
+    "damage": 4,
+    "crit": 3,
+    "range": "Medium",
+    "special": "Auto-Fire, Stun Setting",
+    "category": "Energy Weapons"
+  },
+  {
+    "name": "AB-75 Bo Rifle (Blaster)",
+    "skill": "Ranged (Heavy)",
+    "damage": 8,
+    "crit": 4,
+    "range": "Medium",
+    "special": "Stun Setting",
+    "category": "Energy Weapons"
+  },
+  {
+    "name": "Heartwood Blaster",
+    "skill": "Ranged (Heavy)",
+    "damage": 6,
+    "crit": 5,
+    "range": "Medium",
+    "special": "Cumbersome 2, Stun 3",
+    "category": "Energy Weapons"
+  },
+  {
+    "name": "Lucky Blaster",
+    "skill": "Ranged (Light)",
+    "damage": 5,
+    "crit": 4,
+    "range": "Medium",
+    "special": "Stun Setting",
+    "category": "Energy Weapons"
+  },
+  {
+    "name": "MR-90 Proton Rifle",
+    "skill": "Ranged Heavy",
+    "damage": 10,
+    "crit": 2,
+    "range": "Extreme",
+    "special": "Accurate 1, Cumbersome 3, Knockdown",
+    "category": "Energy Weapons"
+  },
+  {
+    "name": "A28-CFE Convertible Heavy Blaster Pistol (Pistol Configuration)",
+    "skill": "Ranged (Light)",
+    "damage": 8,
+    "crit": 3,
+    "range": "Medium",
+    "special": "Stun Setting",
+    "category": "Energy Weapons"
+  },
+  {
+    "name": "A28-CFE Convertible Heavy Blaster Pistol (Rifle Configuration)",
+    "skill": "Ranged (Heavy)",
+    "damage": 8,
+    "crit": 3,
+    "range": "Medium",
+    "special": "Stun Setting, Accurate 1, Pierce 1",
+    "category": "Energy Weapons"
+  },
+  {
+    "name": "CS14 \"Ghost\" Light Blaster Pistol",
+    "skill": "Ranged (Light)",
+    "damage": 5,
+    "crit": 3,
+    "range": "Short",
+    "special": "Stun Setting",
+    "category": "Energy Weapons"
+  },
+  {
+    "name": "Nightstinger Blaster Rifle",
+    "skill": "Ranged (Heavy)",
+    "damage": 10,
+    "crit": 2,
+    "range": "Extreme",
+    "special": "Accurate 2, Cumbersome 3, Pierce 1, Stun Setting",
+    "category": "Energy Weapons"
+  },
+  {
+    "name": "ST-M40 Heavy Repeating Blaster Pistol",
+    "skill": "Ranged (Light)",
+    "damage": 6,
+    "crit": 3,
+    "range": "Short",
+    "special": "Auto-fire, Inaccurate 1",
+    "category": "Energy Weapons"
+  },
+  {
+    "name": "Vac Attack Mk-127 Concealable Disc Launcher",
+    "skill": "Ranged (Light)",
+    "damage": 6,
+    "crit": 3,
+    "range": "Short",
+    "special": "Limited Ammo 4, Pierce 1, Vicious 1",
+    "category": "Energy Weapons"
+  },
+  {
+    "name": "Wrist Blaster",
+    "skill": "Ranged (Light)",
+    "damage": 6,
+    "crit": 3,
+    "range": "Engaged",
+    "special": "Limited Ammo 1, Pierce 4",
+    "category": "Energy Weapons"
+  },
+  {
+    "name": "DC-15 Blaster Rifle",
+    "skill": "Ranged (Heavy)",
+    "damage": 10,
+    "crit": 3,
+    "range": "Long",
+    "special": "Cumbersome 3, Pierce 1, Stun Setting",
+    "category": "Energy Weapons"
+  },
+  {
+    "name": "DC-15A Blaster Carbine",
+    "skill": "Ranged (Heavy)",
+    "damage": 9,
+    "crit": 3,
+    "range": "Medium",
+    "special": "Auto-Fire, Pierce 1, Stun Setting",
+    "category": "Energy Weapons"
+  },
+  {
+    "name": "DC-17 Hand Blaster",
+    "skill": "Ranged (Light)",
+    "damage": 7,
+    "crit": 3,
+    "range": "Medium",
+    "special": "Accurate 1, Stun Setting",
+    "category": "Energy Weapons"
+  },
+  {
+    "name": "DC-12u Beam Rifle",
+    "skill": "Ranged (Heavy)",
+    "damage": 7,
+    "crit": 3,
+    "range": "Medium",
+    "special": "Linked 1",
+    "category": "Energy Weapons"
+  },
+  {
+    "name": "DE-10 Blaster Pistol",
+    "skill": "Ranged (Light)",
+    "damage": 6,
+    "crit": 2,
+    "range": "Long",
+    "special": "Accurate 1, Stun Setting",
+    "category": "Energy Weapons"
+  },
+  {
+    "name": "E-5 Blaster Rifle",
+    "skill": "Ranged (Heavy)",
+    "damage": 9,
+    "crit": 3,
+    "range": "Long",
+    "special": "Stun Setting",
+    "category": "Energy Weapons"
+  },
+  {
+    "name": "EE-3 Carbine Rifle",
+    "skill": "Ranged (Heavy)",
+    "damage": 8,
+    "crit": 3,
+    "range": "Medium",
+    "special": "Auto-fire, Stun Setting",
+    "category": "Energy Weapons"
+  },
+  {
+    "name": "GALAAR-15",
+    "skill": "Ranged (Heavy)",
+    "damage": 9,
+    "crit": 2,
+    "range": "Long",
+    "special": "Accurate 1, Stun Setting",
+    "category": "Energy Weapons"
+  },
+  {
+    "name": "WESTAR - 35",
+    "skill": "Ranged (Light)",
+    "damage": 6,
+    "crit": 2,
+    "range": "Medium",
+    "special": "Accurate 1, Stun Setting",
+    "category": "Energy Weapons"
+  },
+  {
+    "name": "Han Solo's Customized \nDL-44 Heavy Blaster Pistol",
+    "skill": "Ranged (Light)",
+    "damage": 7,
+    "crit": 3,
+    "range": "Medium",
+    "special": "Stun Setting, Overcharged (in notes)",
+    "category": "Energy Weapons"
+  },
+  {
+    "name": "Qi-Ra's Monlitzer S-195 Blaster Pistol",
+    "skill": "Ranged (Light)",
+    "damage": 5,
+    "crit": 3,
+    "range": "Medium",
+    "special": "Implied Violence (In Notes), Linked 1, Stun Setting, Superior",
+    "category": "Energy Weapons"
+  },
+  {
+    "name": "SX-21 Pump-Action Scatter Blaster",
+    "skill": "Ranged (Heavy)",
+    "damage": 10,
+    "crit": 3,
+    "range": "Short",
+    "special": "Blast 6, Cumbersome 3, Prepare 1",
+    "category": "Energy Weapons"
+  },
+  {
+    "name": "Chewbacca's Bowcaster",
+    "skill": "Ranged (Heavy)",
+    "damage": 10,
+    "crit": 4,
+    "range": "Medium",
+    "special": "Cumbersome 3, Knockdown, Quarrel Bandolier (In Notes)",
+    "category": "Energy Weapons"
+  },
+  {
+    "name": "Repulsor Gun",
+    "skill": "Ranged (Heavy)",
+    "damage": 3,
+    "crit": 5,
+    "range": "Short",
+    "special": "Knockdown",
+    "category": "Energy Weapons"
+  },
+  {
+    "name": "Adostic Arms 8-Gauge Scatter Gun",
+    "skill": "Ranged (Heavy)",
+    "damage": 7,
+    "crit": 6,
+    "range": "Short",
+    "special": "Blast 3, Knockdown",
+    "category": "Slugthrowers"
+  },
+  {
+    "name": "ASP-9 \"Vrelt\" Autopistol",
+    "skill": "Ranged (Light)",
+    "damage": 4,
+    "crit": 5,
+    "range": "Short",
+    "special": "Auto-fire",
+    "category": "Slugthrowers"
+  },
+  {
+    "name": "FYR Assault Carbine",
+    "skill": "Ranged (Heavy)",
+    "damage": 6,
+    "crit": 5,
+    "range": "Short",
+    "special": "Auto-Fire, Inaccurate 1",
+    "category": "Slugthrowers"
+  },
+  {
+    "name": "Berserker Rifle",
+    "skill": "Ranged (Heavy)",
+    "damage": 7,
+    "crit": 4,
+    "range": "Medium",
+    "special": "Burn 1, Cumbersome 3, Disorient 1",
+    "category": "Slugthrowers"
+  },
+  {
+    "name": "Fiver Pistol",
+    "skill": "Ranged (Light)",
+    "damage": 5,
+    "crit": 4,
+    "range": "Short",
+    "special": "Accurate 1, Limited Ammo 5",
+    "category": "Slugthrowers"
+  },
+  {
+    "name": "FWG-5 Flechette Pistol",
+    "skill": "Ranged (Light)",
+    "damage": 6,
+    "crit": 3,
+    "range": "Short",
+    "special": "Guided 3, Limited Ammo 3",
+    "category": "Slugthrowers"
+  },
+  {
+    "name": "Hammer",
+    "skill": "Ranged (Heavy)",
+    "damage": 8,
+    "crit": 4,
+    "range": "Short",
+    "special": "Blast 6, Knockdown",
+    "category": "Slugthrowers"
+  },
+  {
+    "name": "Imperial Heavy Repeater",
+    "skill": "Ranged (Heavy)",
+    "damage": 8,
+    "crit": 4,
+    "range": "Medium",
+    "special": "Auto-fire, Cumbersome 4",
+    "category": "Slugthrowers"
+  },
+  {
+    "name": "Kelvarek Consolidated Arms KD-30 \"Dissuader\" Pistol",
+    "skill": "Ranged (Light)",
+    "damage": 4,
+    "crit": 5,
+    "range": "Short",
+    "special": "Pierce 2, Vicious 1",
+    "category": "Slugthrowers"
+  },
+  {
+    "name": "Mark V \"Sand Panther\" Hunting Rifle",
+    "skill": "Ranged (Heavy)",
+    "damage": 7,
+    "crit": 5,
+    "range": "Long",
+    "special": "Accurate 1, Cumbersome 2",
+    "category": "Slugthrowers"
+  },
+  {
+    "name": "Model 38 Sharpshooter's Rifle",
+    "skill": "Ranged (Heavy)",
+    "damage": 8,
+    "crit": 3,
+    "range": "Extreme",
+    "special": "Accurate 2, Pierce 3",
+    "category": "Slugthrowers"
+  },
+  {
+    "name": "Model 77",
+    "skill": "Ranged (Heavy)",
+    "damage": 6,
+    "crit": 0,
+    "range": "Long",
+    "special": "Pierce 4, Stun damage",
+    "category": "Slugthrowers"
+  },
+  {
+    "name": "Prax Arms Stealth 2VX Palm Shooter",
+    "skill": "Ranged (Light)",
+    "damage": 1,
+    "crit": 5,
+    "range": "Short",
+    "special": "Limited Ammo 3",
+    "category": "Slugthrowers"
+  },
+  {
+    "name": "Salus DF-D1 Duo Flechette Rifle",
+    "skill": "Ranged (Heavy)",
+    "damage": 9,
+    "crit": 3,
+    "range": "Short",
+    "special": "Blast 4, Limited Ammo 5, Linked 1, Vicious 2",
+    "category": "Slugthrowers"
+  },
+  {
+    "name": "Selonian Shard Shooter",
+    "skill": "Ranged (Heavy)",
+    "damage": 5,
+    "crit": 3,
+    "range": "Medium",
+    "special": "Auto-fire, Pierce 1",
+    "category": "Slugthrowers"
+  },
+  {
+    "name": "SH-9 Slugthrower Pistol",
+    "skill": "Ranged (Light)",
+    "damage": 4,
+    "crit": 5,
+    "range": "Short",
+    "special": "Limited Ammo 5, Pierce 2",
+    "category": "Slugthrowers"
+  },
+  {
+    "name": "Slugthrower Pistol",
+    "skill": "Ranged (Light)",
+    "damage": 4,
+    "crit": 5,
+    "range": "Short",
+    "special": "",
+    "category": "Slugthrowers"
+  },
+  {
+    "name": "Slugthrower Rifle",
+    "skill": "Ranged (Heavy)",
+    "damage": 7,
+    "crit": 5,
+    "range": "Medium",
+    "special": "Cumbersome 2",
+    "category": "Slugthrowers"
+  },
+  {
+    "name": "Verpine Heavy Shatter Rifle",
+    "skill": "Gunnery",
+    "damage": 15,
+    "crit": 2,
+    "range": "Extreme",
+    "special": "Accurate 2, Knockdown, Pierce 6",
+    "category": "Slugthrowers"
+  },
+  {
+    "name": "Verpine Shatter Pistol",
+    "skill": "Ranged (Light)",
+    "damage": 8,
+    "crit": 3,
+    "range": "Medium",
+    "special": "Knockdown, Pierce 2",
+    "category": "Slugthrowers"
+  },
+  {
+    "name": "Verpine Shatter Rifle",
+    "skill": "Ranged (Heavy)",
+    "damage": 12,
+    "crit": 3,
+    "range": "Extreme",
+    "special": "Knockdown, Pierce 4",
+    "category": "Slugthrowers"
+  },
+  {
+    "name": "Vodran Hunting Rifle",
+    "skill": "Ranged (Heavy)",
+    "damage": 7,
+    "crit": 4,
+    "range": "Long",
+    "special": "Cumbersome 2",
+    "category": "Slugthrowers"
+  },
+  {
+    "name": "Arquebus",
+    "skill": "Ranged (Heavy)",
+    "damage": 9,
+    "crit": 5,
+    "range": "Long",
+    "special": "Cumbersome 3, Prepare 1",
+    "category": "Slugthrowers"
+  },
+  {
+    "name": "Panic Pistol",
+    "skill": "Ranged (Light)",
+    "damage": 6,
+    "crit": 5,
+    "range": "Short",
+    "special": "Inaccurate 1",
+    "category": "Slugthrowers"
+  },
+  {
+    "name": "Model 134A \"Buzzsaw\" Rotary Cannon",
+    "skill": "Ranged (Heavy)",
+    "damage": 12,
+    "crit": 3,
+    "range": "Long",
+    "special": "Auto-fire, Cumbersome 5, Pierce 3",
+    "category": "Slugthrowers"
+  },
+  {
+    "name": "Model 4 \"Thunderhead\" Scattergun",
+    "skill": "Ranged (Heavy)",
+    "damage": 7,
+    "crit": 4,
+    "range": "Short",
+    "special": "Blast 5, Knockdown, Vicious 1",
+    "category": "Slugthrowers"
+  },
+  {
+    "name": "Ascian Throwing Dagger",
+    "skill": "Ranged (Light)",
+    "damage": "+1",
+    "crit": 2,
+    "range": "Short",
+    "special": "Pierce 2, Limited Ammo 1",
+    "category": "Others, Thrown and Specialty Weapons"
+  },
+  {
+    "name": "Aurateran Boomerang",
+    "skill": "Ranged (Light)",
+    "damage": 4,
+    "crit": 5,
+    "range": "Medium",
+    "special": "Guided 1 Limited ammo 1",
+    "category": "Others, Thrown and Specialty Weapons"
+  },
+  {
+    "name": "Bola /Net",
+    "skill": "Ranged (Light)",
+    "damage": 2,
+    "crit": 0,
+    "range": "Short",
+    "special": "Ensnare 3, Knockdown, Limited Ammo 1",
+    "category": "Others, Thrown and Specialty Weapons"
+  },
+  {
+    "name": "Corellian Compound Bow",
+    "skill": "Ranged (Heavy)",
+    "damage": 5,
+    "crit": 5,
+    "range": "Medium",
+    "special": "Cumbersome 3, Knockdown, Limited ammo 1, Pierce 1",
+    "category": "Others, Thrown and Specialty Weapons"
+  },
+  {
+    "name": "Czerka Arms Model 57 \"Homesteader\" Hunting Rifle",
+    "skill": "Ranged (Heavy)",
+    "damage": 7,
+    "crit": 5,
+    "range": "Long",
+    "special": "Accurate 1, Cumbersome 2",
+    "category": "Others, Thrown and Specialty Weapons"
+  },
+  {
+    "name": "Explosive Tipped Arrow",
+    "skill": "Ranged (Heavy)",
+    "damage": 6,
+    "crit": 3,
+    "range": "Medium",
+    "special": "Blast 4, Limited ammo 1",
+    "category": "Others, Thrown and Specialty Weapons"
+  },
+  {
+    "name": "Explosive Tipped Arrows",
+    "skill": "Ranged (Light)",
+    "damage": 6,
+    "crit": 3,
+    "range": "Medium",
+    "special": "Blast 4, Limited ammo 1",
+    "category": "Others, Thrown and Specialty Weapons"
+  },
+  {
+    "name": "Field Sports FS19 Compound Bow (Broadhead Arrow)",
+    "skill": "Ranged (Heavy)",
+    "damage": 5,
+    "crit": 4,
+    "range": "Medium",
+    "special": "Cumbersome 3, Limited ammo 1, Pierce 1, Vicious 2",
+    "category": "Others, Thrown and Specialty Weapons"
+  },
+  {
+    "name": "Field Sports Model 77 Air Rifle",
+    "skill": "Ranged (Heavy)",
+    "damage": 6,
+    "crit": 0,
+    "range": "Long",
+    "special": "Pierce 4, Stun Damage",
+    "category": "Others, Thrown and Specialty Weapons"
+  },
+  {
+    "name": "Gungan Atlati",
+    "skill": "Ranged (Light)",
+    "damage": 5,
+    "crit": 3,
+    "range": "Medium",
+    "special": "Accurate 1, Burn 1, Ion, Limited ammo 1",
+    "category": "Others, Thrown and Specialty Weapons"
+  },
+  {
+    "name": "Gungan Plasma Ball",
+    "skill": "Ranged (Light)",
+    "damage": 5,
+    "crit": 3,
+    "range": "Short",
+    "special": "Burn 1, Ion, Limited ammo 1",
+    "category": "Others, Thrown and Specialty Weapons"
+  },
+  {
+    "name": "Incendiary Arrow",
+    "skill": "Ranged (Heavy)",
+    "damage": 6,
+    "crit": 5,
+    "range": "Medium",
+    "special": "Burn 2, Limited ammo 1",
+    "category": "Others, Thrown and Specialty Weapons"
+  },
+  {
+    "name": "Ion Thruster Gun",
+    "skill": "Ranged (Heavy)",
+    "damage": 5,
+    "crit": 4,
+    "range": "Short",
+    "special": "Concussive 1, Cumbersome 5, Ion, Prepare 1",
+    "category": "Others, Thrown and Specialty Weapons"
+  },
+  {
+    "name": "KWS Mk I Saberdart",
+    "skill": "Ranged (Light)",
+    "damage": 1,
+    "crit": 0,
+    "range": "Long",
+    "special": "Limited Ammo 1",
+    "category": "Others, Thrown and Specialty Weapons"
+  },
+  {
+    "name": "Longbow",
+    "skill": "Ranged (Heavy)",
+    "damage": 5,
+    "crit": 5,
+    "range": "Long",
+    "special": "Cumbersome 3, Limited ammo 1 Pierce 1",
+    "category": "Others, Thrown and Specialty Weapons"
+  },
+  {
+    "name": "Multi-Goo Gun",
+    "skill": "Ranged (Light)",
+    "damage": 2,
+    "crit": 0,
+    "range": "Short",
+    "special": "Disorient 1, Ensnare 4, Knockdown",
+    "category": "Others, Thrown and Specialty Weapons"
+  },
+  {
+    "name": "Net Arrow",
+    "skill": "Ranged (Heavy)",
+    "damage": 7,
+    "crit": 0,
+    "range": "Medium",
+    "special": "Ensnare 2, Limited Ammo 1",
+    "category": "Others, Thrown and Specialty Weapons"
+  },
+  {
+    "name": "Net Gun",
+    "skill": "Ranged (Heavy)",
+    "damage": 3,
+    "crit": 0,
+    "range": "Short",
+    "special": "Ensnare 5",
+    "category": "Others, Thrown and Specialty Weapons"
+  },
+  {
+    "name": "NX-14 Needler",
+    "skill": "Ranged (Light)",
+    "damage": 5,
+    "crit": 0,
+    "range": "Short",
+    "special": "Pierce 3",
+    "category": "Others, Thrown and Specialty Weapons"
+  },
+  {
+    "name": "Palandix AO14 \"Aranea\" Net Gun",
+    "skill": "Ranged (Heavy)",
+    "damage": 3,
+    "crit": 0,
+    "range": "Medium",
+    "special": "Ensnare 5, Limited ammo 1",
+    "category": "Others, Thrown and Specialty Weapons"
+  },
+  {
+    "name": "Rivet Gun",
+    "skill": "Ranged (Light)",
+    "damage": 4,
+    "crit": 3,
+    "range": "Engaged",
+    "special": "Ensnare 1, Inaccurate 2, Limited Ammo 1",
+    "category": "Others, Thrown and Specialty Weapons"
+  },
+  {
+    "name": "Rupulsor Gun",
+    "skill": "Ranged (Heavy)",
+    "damage": 3,
+    "crit": 5,
+    "range": "Short",
+    "special": "Knockdown",
+    "category": "Others, Thrown and Specialty Weapons"
+  },
+  {
+    "name": "Spray Stick",
+    "skill": "Ranged (Heavy)",
+    "damage": 0,
+    "crit": 0,
+    "range": "Long",
+    "special": "Accurate 2, Ensnare 4, Slow Firing 1, Stun 8",
+    "category": "Others, Thrown and Specialty Weapons"
+  },
+  {
+    "name": "SSB-1 Static Pistol",
+    "skill": "Ranged (Light)",
+    "damage": 2,
+    "crit": 4,
+    "range": "Short",
+    "special": "Disorient 1, Stun 8",
+    "category": "Others, Thrown and Specialty Weapons"
+  },
+  {
+    "name": "Stun Arrow",
+    "skill": "Ranged (Heavy)",
+    "damage": 6,
+    "crit": 0,
+    "range": "Medium",
+    "special": "Limited Ammo 1, Stun Damage",
+    "category": "Others, Thrown and Specialty Weapons"
+  },
+  {
+    "name": "Stun Arrows",
+    "skill": "Ranged (Light)",
+    "damage": 6,
+    "crit": 0,
+    "range": "Medium",
+    "special": "Limited Ammo 1, Stun Damage",
+    "category": "Others, Thrown and Specialty Weapons"
+  },
+  {
+    "name": "Styanax Lance",
+    "skill": "Ranged (Heavy)",
+    "damage": 8,
+    "crit": 3,
+    "range": "Short",
+    "special": "Cumbersome 4, Limited Ammo 1, Pierce 3, Vicious 1",
+    "category": "Others, Thrown and Specialty Weapons"
+  },
+  {
+    "name": "R-88 \"Suppressor\" Riot Rifle",
+    "skill": "Ranged (Heavy)",
+    "damage": 8,
+    "crit": 0,
+    "range": "Medium",
+    "special": "Blast 5, Disorient 3, Stun Damage",
+    "category": "Others, Thrown and Specialty Weapons"
+  },
+  {
+    "name": "TaggeCo. CryoBan Projector",
+    "skill": "Ranged (Heavy)",
+    "damage": 6,
+    "crit": 2,
+    "range": "Short",
+    "special": "Blast 6, Cumbersome 3, Vicious 2",
+    "category": "Others, Thrown and Specialty Weapons"
+  },
+  {
+    "name": "Tangle Gun",
+    "skill": "Ranged (Heavy)",
+    "damage": 1,
+    "crit": 4,
+    "range": "Short",
+    "special": "Ensnare 3",
+    "category": "Others, Thrown and Specialty Weapons"
+  },
+  {
+    "name": "Tenloss L70 Acid Projector",
+    "skill": "Ranged (Heavy)",
+    "damage": 6,
+    "crit": 2,
+    "range": "Short",
+    "special": "Blast 6, Burn 3, Vicious 1",
+    "category": "Others, Thrown and Specialty Weapons"
+  },
+  {
+    "name": "\"Firecaller\" Light Flame Projector",
+    "skill": "Ranged (Light)",
+    "damage": 5,
+    "crit": 2,
+    "range": "Short",
+    "special": "Blast 2, Burn 2, Pierce 2, Vicious 3",
+    "category": "Others, Thrown and Specialty Weapons"
+  },
+  {
+    "name": "Grapnel-Harpoon Launcher",
+    "skill": "Ranged (Light)",
+    "damage": 3,
+    "crit": 5,
+    "range": "Medium",
+    "special": "Ensnare 3",
+    "category": "Others, Thrown and Specialty Weapons"
+  },
+  {
+    "name": "Nova Design \"Impact\" Repulsor Cannon",
+    "skill": "Ranged (Heavy)",
+    "damage": 3,
+    "crit": 6,
+    "range": "Medium",
+    "special": "Blast 3, Concussive 1, Knockdown, Prepare 1, Slow-Firing 1",
+    "category": "Others, Thrown and Specialty Weapons"
+  },
+  {
+    "name": "Spray Rifle",
+    "skill": "Ranged (Heavy)",
+    "damage": 7,
+    "crit": 0,
+    "range": "Medium",
+    "special": "Burn 3, Limited Ammo 3, Pierce 3, Prepare 1, Stun Damage",
+    "category": "Others, Thrown and Specialty Weapons"
+  },
+  {
+    "name": "Vibrorang",
+    "skill": "Ranged (Light)",
+    "damage": 4,
+    "crit": 2,
+    "range": "Medium",
+    "special": "Limited Ammo 1, Pierce 2, Vicious 1",
+    "category": "Others, Thrown and Specialty Weapons"
+  },
+  {
+    "name": "Czerka M9 \"Boomer\" Heavy Pistol",
+    "skill": "Ranged (Light)",
+    "damage": 5,
+    "crit": 3,
+    "range": "Medium",
+    "special": "Blast 5, Cumbersome 2, Inaccurate 1",
+    "category": "Others, Thrown and Specialty Weapons"
+  },
+  {
+    "name": "MK VIII Gravitic Mortar Launcher",
+    "skill": "Gunnery",
+    "damage": 4,
+    "crit": 0,
+    "range": "Long",
+    "special": "Inaccurate 1, Prepare 1",
+    "category": "Others, Thrown and Specialty Weapons"
+  },
+  {
+    "name": "Repulsor Throwing Razor",
+    "skill": "Ranged (Light)",
+    "damage": 5,
+    "crit": 2,
+    "range": "Medium",
+    "special": "Guided 2, Limited Ammo 1, Pierce 2, Vicious 1",
+    "category": "Others, Thrown and Specialty Weapons"
+  },
+  {
+    "name": "Anti-Personnel Mine",
+    "skill": "Mechanics",
+    "damage": 12,
+    "crit": 3,
+    "range": "Engaged",
+    "special": "Blast 4, Vicious 4, Limited Ammo 1",
+    "category": "Explosives and Ordnance"
+  },
+  {
+    "name": "Anti-Vehicle Mine",
+    "skill": "Mechanics",
+    "damage": 25,
+    "crit": 2,
+    "range": "Engaged",
+    "special": "Blast 2, Breach 4, Limited Ammo 1",
+    "category": "Explosives and Ordnance"
+  },
+  {
+    "name": "Armour-Piercing Grenade",
+    "skill": "Ranged (Light)",
+    "damage": 13,
+    "crit": 3,
+    "range": "Short",
+    "special": "Blast 4, Limited Ammo 1, Peirce 3",
+    "category": "Explosives and Ordnance"
+  },
+  {
+    "name": "Brennkeyes Syndicate Knockout Mines",
+    "skill": "Ranged (Light)",
+    "damage": 6,
+    "crit": 0,
+    "range": "Short",
+    "special": "Stun Damage, Limited Ammo 1",
+    "category": "Explosives and Ordnance"
+  },
+  {
+    "name": "Concussion Grenade",
+    "skill": "Ranged (Light)",
+    "damage": 10,
+    "crit": 5,
+    "range": "Short",
+    "special": "Blast 8, Concussive 2, Disorient 5, Limited Ammo 1",
+    "category": "Explosives and Ordnance"
+  },
+  {
+    "name": "Concussion Missile",
+    "skill": "Gunnery",
+    "damage": 14,
+    "crit": 4,
+    "range": "Extreme",
+    "special": "Blast 10, concussive 3, Disorient 5, Guided 2",
+    "category": "Explosives and Ordnance"
+  },
+  {
+    "name": "CSPL-12 Projectile Launcher (Frag Grenade)",
+    "skill": "Ranged (Light)",
+    "damage": 8,
+    "crit": 4,
+    "range": "Medium",
+    "special": "Blast 6, Limited Ammo 3",
+    "category": "Explosives and Ordnance"
+  },
+  {
+    "name": "Flame Projector",
+    "skill": "Ranged (Heavy)",
+    "damage": 8,
+    "crit": 2,
+    "range": "Short",
+    "special": "Burn 3, Blast 8",
+    "category": "Explosives and Ordnance"
+  },
+  {
+    "name": "Flamestrike",
+    "skill": "Gunnery",
+    "damage": 9,
+    "crit": 2,
+    "range": "Short",
+    "special": "Burn 4, Blast 9, Cumbersome 3, Vicious 2",
+    "category": "Explosives and Ordnance"
+  },
+  {
+    "name": "Flechette Launcher (Anti-Infantry)",
+    "skill": "Gunnery",
+    "damage": 8,
+    "crit": 3,
+    "range": "Medium",
+    "special": "Blast 8, Cumbersome 3, Limited Ammo 4, Pierce 6, Prepare 1, Vicious 1",
+    "category": "Explosives and Ordnance"
+  },
+  {
+    "name": "Flechette Launcher (Anti-Vehicle)",
+    "skill": "Gunnery",
+    "damage": 10,
+    "crit": 2,
+    "range": "Medium",
+    "special": "Breach 2, Cumbersome 3, Limited Ammo 4, Prepare 1, Vicious 3",
+    "category": "Explosives and Ordnance"
+  },
+  {
+    "name": "Frag Grenade",
+    "skill": "Ranged (Light)",
+    "damage": 8,
+    "crit": 4,
+    "range": "Short",
+    "special": "Blast 6, Limited Ammo 1",
+    "category": "Explosives and Ordnance"
+  },
+  {
+    "name": "Fragmentation Missile",
+    "skill": "Gunnery",
+    "damage": 12,
+    "crit": 4,
+    "range": "Extreme",
+    "special": "Blast 12, Guided 3",
+    "category": "Explosives and Ordnance"
+  },
+  {
+    "name": "Glop Grenade",
+    "skill": "Ranged (Light)",
+    "damage": 0,
+    "crit": 0,
+    "range": "Short",
+    "special": "Blast -, Ensnare 3",
+    "category": "Explosives and Ordnance"
+  },
+  {
+    "name": "Goseia HIC \"Mercy\" Grenades",
+    "skill": "Ranged (Light)",
+    "damage": 5,
+    "crit": 0,
+    "range": "Short",
+    "special": "Blast 5, Stun Damage, Limited Ammo 1",
+    "category": "Explosives and Ordnance"
+  },
+  {
+    "name": "Grenade Launcher",
+    "skill": "Gunnery",
+    "damage": 8,
+    "crit": 4,
+    "range": "Medium",
+    "special": "Blast 6, Cumbersome 3, Limited Ammo 6",
+    "category": "Explosives and Ordnance"
+  },
+  {
+    "name": "RGL-318 Rotary Grenade Launcher",
+    "skill": "Gunnery",
+    "damage": 8,
+    "crit": 4,
+    "range": "Medium",
+    "special": "Blast 6, Cumbersome 3, Limited Ammo 5",
+    "category": "Explosives and Ordnance"
+  },
+  {
+    "name": "Heavy Frag Grenade",
+    "skill": "Ranged (Light)",
+    "damage": 9,
+    "crit": 4,
+    "range": "Short",
+    "special": "Blast 7, Limited Ammo 1, Cumbersome 2",
+    "category": "Explosives and Ordnance"
+  },
+  {
+    "name": "Incendiary Missile",
+    "skill": "Gunnery",
+    "damage": 10,
+    "crit": 3,
+    "range": "Extreme",
+    "special": "Blast 10, Burn 3, Guided 2",
+    "category": "Explosives and Ordnance"
+  },
+  {
+    "name": "Inferno Grenade",
+    "skill": "Ranged (Light)",
+    "damage": 8,
+    "crit": 3,
+    "range": "Short",
+    "special": "Blast 5, Burn 2, Limited Ammo 1",
+    "category": "Explosives and Ordnance"
+  },
+  {
+    "name": "Ion Grenade",
+    "skill": "Ranged (Light)",
+    "damage": 10,
+    "crit": 5,
+    "range": "Short",
+    "special": "Blast 7, Disorient 5, Stun Damage (Droid Only), Limited Ammo 1",
+    "category": "Explosives and Ordnance"
+  },
+  {
+    "name": "Knockout Grenade",
+    "skill": "Ranged (Light)",
+    "damage": 12,
+    "crit": 0,
+    "range": "Short",
+    "special": "Blast 10, Stun Damage, Limited Ammo 1",
+    "category": "Explosives and Ordnance"
+  },
+  {
+    "name": "Merr-Sonn N-4 Noise Grenades",
+    "skill": "Ranged (Light)",
+    "damage": 4,
+    "crit": 6,
+    "range": "Short",
+    "special": "Blast 4, Stun Damage, Concussive 1, Limited Ammo 1",
+    "category": "Explosives and Ordnance"
+  },
+  {
+    "name": "Micro-Rocket Anti Armour",
+    "skill": "Ranged (Heavy)",
+    "damage": 8,
+    "crit": 4,
+    "range": "Short",
+    "special": "Breach 1, Limited Ammo 1",
+    "category": "Explosives and Ordnance"
+  },
+  {
+    "name": "Micro-Rocket Explosive",
+    "skill": "Ranged (Heavy)",
+    "damage": 7,
+    "crit": 2,
+    "range": "Short",
+    "special": "Blast 6, Limited Ammo 1",
+    "category": "Explosives and Ordnance"
+  },
+  {
+    "name": "Micro-Rocket Flechette",
+    "skill": "Ranged (Heavy)",
+    "damage": 6,
+    "crit": 2,
+    "range": "Short",
+    "special": "Blast 5, Vicious 2, Limited Ammo 1",
+    "category": "Explosives and Ordnance"
+  },
+  {
+    "name": "Micro-Rocket Incendiary",
+    "skill": "Ranged (Heavy)",
+    "damage": 6,
+    "crit": 3,
+    "range": "Short",
+    "special": "Blast 6, Burn 2, Limited Ammo 1",
+    "category": "Explosives and Ordnance"
+  },
+  {
+    "name": "Micro-Rocket Ion",
+    "skill": "Ranged (Heavy)",
+    "damage": 10,
+    "crit": 3,
+    "range": "Short",
+    "special": "Ion, Sunderer, Limited Ammo 1",
+    "category": "Explosives and Ordnance"
+  },
+  {
+    "name": "Micro-Rocket Launcher Pistol",
+    "skill": "Ranged (Light)",
+    "damage": 0,
+    "crit": 0,
+    "range": "Medium",
+    "special": "",
+    "category": "Explosives and Ordnance"
+  },
+  {
+    "name": "Mini-Torpedo, Anti-Personnel",
+    "skill": "Ranged (Heavy)",
+    "damage": 8,
+    "crit": 2,
+    "range": "Long",
+    "special": "Blast 6, Limited Ammo 1",
+    "category": "Explosives and Ordnance"
+  },
+  {
+    "name": "Mini-Torpedo, Armour Piercing",
+    "skill": "Ranged (Heavy)",
+    "damage": 12,
+    "crit": 3,
+    "range": "Medium",
+    "special": "Blast 2, Limited Ammo 1, Pierce 4",
+    "category": "Explosives and Ordnance"
+  },
+  {
+    "name": "Mini-Torpedo, Ink",
+    "skill": "Ranged (Heavy)",
+    "damage": 0,
+    "crit": 0,
+    "range": "Long",
+    "special": "Blast 0, Disorient 4, Limited Ammo 1",
+    "category": "Explosives and Ordnance"
+  },
+  {
+    "name": "Mini-Torpedo, Ion",
+    "skill": "Ranged (Heavy)",
+    "damage": 10,
+    "crit": 2,
+    "range": "Long",
+    "special": "Blast 8, Ion, Limited Ammo 1",
+    "category": "Explosives and Ordnance"
+  },
+  {
+    "name": "Mini-Torpedo, Net",
+    "skill": "Ranged (Heavy)",
+    "damage": 0,
+    "crit": 0,
+    "range": "Medium",
+    "special": "Blast 0, Ensnare 6, Limited Ammo 1",
+    "category": "Explosives and Ordnance"
+  },
+  {
+    "name": "Mini-Torpedo, Stun",
+    "skill": "Ranged (Heavy)",
+    "damage": 8,
+    "crit": 2,
+    "range": "Long",
+    "special": "Blast 4, Concussive 2, Limited Ammo 1, Stun Damage",
+    "category": "Explosives and Ordnance"
+  },
+  {
+    "name": "Missile Tube",
+    "skill": "Gunnery",
+    "damage": 20,
+    "crit": 2,
+    "range": "Extreme",
+    "special": "Blast 10, Cumbersome 3, Guided 3, Breach 1, Prepare 1, Limited Ammo 6",
+    "category": "Explosives and Ordnance"
+  },
+  {
+    "name": "Mon Cal Defences Mini-Torpedo Launcher",
+    "skill": "Ranged (Heavy)",
+    "damage": 8,
+    "crit": 2,
+    "range": "Long",
+    "special": "Blast 6, Cumbersome 2, Limited Ammo 2",
+    "category": "Explosives and Ordnance"
+  },
+  {
+    "name": "Plasma Grenade",
+    "skill": "Ranged (Light)",
+    "damage": 12,
+    "crit": 3,
+    "range": "Short",
+    "special": "Blast 10, Limited Ammo 1",
+    "category": "Explosives and Ordnance"
+  },
+  {
+    "name": "Plasma Missile",
+    "skill": "Gunnery",
+    "damage": 16,
+    "crit": 3,
+    "range": "Extreme",
+    "special": "Blast 14, Cumbersome 3, Inaccurate 1, Pierce 2",
+    "category": "Explosives and Ordnance"
+  },
+  {
+    "name": "Poison Gas Grenade",
+    "skill": "Ranged (Light)",
+    "damage": 0,
+    "crit": 0,
+    "range": "Short",
+    "special": "Blast 2, Limited Ammo 1",
+    "category": "Explosives and Ordnance"
+  },
+  {
+    "name": "Shaped Thermal Grenade",
+    "skill": "Ranged (Light)",
+    "damage": 20,
+    "crit": 2,
+    "range": "Short",
+    "special": "Breach 2, Limited Ammo 1, Vicious 5",
+    "category": "Explosives and Ordnance"
+  },
+  {
+    "name": "SoroSuub Wipe-3 Data-Purge Grenades",
+    "skill": "Ranged (Light)",
+    "damage": 0,
+    "crit": 0,
+    "range": "Short",
+    "special": "Limited Ammo 1",
+    "category": "Explosives and Ordnance"
+  },
+  {
+    "name": "Spore Stun Grenade",
+    "skill": "Ranged (Light)",
+    "damage": 8,
+    "crit": 0,
+    "range": "Short",
+    "special": "Blast 7, Limited Ammo 1,Pierce 3, Stun Damage",
+    "category": "Explosives and Ordnance"
+  },
+  {
+    "name": "Spore/B Stun Grenade",
+    "skill": "Ranged (Light)",
+    "damage": 6,
+    "crit": 3,
+    "range": "Short",
+    "special": "Blast 6, Concussive 2, Limited Ammo 1, Stun Damage",
+    "category": "Explosives and Ordnance"
+  },
+  {
+    "name": "Spray Foam Grenade",
+    "skill": "Ranged (Light)",
+    "damage": 0,
+    "crit": 0,
+    "range": "Short",
+    "special": "Ensnare 4, Limited Ammo 1",
+    "category": "Explosives and Ordnance"
+  },
+  {
+    "name": "Stun Grenade",
+    "skill": "Ranged (Light)",
+    "damage": 8,
+    "crit": 0,
+    "range": "Short",
+    "special": "Disorient 3, Stun Damage, Blast 8, Limited Ammo 1",
+    "category": "Explosives and Ordnance"
+  },
+  {
+    "name": "Thermal Detonator",
+    "skill": "Ranged (Light)",
+    "damage": 20,
+    "crit": 2,
+    "range": "Short",
+    "special": "Blast 15, Breach 1, Vicious 4, Limited Ammo 1",
+    "category": "Explosives and Ordnance"
+  },
+  {
+    "name": "BKX-4 \"Shockwave\" Grenade",
+    "skill": "Ranged (Light)",
+    "damage": 10,
+    "crit": 5,
+    "range": "Short",
+    "special": "Blast 8, Knockdown, Disorient 5, Limited Ammo 1",
+    "category": "Explosives and Ordnance"
+  },
+  {
+    "name": "WP-19 Incendiary Grenade",
+    "skill": "Ranged (Light)",
+    "damage": 8,
+    "crit": 3,
+    "range": "Short",
+    "special": "Blast 8, Burn 4, Limited Ammo 1",
+    "category": "Explosives and Ordnance"
+  },
+  {
+    "name": "WW-41 CryoBan Grenade",
+    "skill": "Ranged (Light)",
+    "damage": 8,
+    "crit": 2,
+    "range": "Short",
+    "special": "Blast 6, Disorient 3, Ensnare 3, Limited ammo 1, Vicious 2",
+    "category": "Explosives and Ordnance"
+  },
+  {
+    "name": "Blue Shadow Grenade",
+    "skill": "Ranged (Light)",
+    "damage": 3,
+    "crit": 3,
+    "range": "Short",
+    "special": "Blast 3, Limited Ammo 1",
+    "category": "Explosives and Ordnance"
+  },
+  {
+    "name": "Molten Magnet",
+    "skill": "Ranged (Light)",
+    "damage": 9,
+    "crit": 4,
+    "range": "Short",
+    "special": "Breach 1, Burn 1, Limited Ammo 1, Sunder",
+    "category": "Explosives and Ordnance"
+  },
+  {
+    "name": "Quillbomb",
+    "skill": "Ranged (Light)",
+    "damage": 5,
+    "crit": 2,
+    "range": "Short",
+    "special": "Pierce 2, Blast 3, Limited Ammo 1, Vicious 3",
+    "category": "Explosives and Ordnance"
+  },
+  {
+    "name": "FWG-7 Flechette Carbine",
+    "skill": "Ranged (Heavy)",
+    "damage": 5,
+    "crit": 3,
+    "range": "Medium",
+    "special": "Blast 4, Guided 2, Pierce 3",
+    "category": "Explosives and Ordnance"
+  },
+  {
+    "name": "RLR-331 \"Bulldog\" Rocket Rifle",
+    "skill": "Ranged (Heavy)",
+    "damage": 10,
+    "crit": 4,
+    "range": "Long",
+    "special": "Blast 8, Cumbersome 3, Guided 3, Limited Ammo 6",
+    "category": "Explosives and Ordnance"
+  },
+  {
+    "name": "Incendiary Grenade",
+    "skill": "Ranged (Light)",
+    "damage": 8,
+    "crit": 3,
+    "range": "Short",
+    "special": "Blast 5, Burn 3, Limited Ammo 1",
+    "category": "Explosives and Ordnance"
+  },
+  {
+    "name": "Sonic Grenade",
+    "skill": "Ranged (Light)",
+    "damage": 10,
+    "crit": 4,
+    "range": "Short",
+    "special": "Blast 8, Disorient 5, Limited Ammo 1, Stun Damage",
+    "category": "Explosives and Ordnance"
+  },
+  {
+    "name": "High-Explosive Missile",
+    "skill": "Gunnery",
+    "damage": 18,
+    "crit": 3,
+    "range": "Long",
+    "special": "Blast 6, Breach 2, Guided 2",
+    "category": "Explosives and Ordnance"
+  },
+  {
+    "name": "AP-M1 Armor Piercing Grenade",
+    "skill": "Ranged (Light)",
+    "damage": 13,
+    "crit": 3,
+    "range": "Short",
+    "special": "Blast 4 Limited Ammo 1, Pierce 4",
+    "category": "Explosives and Ordnance"
+  },
+  {
+    "name": "BT X-42 Heavy Flame Projector",
+    "skill": "Gunnery",
+    "damage": 10,
+    "crit": 2,
+    "range": "Medium",
+    "special": "Blast 6, Burn 4, Vicious 1",
+    "category": "Explosives and Ordnance"
+  },
+  {
+    "name": "MK II EMP Grenade",
+    "skill": "Ranged (Light)",
+    "damage": 8,
+    "crit": 4,
+    "range": "Short",
+    "special": "Blast 6, Disorient 3, Ion, Limited Ammo 1",
+    "category": "Explosives and Ordnance"
+  },
+  {
+    "name": "Model 201 Mortar System",
+    "skill": "Gunnery",
+    "damage": 15,
+    "crit": 3,
+    "range": "Extreme",
+    "special": "Blast 12, Breach 1, Limited Ammo 5, Prepare 2, Slow-Firing 1",
+    "category": "Explosives and Ordnance"
+  },
+  {
+    "name": "RPS-6 Rocket Launcher",
+    "skill": "Gunnery",
+    "damage": 22,
+    "crit": 2,
+    "range": "Extreme",
+    "special": "Blast 14, Breach 1 Cumbersome 4, Guided 2, Limited Ammo 7",
+    "category": "Explosives and Ordnance"
+  },
+  {
+    "name": "Baradium",
+    "skill": "3",
+    "damage": "+1",
+    "crit": 2,
+    "range": "( R ) 750",
+    "special": "",
+    "category": "Demolition and Mining Explosives"
+  },
+  {
+    "name": "Detonite",
+    "skill": "15",
+    "damage": "+10",
+    "crit": 2,
+    "range": "50",
+    "special": "",
+    "category": "Demolition and Mining Explosives"
+  },
+  {
+    "name": "Plasma",
+    "skill": "9",
+    "damage": "+6",
+    "crit": 2,
+    "range": "( R ) 200",
+    "special": "",
+    "category": "Demolition and Mining Explosives"
+  },
+  {
+    "name": "Proton Grenade",
+    "skill": "10",
+    "damage": 0,
+    "crit": 1,
+    "range": "60",
+    "special": "",
+    "category": "Demolition and Mining Explosives"
+  },
+  {
+    "name": "Flex-5 Detonite Tape",
+    "skill": "5",
+    "damage": "+2",
+    "crit": 1,
+    "range": "30",
+    "special": "",
+    "category": "Demolition and Mining Explosives"
+  },
+  {
+    "name": "Fuel-Air Bomb",
+    "skill": "9",
+    "damage": "+10",
+    "crit": 3,
+    "range": "150",
+    "special": "",
+    "category": "Demolition and Mining Explosives"
+  },
+  {
+    "name": "Shaped Charge",
+    "skill": "15",
+    "damage": "+5",
+    "crit": 2,
+    "range": "500",
+    "special": "",
+    "category": "Demolition and Mining Explosives"
+  },
+  {
+    "name": "Destro-6 Charges",
+    "skill": "20",
+    "damage": "+5",
+    "crit": 1,
+    "range": "750",
+    "special": "",
+    "category": "Demolition and Mining Explosives"
+  },
+  {
+    "name": "Backhand Shock Gloves",
+    "skill": "Brawl",
+    "damage": "+1",
+    "crit": 3,
+    "range": "Engaged",
+    "special": "Concussive 1, Stun Damage, Slow-Firing 1",
+    "category": "Brawl Weapons"
+  },
+  {
+    "name": "Blast Knuckles",
+    "skill": "Brawl",
+    "damage": "+4",
+    "crit": 4,
+    "range": "Engaged",
+    "special": "Inaccurate 1",
+    "category": "Brawl Weapons"
+  },
+  {
+    "name": "Brass Knuckles",
+    "skill": "Brawl",
+    "damage": "+ 1",
+    "crit": 4,
+    "range": "Engaged",
+    "special": "Disorient 3",
+    "category": "Brawl Weapons"
+  },
+  {
+    "name": "Cortosis Gauntlets",
+    "skill": "Brawl",
+    "damage": "+1",
+    "crit": 4,
+    "range": "Engaged",
+    "special": "Cortosis",
+    "category": "Brawl Weapons"
+  },
+  {
+    "name": "Koromondian SVT-300 Stun Cloak",
+    "skill": "Brawl",
+    "damage": 7,
+    "crit": 3,
+    "range": "Engaged",
+    "special": "Limited Ammo 3, Stun Damage",
+    "category": "Brawl Weapons"
+  },
+  {
+    "name": "Needles Gloves",
+    "skill": "Brawl",
+    "damage": "+ 0",
+    "crit": 5,
+    "range": "Engaged",
+    "special": "",
+    "category": "Brawl Weapons"
+  },
+  {
+    "name": "Shield Gauntlet",
+    "skill": "Brawl",
+    "damage": "+1",
+    "crit": 5,
+    "range": "Engaged",
+    "special": "Deflection 2, Stun Damage",
+    "category": "Brawl Weapons"
+  },
+  {
+    "name": "Shock Boots",
+    "skill": "Brawl",
+    "damage": "+0",
+    "crit": 5,
+    "range": "Engaged",
+    "special": "Disorient 3, Stun 3",
+    "category": "Brawl Weapons"
+  },
+  {
+    "name": "Shock Gloves",
+    "skill": "Brawl",
+    "damage": "+ 0",
+    "crit": 5,
+    "range": "Engaged",
+    "special": "Stun 3",
+    "category": "Brawl Weapons"
+  },
+  {
+    "name": "S-1 Vamblade",
+    "skill": "Brawl",
+    "damage": "+1",
+    "crit": 3,
+    "range": "Engaged",
+    "special": "Defensive 1",
+    "category": "Brawl Weapons"
+  },
+  {
+    "name": "Vibroknucklers",
+    "skill": "Brawl",
+    "damage": "+1",
+    "crit": 2,
+    "range": "Engaged",
+    "special": "Pierce 1, Vicious 1",
+    "category": "Brawl Weapons"
+  },
+  {
+    "name": "Garrote",
+    "skill": "Brawl",
+    "damage": "+0",
+    "crit": 0,
+    "range": "Engaged",
+    "special": "Stun Setting",
+    "category": "Brawl Weapons"
+  },
+  {
+    "name": "Sap Gloves",
+    "skill": "Brawl",
+    "damage": "+2",
+    "crit": 5,
+    "range": "Engaged",
+    "special": "Concusssive 1",
+    "category": "Brawl Weapons"
+  },
+  {
+    "name": "Garrote Chrono",
+    "skill": "Brawl",
+    "damage": "+0",
+    "crit": 0,
+    "range": "Engaged",
+    "special": "Stun Setting",
+    "category": "Brawl Weapons"
+  },
+  {
+    "name": "Slicewire",
+    "skill": "Brawl",
+    "damage": "+2",
+    "crit": 2,
+    "range": "Engaged",
+    "special": "Pierce 2, Vicious 3",
+    "category": "Brawl Weapons"
+  },
+  {
+    "name": "Crushgaunts",
+    "skill": "Brawl",
+    "damage": "+4",
+    "crit": 2,
+    "range": "Engaged",
+    "special": "Cortosis, Sunder, Vicious 2",
+    "category": "Brawl Weapons"
+  },
+  {
+    "name": "Exoglove",
+    "skill": "Brawl",
+    "damage": "+2",
+    "crit": 4,
+    "range": "Engaged",
+    "special": "Knockdown",
+    "category": "Brawl Weapons"
+  },
+  {
+    "name": "Kyuzo Petars",
+    "skill": "Brawl",
+    "damage": "+2",
+    "crit": 3,
+    "range": "Engaged",
+    "special": "Pierce 3, Vicious 2",
+    "category": "Brawl Weapons"
+  },
+  {
+    "name": "Combat Knife",
+    "skill": "Melee",
+    "damage": "+1",
+    "crit": 3,
+    "range": "Engaged",
+    "special": "",
+    "category": "Melee Weapons"
+  },
+  {
+    "name": "Force Pike",
+    "skill": "Melee",
+    "damage": "+3",
+    "crit": 2,
+    "range": "Engaged",
+    "special": "Pierce 2, Stun Setting",
+    "category": "Melee Weapons"
+  },
+  {
+    "name": "Truncheon",
+    "skill": "Melee",
+    "damage": "+2",
+    "crit": 5,
+    "range": "Engaged",
+    "special": "Disorient 2",
+    "category": "Melee Weapons"
+  },
+  {
+    "name": "Vibro-Ax",
+    "skill": "Melee",
+    "damage": "+3",
+    "crit": 2,
+    "range": "Engaged",
+    "special": "Pierce 2, Sunder, Vicious 3",
+    "category": "Melee Weapons"
+  },
+  {
+    "name": "VibroKnife",
+    "skill": "Melee",
+    "damage": "+1",
+    "crit": 2,
+    "range": "Engaged",
+    "special": "Pierce 2, Vicious 1",
+    "category": "Melee Weapons"
+  },
+  {
+    "name": "VibroSword",
+    "skill": "Melee",
+    "damage": "+2",
+    "crit": 2,
+    "range": "Engaged",
+    "special": "Defensive 1, Pierce 2, Vicious 1",
+    "category": "Melee Weapons"
+  },
+  {
+    "name": "Ceremonial Blade",
+    "skill": "Melee",
+    "damage": "+2",
+    "crit": 3,
+    "range": "Engaged",
+    "special": "Defensive 1",
+    "category": "Melee Weapons"
+  },
+  {
+    "name": "Staff of office",
+    "skill": "Melee",
+    "damage": "+2",
+    "crit": 4,
+    "range": "Engaged",
+    "special": "Defensive 1, Disorient 2",
+    "category": "Melee Weapons"
+  },
+  {
+    "name": "Stealth Vibroknife",
+    "skill": "Melee",
+    "damage": "+1",
+    "crit": 2,
+    "range": "Engaged",
+    "special": "Pierce 1, Vicious 1",
+    "category": "Melee Weapons"
+  },
+  {
+    "name": "Sword Cane",
+    "skill": "Melee",
+    "damage": "+2",
+    "crit": 3,
+    "range": "Engaged",
+    "special": "Defensive 1",
+    "category": "Melee Weapons"
+  },
+  {
+    "name": "Longeing Whip",
+    "skill": "Melee",
+    "damage": "+1",
+    "crit": 5,
+    "range": "Short",
+    "special": "Ensnare 2, Stun Damage",
+    "category": "Melee Weapons"
+  },
+  {
+    "name": "SoroSuub Persuader",
+    "skill": "Melee",
+    "damage": "+2",
+    "crit": 4,
+    "range": "Engaged",
+    "special": "Concussive 1, Slow Firing, Stun Setting",
+    "category": "Melee Weapons"
+  },
+  {
+    "name": "Mon Cal Spear Blaster (Spear)",
+    "skill": "Melee",
+    "damage": "+2",
+    "crit": 3,
+    "range": "Engaged",
+    "special": "Pierce 1",
+    "category": "Melee Weapons"
+  },
+  {
+    "name": "Mon Calamari Coral Pike",
+    "skill": "Melee",
+    "damage": "+3",
+    "crit": 2,
+    "range": "Engaged",
+    "special": "Defensive 1, Pierce 2",
+    "category": "Melee Weapons"
+  },
+  {
+    "name": "Mon Calamari Energy Lance",
+    "skill": "Melee",
+    "damage": "+3",
+    "crit": 2,
+    "range": "Engaged",
+    "special": "Cumbersome 3 (dismounted), Pierce 3",
+    "category": "Melee Weapons"
+  },
+  {
+    "name": "SoroSuub CS-12 Stun Master",
+    "skill": "Melee",
+    "damage": 6,
+    "crit": 3,
+    "range": "Engaged",
+    "special": "Disorient 2, Stun Damage",
+    "category": "Melee Weapons"
+  },
+  {
+    "name": "Gaffi Stick",
+    "skill": "Melee",
+    "damage": "+2",
+    "crit": 3,
+    "range": "Engaged",
+    "special": "Defensive 1, Disorient 3",
+    "category": "Melee Weapons"
+  },
+  {
+    "name": "Ryyk Blade",
+    "skill": "Melee",
+    "damage": "+2",
+    "crit": 2,
+    "range": "Engaged",
+    "special": "Cumbersome 3, Defensive 1, Superior",
+    "category": "Melee Weapons"
+  },
+  {
+    "name": "Therm-Ax",
+    "skill": "Melee",
+    "damage": "+2",
+    "crit": 3,
+    "range": "Engaged",
+    "special": "Burn 2, Sunder, Vicious 1",
+    "category": "Melee Weapons"
+  },
+  {
+    "name": "\"Czerhandler\" VX Vibro-Greatsword",
+    "skill": "Melee",
+    "damage": "+3",
+    "crit": 2,
+    "range": "Engaged",
+    "special": "Defensive 1, Pierce 2, Vicious 2",
+    "category": "Melee Weapons"
+  },
+  {
+    "name": "G9-GP Pulse Drill",
+    "skill": "Melee",
+    "damage": 5,
+    "crit": 4,
+    "range": "Engaged",
+    "special": "Breach 1, Cumbersome 3, Inaccurate 2",
+    "category": "Melee Weapons"
+  },
+  {
+    "name": "Huntsman Vibrospear",
+    "skill": "Melee",
+    "damage": "+3",
+    "crit": 3,
+    "range": "Engaged",
+    "special": "Pierce 2, Vicious 2",
+    "category": "Melee Weapons"
+  },
+  {
+    "name": "Mk. VIII Vibrosaw",
+    "skill": "Melee",
+    "damage": "+4",
+    "crit": 2,
+    "range": "Engaged",
+    "special": "Cumbersome 5, Pierce 2, Sunder, Vicious 2",
+    "category": "Melee Weapons"
+  },
+  {
+    "name": "MSW-9 Molecular Stiletto",
+    "skill": "Melee",
+    "damage": "+0",
+    "crit": 2,
+    "range": "Engaged",
+    "special": "Pierce 5, Vicious 1",
+    "category": "Melee Weapons"
+  },
+  {
+    "name": "ACTIVV1 Riot Shield",
+    "skill": "Melee",
+    "damage": "+0",
+    "crit": 6,
+    "range": "Engaged",
+    "special": "Cumbersome 3, Defensive 2, Deflection 2, Disorient 1",
+    "category": "Melee Weapons"
+  },
+  {
+    "name": "Z2 Stun Baton",
+    "skill": "Melee",
+    "damage": "+2",
+    "crit": 6,
+    "range": "Engaged",
+    "special": "Disorient 2, Stun Damage",
+    "category": "Melee Weapons"
+  },
+  {
+    "name": "Thunderbolt (**BECOME ZEUS**)",
+    "skill": "Melee",
+    "damage": 5,
+    "crit": 3,
+    "range": "Engaged",
+    "special": "Concussive 1, Stun Damage",
+    "category": "Melee Weapons"
+  },
+  {
+    "name": "Punch Dagger",
+    "skill": "Melee",
+    "damage": "+1",
+    "crit": 3,
+    "range": "Engaged",
+    "special": "Pierce 1",
+    "category": "Melee Weapons"
+  },
+  {
+    "name": "Vibrorapier",
+    "skill": "Melee",
+    "damage": "+2",
+    "crit": 2,
+    "range": "Engaged",
+    "special": "Defensive 1, Pierce 5",
+    "category": "Melee Weapons"
+  },
+  {
+    "name": "Blade-breaker",
+    "skill": "Melee",
+    "damage": "+0",
+    "crit": 4,
+    "range": "Engaged",
+    "special": "Defensive 2, Pierce 1, Sunder",
+    "category": "Melee Weapons"
+  },
+  {
+    "name": "Arg'garok",
+    "skill": "Melee",
+    "damage": "+5",
+    "crit": 3,
+    "range": "Engaged",
+    "special": "Cumbersome 5, Inferior 1, Pierce 1, Sunder",
+    "category": "Melee Weapons"
+  },
+  {
+    "name": "Beastmaster's Vibro-Glaive",
+    "skill": "Melee",
+    "damage": "+2",
+    "crit": 2,
+    "range": "Engaged",
+    "special": "Defensive 2, Pierce 3",
+    "category": "Melee Weapons"
+  },
+  {
+    "name": "Morgukai Cortosis Staff",
+    "skill": "Melee",
+    "damage": 8,
+    "crit": 1,
+    "range": "Engaged",
+    "special": "Breach 1, Cortosis, Defensive 1",
+    "category": "Melee Weapons"
+  },
+  {
+    "name": "Neuronic Whip",
+    "skill": "Melee",
+    "damage": "+1",
+    "crit": 4,
+    "range": "Short",
+    "special": "Disorient 4, Ensnare 1, Stun Damage",
+    "category": "Melee Weapons"
+  },
+  {
+    "name": "Tuskbeast Pike",
+    "skill": "Melee",
+    "damage": "+4",
+    "crit": 3,
+    "range": "Engaged",
+    "special": "Defensive 1, Knockdown",
+    "category": "Melee Weapons"
+  },
+  {
+    "name": "Electromag-Pulse Disruptor",
+    "skill": "Melee",
+    "damage": 5,
+    "crit": 4,
+    "range": "Engaged",
+    "special": "Disorient1, Ion",
+    "category": "Melee Weapons"
+  },
+  {
+    "name": "Hand Grinder",
+    "skill": "Melee",
+    "damage": "+2",
+    "crit": 4,
+    "range": "Engaged",
+    "special": "Cumbersome 3, Prepare 1, Vicious 4",
+    "category": "Melee Weapons"
+  },
+  {
+    "name": "Welding Rod",
+    "skill": "Melee",
+    "damage": 3,
+    "crit": 2,
+    "range": "Engaged",
+    "special": "Breach 1, Inaccurate 2",
+    "category": "Melee Weapons"
+  },
+  {
+    "name": "Corellian Cutlass",
+    "skill": "Melee",
+    "damage": "+2",
+    "crit": 3,
+    "range": "Engaged",
+    "special": "Defensive 1, Vicious 1",
+    "category": "Melee Weapons"
+  },
+  {
+    "name": "J-7b Beamdrill",
+    "skill": "Melee",
+    "damage": 9,
+    "crit": 2,
+    "range": "Engaged",
+    "special": "Breach 1, Cumbersome 4, Inaccurate 2, Sunder",
+    "category": "Melee Weapons"
+  },
+  {
+    "name": "Drall Flashstick",
+    "skill": "Melee",
+    "damage": "+2",
+    "crit": 0,
+    "range": "Engaged",
+    "special": "Disorient 3, Stun Damage",
+    "category": "Melee Weapons"
+  },
+  {
+    "name": "Selonian Glaive",
+    "skill": "Melee",
+    "damage": "+3",
+    "crit": 3,
+    "range": "Engaged",
+    "special": "Defensive 1, Pierce 3",
+    "category": "Melee Weapons"
+  },
+  {
+    "name": "Cortosis Shield",
+    "skill": "Melee",
+    "damage": "+0",
+    "crit": 6,
+    "range": "Engaged",
+    "special": "Cortosis, Cumbersome 3, Defensive 2, Deflection 2",
+    "category": "Melee Weapons"
+  },
+  {
+    "name": "Cortosis Staff (Refined)",
+    "skill": "Melee",
+    "damage": "+3",
+    "crit": 5,
+    "range": "Engaged",
+    "special": "Cortosis",
+    "category": "Melee Weapons"
+  },
+  {
+    "name": "Cortosis Sword",
+    "skill": "Melee",
+    "damage": "+2",
+    "crit": 3,
+    "range": "Engaged",
+    "special": "Cortosis, Defensive 1",
+    "category": "Melee Weapons"
+  },
+  {
+    "name": "Electrostaff",
+    "skill": "Melee",
+    "damage": "+4",
+    "crit": 3,
+    "range": "Engaged",
+    "special": "Cortosis, Cumbersome 3, Linked 1, Stun Setting, Unwieldy 3",
+    "category": "Melee Weapons"
+  },
+  {
+    "name": "Electronet",
+    "skill": "Melee",
+    "damage": 6,
+    "crit": 6,
+    "range": "Engaged",
+    "special": "Ensnare 5, Knockdown, Limited Ammo 1, Stun Damage",
+    "category": "Melee Weapons"
+  },
+  {
+    "name": "Energy Buckler",
+    "skill": "Melee",
+    "damage": "+0",
+    "crit": 5,
+    "range": "Engaged",
+    "special": "Concussive 1, Defensive 1, Deflection 1",
+    "category": "Melee Weapons"
+  },
+  {
+    "name": "Parrying Dagger",
+    "skill": "Melee",
+    "damage": "+1",
+    "crit": 3,
+    "range": "Engaged",
+    "special": "Defensive 1",
+    "category": "Melee Weapons"
+  },
+  {
+    "name": "Parrying Vibroblade",
+    "skill": "Melee",
+    "damage": "+1",
+    "crit": 2,
+    "range": "Engaged",
+    "special": "Defensive 1, Pierce 2, vicious 1",
+    "category": "Melee Weapons"
+  },
+  {
+    "name": "Rodian Cryogen Whip",
+    "skill": "Melee",
+    "damage": "+2",
+    "crit": 3,
+    "range": "Short",
+    "special": "Ensnare 1, Vicious 2, Unwieldy 3",
+    "category": "Melee Weapons"
+  },
+  {
+    "name": "Sith Shield",
+    "skill": "Melee",
+    "damage": "+1",
+    "crit": 4,
+    "range": "Engaged",
+    "special": "Cortosis, Defensive 1, Deflection 2, Vicious 1",
+    "category": "Melee Weapons"
+  },
+  {
+    "name": "Snap Baton",
+    "skill": "Melee",
+    "damage": "+1",
+    "crit": 4,
+    "range": "Engaged",
+    "special": "Disorient 2",
+    "category": "Melee Weapons"
+  },
+  {
+    "name": "Bardottan Electrolance",
+    "skill": "Melee",
+    "damage": "+2",
+    "crit": 3,
+    "range": "Engaged",
+    "special": "Defensive 2, Stun Setting",
+    "category": "Melee Weapons"
+  },
+  {
+    "name": "Gungan Electropole",
+    "skill": "Melee",
+    "damage": "+2",
+    "crit": 4,
+    "range": "Engaged",
+    "special": "Stun 3, stun setting",
+    "category": "Melee Weapons"
+  },
+  {
+    "name": "Gungan Personal Energy Shield",
+    "skill": "Melee",
+    "damage": -1,
+    "crit": 5,
+    "range": "Engaged",
+    "special": "Defensive 2, Deflection 2",
+    "category": "Melee Weapons"
+  },
+  {
+    "name": "Voss Warspear",
+    "skill": "Melee",
+    "damage": "+2",
+    "crit": 4,
+    "range": "Engaged",
+    "special": "Defensive 2",
+    "category": "Melee Weapons"
+  },
+  {
+    "name": "Weik Greatsword",
+    "skill": "Melee",
+    "damage": "+4",
+    "crit": 3,
+    "range": "Engaged",
+    "special": "Cumbersome 4, defensive 1",
+    "category": "Melee Weapons"
+  },
+  {
+    "name": "aKraB Clip-point Vibrodagger",
+    "skill": "Melee",
+    "damage": "+1",
+    "crit": 2,
+    "range": "Engaged",
+    "special": "Pierce 3, Vicious 1",
+    "category": "Melee Weapons"
+  },
+  {
+    "name": "Kyuzo War Shield",
+    "skill": "Melee",
+    "damage": "+1",
+    "crit": 4,
+    "range": "Engaged",
+    "special": "Cumbersome 3, Defensive 1, Deflection 2, Disorient 1.",
+    "category": "Melee Weapons"
+  },
+  {
+    "name": "Shistavanen Combat Utility Vibroblade",
+    "skill": "Melee",
+    "damage": "+1",
+    "crit": 2,
+    "range": "Engaged",
+    "special": "Pierce 2, Vicious 1",
+    "category": "Melee Weapons"
+  },
+  {
+    "name": "Explorer's Knife",
+    "skill": "Melee",
+    "damage": "+1",
+    "crit": 3,
+    "range": "Engaged",
+    "special": "Vicious 1",
+    "category": "Melee Weapons"
+  },
+  {
+    "name": "Laserhone Trailbreaker Poleaxe",
+    "skill": "Melee",
+    "damage": "+3",
+    "crit": 3,
+    "range": "Engaged",
+    "special": "Defensive 1, Pierce 2, Unwieldy 2",
+    "category": "Melee Weapons"
+  },
+  {
+    "name": "Merr-sonn Model 14 \"Stalker\" Vibrospear",
+    "skill": "Melee",
+    "damage": "+2",
+    "crit": 2,
+    "range": "Engaged",
+    "special": "Defensive 1, Pierce 2, Vicious 2",
+    "category": "Melee Weapons"
+  },
+  {
+    "name": "Mon Calamari Energy Lance",
+    "skill": "Melee",
+    "damage": "+3",
+    "crit": 2,
+    "range": "Engaged",
+    "special": "Cumbersome 3 (dismounted), Pierce 3",
+    "category": "Melee Weapons"
+  },
+  {
+    "name": "MSW 12 NanoDagger",
+    "skill": "Melee",
+    "damage": "+1",
+    "crit": 2,
+    "range": "Engaged",
+    "special": "Pierce 5, Vicious 1",
+    "category": "Melee Weapons"
+  },
+  {
+    "name": "Vibro-Machete",
+    "skill": "Melee",
+    "damage": "+2",
+    "crit": 2,
+    "range": "Engaged",
+    "special": "Pierce 1, Sunder, Vicious 1",
+    "category": "Melee Weapons"
+  },
+  {
+    "name": "Czerka \"Peacekeeper\" Stun Baton",
+    "skill": "Melee",
+    "damage": "+2",
+    "crit": 4,
+    "range": "Engaged",
+    "special": "Cumbersome 3, Disorient 2, Stun 3",
+    "category": "Melee Weapons"
+  },
+  {
+    "name": "Ion Pike",
+    "skill": "Melee",
+    "damage": 10,
+    "crit": 3,
+    "range": "Engaged",
+    "special": "Inaccurate 1, Ion, Pierce 4",
+    "category": "Melee Weapons"
+  },
+  {
+    "name": "Borstel Neuronic Lash",
+    "skill": "Melee",
+    "damage": "+1",
+    "crit": 5,
+    "range": "Short",
+    "special": "Ensnare 1, Stun 3, Stun Damage",
+    "category": "Melee Weapons"
+  },
+  {
+    "name": "Fear Stick",
+    "skill": "Melee",
+    "damage": 5,
+    "crit": 0,
+    "range": "Engaged",
+    "special": "Limited Ammo 3, Pierce 1, Stun Damage",
+    "category": "Melee Weapons"
+  },
+  {
+    "name": "Z6 Riot Control Baton (AKA the \"TRAITOR!\" Baton)",
+    "skill": "Melee",
+    "damage": "+2",
+    "crit": 5,
+    "range": "Engaged",
+    "special": "Cortosis, Disorient 2, Stun Damage",
+    "category": "Melee Weapons"
+  },
+  {
+    "name": "Vibrorang",
+    "skill": "Melee",
+    "damage": "+2",
+    "crit": 2,
+    "range": "Engaged",
+    "special": "Inaccurate 1, Pierce 2, Vicious 1",
+    "category": "Melee Weapons"
+  },
+  {
+    "name": "Thermal Cutter",
+    "skill": "Melee",
+    "damage": 4,
+    "crit": 4,
+    "range": "Engaged",
+    "special": "Burn 1, Inaccurate 2",
+    "category": "Melee Weapons"
+  },
+  {
+    "name": "\"Breaker\" Heavy Hydrospanner",
+    "skill": "Melee",
+    "damage": "+2",
+    "crit": 4,
+    "range": "Engaged",
+    "special": "Cumbersome 3, Disorient 1, Inaccurate 1",
+    "category": "Melee Weapons"
+  },
+  {
+    "name": "Engineer's Hammer",
+    "skill": "Melee",
+    "damage": "+3",
+    "crit": 5,
+    "range": "Engaged",
+    "special": "Cumbersome 3, Disorient 1, Knockdown",
+    "category": "Melee Weapons"
+  },
+  {
+    "name": "Vibro Pickaxe",
+    "skill": "Melee",
+    "damage": "+2",
+    "crit": 2,
+    "range": "Engaged",
+    "special": "Cumbersome 4, Pierce 3, Sunder, Vicious 1",
+    "category": "Melee Weapons"
+  },
+  {
+    "name": "Ashla Staff",
+    "skill": "Melee",
+    "damage": "+2",
+    "crit": 3,
+    "range": "Engaged",
+    "special": "N/A",
+    "category": "Melee Weapons"
+  },
+  {
+    "name": "Ouro Blade",
+    "skill": "Melee",
+    "damage": "+1",
+    "crit": 3,
+    "range": "Engaged",
+    "special": "N/A",
+    "category": "Melee Weapons"
+  },
+  {
+    "name": "Semblan Obsidian Dagger",
+    "skill": "Melee",
+    "damage": "+0",
+    "crit": 1,
+    "range": "Engaged",
+    "special": "N/A",
+    "category": "Melee Weapons"
+  },
+  {
+    "name": "Double-Bladed Vibrosword",
+    "skill": "Melee",
+    "damage": "+2",
+    "crit": 2,
+    "range": "Engaged",
+    "special": "Defensive 1, Linked 1, Pierce 2, Vicious 1, Unwieldy 3",
+    "category": "Melee Weapons"
+  },
+  {
+    "name": "RS01 \"Ripper\" Powersword",
+    "skill": "Melee",
+    "damage": "+3",
+    "crit": 2,
+    "range": "Engaged",
+    "special": "Cumbersome 3, Pierce 2, Sunder, Knockdown, Vicious 2",
+    "category": "Melee Weapons"
+  },
+  {
+    "name": "Shockprod Staff",
+    "skill": "Melee",
+    "damage": 7,
+    "crit": 3,
+    "range": "Short",
+    "special": "Disorient 2, Stun Setting",
+    "category": "Melee Weapons"
+  },
+  {
+    "name": "MMD-18 Molecular Dagger",
+    "skill": "Melee",
+    "damage": "+2",
+    "crit": 3,
+    "range": "Engaged",
+    "special": "Pierce 2",
+    "category": "Melee Weapons"
+  },
+  {
+    "name": "Concealed Escape Kit (Boot Knife from kit)",
+    "skill": "Melee",
+    "damage": "+1",
+    "crit": 3,
+    "range": "Engaged",
+    "special": "Pierce 1",
+    "category": "Melee Weapons"
+  },
+  {
+    "name": "M3 Bulwark Blast Shield",
+    "skill": "Melee",
+    "damage": "+1",
+    "crit": 6,
+    "range": "Engaged",
+    "special": "Cumbersome 3, Defensive 2, Deflection 2",
+    "category": "Melee Weapons"
+  },
+  {
+    "name": "M8 Combat Knife",
+    "skill": "Melee",
+    "damage": "+1",
+    "crit": 3,
+    "range": "Engaged",
+    "special": "Accurate 1, Pierce 1",
+    "category": "Melee Weapons"
+  },
+  {
+    "name": "TZ-97 \"Zapper\" Shock Baton",
+    "skill": "Melee",
+    "damage": 5,
+    "crit": 4,
+    "range": "Engaged",
+    "special": "Concussive 1, Stun Damage",
+    "category": "Melee Weapons"
+  },
+  {
+    "name": "Beskad",
+    "skill": "Melee",
+    "damage": "+3",
+    "crit": 2,
+    "range": "Engaged",
+    "special": "Cortosis, Cumbersome 3, Sunder, Vicious 3",
+    "category": "Melee Weapons"
+  },
+  {
+    "name": "Duskblade",
+    "skill": "Melee",
+    "damage": "+3",
+    "crit": 3,
+    "range": "Engaged",
+    "special": "Pierce 2, Superior",
+    "category": "Melee Weapons"
+  },
+  {
+    "name": "Kal Dagger",
+    "skill": "Melee",
+    "damage": "+2",
+    "crit": 2,
+    "range": "Engaged",
+    "special": "Cortosis, Sunder, Vicious 2",
+    "category": "Melee Weapons"
+  },
+  {
+    "name": "Findsman Shockprod",
+    "skill": "Melee",
+    "damage": "+2",
+    "crit": 5,
+    "range": "Engaged",
+    "special": "Cortosis, Defensive 1, Stun Damage",
+    "category": "Melee Weapons"
+  },
+  {
+    "name": "Ancient Sword",
+    "skill": "Lightsaber",
+    "damage": "+2",
+    "crit": 3,
+    "range": "Engaged",
+    "special": "Defensive 1",
+    "category": "Lightsabers"
+  },
+  {
+    "name": "Basic Lightsaber",
+    "skill": "Lightsaber",
+    "damage": 6,
+    "crit": 2,
+    "range": "Engaged",
+    "special": "Breach 1, Sunder",
+    "category": "Lightsabers"
+  },
+  {
+    "name": "Crossguard Lightsaber",
+    "skill": "Lightsaber",
+    "damage": 6,
+    "crit": 2,
+    "range": "Engaged",
+    "special": "Breach 1, Defensive 1, Sunder",
+    "category": "Lightsabers"
+  },
+  {
+    "name": "Double-Bladed Lightsaber",
+    "skill": "Lightsaber",
+    "damage": 6,
+    "crit": 2,
+    "range": "Engaged",
+    "special": "Breach 1, Linked 1, Sunder, Unwieldy 3",
+    "category": "Lightsabers"
+  },
+  {
+    "name": "Guard Shoto",
+    "skill": "Lightsaber",
+    "damage": 5,
+    "crit": 2,
+    "range": "Engaged",
+    "special": "Breach 1, Defensive 1, Deflection 2, Sunder, Unwieldy 4",
+    "category": "Lightsabers"
+  },
+  {
+    "name": "Lightsaber",
+    "skill": "Lightsaber",
+    "damage": 10,
+    "crit": 1,
+    "range": "Engaged",
+    "special": "Breach 1, Sunder, Vicious 2",
+    "category": "Lightsabers"
+  },
+  {
+    "name": "Lightsaber Pike",
+    "skill": "Lightsaber",
+    "damage": 6,
+    "crit": 2,
+    "range": "Engaged",
+    "special": "Breach 1, Cumbersome 3, Defensive 1, Sunder",
+    "category": "Lightsabers"
+  },
+  {
+    "name": "Lightwhip",
+    "skill": "Lightsaber",
+    "damage": 4,
+    "crit": 4,
+    "range": "Short",
+    "special": "Ensnare 1, Pierce 5, Unwieldy 4",
+    "category": "Lightsabers"
+  },
+  {
+    "name": "Philaxian Phase-Knife",
+    "skill": "Lightsaber",
+    "damage": "+1",
+    "crit": 3,
+    "range": "Engaged",
+    "special": "Pierce 4, Vicious 1",
+    "category": "Lightsabers"
+  },
+  {
+    "name": "Shoto",
+    "skill": "Lightsaber",
+    "damage": 5,
+    "crit": 2,
+    "range": "Engaged",
+    "special": "Accurate 1, Breach 1, Sunder",
+    "category": "Lightsabers"
+  },
+  {
+    "name": "Temple Guard Lightsaber Pike",
+    "skill": "Lightsaber",
+    "damage": 6,
+    "crit": 2,
+    "range": "Engaged",
+    "special": "Breach 1, Defensive 1, Linked 1, Sunder, Stun 4, Unwieldy 3",
+    "category": "Lightsabers"
+  },
+  {
+    "name": "Training Lightsaber",
+    "skill": "Lightsaber",
+    "damage": 6,
+    "crit": 0,
+    "range": "Engaged",
+    "special": "Stun Damage",
+    "category": "Lightsabers"
+  },
+  {
+    "name": "Training Stick",
+    "skill": "Lightsaber",
+    "damage": "+1",
+    "crit": 5,
+    "range": "Engaged",
+    "special": "Accurate 1, Disorient 1, Stun Damage",
+    "category": "Lightsabers"
+  },
+  {
+    "name": "Broadsaber",
+    "skill": "Lightsaber",
+    "damage": 7,
+    "crit": 2,
+    "range": "Engaged",
+    "special": "Breach 1, Sunder, Unwieldy 3",
+    "category": "Lightsabers"
+  },
+  {
+    "name": "Contained Energy Axe",
+    "skill": "Lightsaber",
+    "damage": "+3",
+    "crit": 2,
+    "range": "Engaged",
+    "special": "Breach 1, Cumbersome 3, Sunder, Vicious 3",
+    "category": "Lightsabers"
+  },
+  {
+    "name": "Great Lightsaber",
+    "skill": "Lightsaber",
+    "damage": 7,
+    "crit": 2,
+    "range": "Engaged",
+    "special": "Breach 1, Cumbersome 3, Sunder",
+    "category": "Lightsabers"
+  },
+  {
+    "name": "Lightfoil",
+    "skill": "Lightsaber",
+    "damage": 5,
+    "crit": 2,
+    "range": "Engaged",
+    "special": "Breach 1, Defensive 2, Sunder",
+    "category": "Lightsabers"
+  },
+  {
+    "name": "Sabercane",
+    "skill": "Lightsaber",
+    "damage": 5,
+    "crit": 2,
+    "range": "Engaged",
+    "special": "Accurate 1, Breach 1, Sunder",
+    "category": "Lightsabers"
+  },
+  {
+    "name": "Darth Vader's Lightsaber",
+    "skill": "Lightsaber",
+    "damage": 10,
+    "crit": 1,
+    "range": "Engaged",
+    "special": "Breach 1, Dramatic Entrance (In Notes), Dual-Phase Modification (In Notes), Sunder, Superior, Vicious 2.",
+    "category": "Lightsabers"
+  },
+  {
+    "name": "Luke Skywalker's Lightsaber",
+    "skill": "Lightsaber",
+    "damage": 6,
+    "crit": 1,
+    "range": "Engaged",
+    "special": "Breach 1, Return of the Jedi (in notes) Sunder, Vicious 2",
+    "category": "Lightsabers"
+  },
+  {
+    "name": "Obi-Wan Kenobi's Lightsaber",
+    "skill": "Lightsaber",
+    "damage": 10,
+    "crit": 1,
+    "range": "Engaged",
+    "special": "Bastion of Safety (In Notes), Breach 1, Sunder",
+    "category": "Lightsabers"
+  }
+]

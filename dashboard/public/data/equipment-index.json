@@ -1,0 +1,2362 @@
+[
+  {
+    "name": "3-MAL Secure Comlink",
+    "note": "Comlink transmit up to medium range on the planetary scale. Encryption adds ⬛ to any check made to intercept and unscramble the signal. Monitoring a standard clear frequency on civilized worlds can add ⬛⬛ to Knowledge checks related to current events or conditions at the GM's discretion",
+    "category": "Communications Equipment"
+  },
+  {
+    "name": "Atgar Artillery Remote",
+    "note": "A character can link a single Gunnery weapon to an Atgar Artillery Remote with a Hard(ddd) Computers check or a Average (dd) Computers check if the weapon is Atgar Spacedefense corporation model. Linked weapon gains the Inaccurate 2 quality and the holder of the remote can fire the weapon from up to medium range.",
+    "category": "Communications Equipment"
+  },
+  {
+    "name": "Collar-Amp",
+    "note": "Allows users voice to be heard up to long or extreme range (dependant on terrain and other environmental conditions), add 100 credits for a version that hooks into sound systems or entertainment sound systems which improves sound quality",
+    "category": "Communications Equipment"
+  },
+  {
+    "name": "Comlink (Handheld)",
+    "note": "Allows communication up to distances around 100 kilometres",
+    "category": "Communications Equipment"
+  },
+  {
+    "name": "Comlink (Long Range)",
+    "note": "Allows communication across a planet, to orbiting structures, and possibly interplanetary (within the same star system)",
+    "category": "Communications Equipment"
+  },
+  {
+    "name": "DH77 Headcomm",
+    "note": "Subject to interference from explosions, ion engines and jamming, constant shifting encryption adds ⬛⬛⬛ to any attempt to intercept and unscramble the signal",
+    "category": "Communications Equipment"
+  },
+  {
+    "name": "Encryption Module",
+    "note": "Attaches to comlinks or hypertranscivers to encode messages sent, much larger and more sophisticated than a simple comm scrambler the encryption module uses extremely complex algorithms and ciphers to code transmissions. It is nearly impossible to break the codes used so it requires a decryption key to understand but attempts can still be made with a Formidable (ddddd) computers check and also requires proper equipment such as a ship's mainframe or a class one droid.",
+    "category": "Communications Equipment"
+  },
+  {
+    "name": "False Voice Transmitter",
+    "note": "Provided a good voice sample, can replicate any voice. When impersonating another individual the user can upgrade the ability of his Charm, Coercion, Deception, Leadership and Negotiation checks once.",
+    "category": "Communications Equipment"
+  },
+  {
+    "name": "Shockhold Hardened Comlink",
+    "note": "Planet-wide and planet to orbit communications with military grade encryption, adds an automatic ff to decode and a automatic ss to any checks made to broadcast through a com jammer (FaD:Knights of fate version says only one s and only one f)",
+    "category": "Communications Equipment"
+  },
+  {
+    "name": "Holo-Messenger",
+    "note": "Used mostly for messages. Plays a holographic recording or transmission.",
+    "category": "Communications Equipment"
+  },
+  {
+    "name": "HoloNet Relay",
+    "note": "Allows user to communicate with the HoloNet (it is highly regulated and mostly militarized by the empire though) can be blocked by jamming and/or environmental factors.",
+    "category": "Communications Equipment"
+  },
+  {
+    "name": "Hyper transceiver",
+    "note": "Able to transmit up to 100 light years, normally used for ships sending messages or distress signals.",
+    "category": "Communications Equipment"
+  },
+  {
+    "name": "Intergraded Public Address System",
+    "note": "Loudspeaker installed in a backpack or carrying case for addressing large crowds anywhere",
+    "category": "Communications Equipment"
+  },
+  {
+    "name": "Polis Massan Voicebox",
+    "note": "",
+    "category": "Communications Equipment"
+  },
+  {
+    "name": "PTP Link",
+    "note": "Lower tech communication range of 25 kilometres. A encryption device can be purchased for 1,000 credits for near undetectable transmission of messages",
+    "category": "Communications Equipment"
+  },
+  {
+    "name": "Remote Activation Controller (Long range)",
+    "note": "Activates a vehicle or starship and starts pre-flight checks so user can make a quick getaway",
+    "category": "Communications Equipment"
+  },
+  {
+    "name": "Remote Activation Controller (Short range)",
+    "note": "Activates a vehicle or starship and starts pre-flight checks so user can make a quick getaway",
+    "category": "Communications Equipment"
+  },
+  {
+    "name": "Verpine Comlink",
+    "note": "Picks up on Verpine telepathic communications and can broadcast secret messages using said link, range 100 kilometres.",
+    "category": "Communications Equipment"
+  },
+  {
+    "name": "Com-Scan",
+    "note": "A character can Triangulate the location and movement of a known comlink or transceiver with an Average (dd) Computers check. The device functions out to close range on planetary scale. Prevailing atmospheric conditions or excessive background signals can reduce its efficacy.",
+    "category": "Communications Equipment"
+  },
+  {
+    "name": "Earbud Comlink",
+    "note": "Activated by touching ones ear, or clicking ones teeth, This has a far shorter range than of a normal commlink due to tiny power cell and can only work to a maximum range of long, Noticing someone wearing a earbud comlink requires a Hard (ddd) Perception check.",
+    "category": "Communications Equipment"
+  },
+  {
+    "name": "Holo-Megacaster",
+    "note": "Projects a large holographic version of the user up to 10 meters in height, normally used for addressing large crowds. A Character using a Holo-Megacaster adds to Presence-based checks to address a crowd and allows the users image and voice to be seen and heard clearly up to extreme range.",
+    "category": "Communications Equipment"
+  },
+  {
+    "name": "Antidote Set",
+    "note": "When used reduce the difficulty of any check to resist a poison by two (to a minimum of Easy (d)), if character does not know what poison was used he/she must make a Hard (ddd) Knowledge (Underworld) check to make a educated guess on the poison to benefit from this item",
+    "category": "Drugs and Poisons"
+  },
+  {
+    "name": "Dendriton Toxin (1 dose)",
+    "note": "Has a Daunting (dddd) difficulty, if the target fails the check the poison inflicts 1 strain at the end of his next turn, 3 strain at the end of the subsequent turn and 5 strain at the turn after that one (ignoring soak) in addition the target suffers ⬛ to any check he attempts under the effects of the poison, each t he generates on those checks inflicts 1 additional strain (ignores soak), The GM may spend y on the initial Resilience check to make the target make another check against the poison at the end of his third turn or suffer an additional 5 strain",
+    "category": "Drugs and Poisons"
+  },
+  {
+    "name": "Dioxis Gas (1 dose)",
+    "note": "A single dose has a Hard (ddd) difficulty, 2 or more doses have a Daunting (dddd) difficulty, if the target fail the check the poison inflicts 5 wounds (ignoring soak) in addition each t generated inflicts 2 strain on the target (ignores soak), target becomes overwhelmed by nausea and muscle spasms cause by the choking gas. Gas lingers in the air for up to 3 rounds unless dissipated by high winds",
+    "category": "Drugs and Poisons"
+  },
+  {
+    "name": "Poisoner's Ring",
+    "note": "As an action make a opposed Skulduggery check against any onlookers' Vigilance to deposit one dose of any GM approved poison to a targets meal of beverage without being noticed",
+    "category": "Drugs and Poisons"
+  },
+  {
+    "name": "Raquor Venom (1 dose)",
+    "note": "Has a Daunting (dddd) difficulty, if the target fails the check the poison staggers the target for 2 rounds and for each t generated inflicts 2 strain on the target (ignores soak), GM may spend y to Immobilize the target for 2 rounds. Can be Liquid or Gas (gas reducing the difficulty by one)",
+    "category": "Drugs and Poisons"
+  },
+  {
+    "name": "Synthetic Anaesthetic (1 dose)",
+    "note": "Used to render subject unconscious, a single dose has an Average (dd) difficulty check while two ore more doses have a Hard (ddd) difficulty check. The poison inflicts 5 strain if the target fails the check, if the check generates one or two t , the target must also give up his free manoeuvre during his next turn, if three or more t is generated he/she is staggered during his/her next turn, Finally the GM can spend y to make the target test against the poison again during the next round to see if the poison remains in the subjects system",
+    "category": "Drugs and Poisons"
+  },
+  {
+    "name": "Synthetic Neuropralytic (1 dose)",
+    "note": "Immobilizes the target, any dosage size has a Hard (ddd) difficulty check, if the target fails the check they are immobilized for three rounds, in addition on each t generated 1 strain is inflicted on the target, the GM can spend y to make the target test against the poison again during the next round",
+    "category": "Drugs and Poisons"
+  },
+  {
+    "name": "Synthetic Neurotoxin (1 dose)",
+    "note": "If the target fails a Average (dd) check for a single dose or a Hard (ddd) check for multiple doses, the target suffers 5 wounds, in addition for each t one strain is suffered, the GM may spend one y to have the target test against the poison during the next round.",
+    "category": "Drugs and Poisons"
+  },
+  {
+    "name": "SleepPack (1 Dose)",
+    "note": "If target is aware and unwilling the wielder must make a Hard (ddd) Brawl or Melee combat check against the target instead of inflicting damage, if successful the target must immediately resist the effects of the medications that flood the system as a poison (with a Resilience check). Any sized dose has a Hard (ddd) difficulty and failure inflicts 10 strain.",
+    "category": "Drugs and Poisons"
+  },
+  {
+    "name": "Sulfer Inhaler (10 Doses)",
+    "note": "Only effective for Devaronians. As a manoeuvre inhale a does of the drug, the character suffers 2 strain and adds ⬛ to any Brawn or Agility he makes until the end of the encounter. Additional doses inflict more strain but do not give additional bonuses. Unpleasant for non-Devaronians",
+    "category": "Drugs and Poisons"
+  },
+  {
+    "name": "Affide Crystal",
+    "note": "(Suicide pill usually in a false tooth) This is a poison that requires a upgraded Daunting cddd Resilience check to overcome when ingested. The poison inflicts 10 wounds and a Critical Injury on a failed check. Each t generated adds +40 to the roll for the Critical Injury result. Gms may spend ttt or y to kill a target instantly, leaving no opportunity for resuscitation.",
+    "category": "Drugs and Poisons"
+  },
+  {
+    "name": "Cyanoxis D-570",
+    "note": "Administered through food and/or drink, once ingested the poison usually takes about a week to kill. A character who has injested this can make a hard ddd resilience check to overcome. On a failed check, the poison inflicts 2 wounds and 2 strain immediately, plus 1 wound and 1 strain per day for ten days or until the target succumbs to death. Each t generated inflicts 1 additional strain per day. y can be spent to increase the number of days the poison stays in effect by one.",
+    "category": "Drugs and Poisons"
+  },
+  {
+    "name": "Skirtopanol",
+    "note": "Requires a hard ddd Resilience check to overcome. On a failed check, the drug inflicts 5 strain and the difficulty of all checks the target makes to resist charm or coercion for the remainder of the encounter is upgraded once. In addition, each t generated on the original check inflicts 2 strain on the target. finally, the GM can spend y to make the target check against the drug again during the next round as it remains in their system.",
+    "category": "Drugs and Poisons"
+  },
+  {
+    "name": "Vutalamine",
+    "note": "known as \"Vue,\"a single dose lasts 24 hours, during that time the character upgrades the ability of any checks made to resist stress or fear once. In addition the difficulty of ranged (light) and ranged (heavy) checks made at long or extreme range is reduced by one. at the GMs discretion, frequent use can lead to impaired judgement and memory loss, imposing a permanent ⬛ on Intellect and Cunning based checks",
+    "category": "Drugs and Poisons"
+  },
+  {
+    "name": "Cybernetic Arms (mod V and VI)",
+    "note": "Mod V Cyberarms provide +1 Brawn, while Mod VI Cyberarms provide +1 Agility. If replacing both arms they must both be the same Mod and stat modifiers do not stack",
+    "category": "Cybernetic Enhancements and Replacements"
+  },
+  {
+    "name": "Cybernetic Brain Implant",
+    "note": "Provides +1 Intellect, Comes with Commlink and Computer access link",
+    "category": "Cybernetic Enhancements and Replacements"
+  },
+  {
+    "name": "Cybernetic Eyes",
+    "note": "Provides +1 Vigilance and Perception",
+    "category": "Cybernetic Enhancements and Replacements"
+  },
+  {
+    "name": "Cybernetic Legs (Mod II and III)",
+    "note": "Mod II Cyberlegs provide +1 Brawn and Mod III cyberlegs provide +1 agility. BOTH legs must be replaced to receive these benefits.",
+    "category": "Cybernetic Enhancements and Replacements"
+  },
+  {
+    "name": "Cybernetic Weapon Implant",
+    "note": "Houses a retractable light blaster pistol that cannot be dropped, removed or disarmed",
+    "category": "Cybernetic Enhancements and Replacements"
+  },
+  {
+    "name": "Cyber scanner Limb",
+    "note": "Medium range detection showing nearby motion, lifeforms, energy signatures and other common targets as desired",
+    "category": "Cybernetic Enhancements and Replacements"
+  },
+  {
+    "name": "Immune Implant",
+    "note": "Provides wearer +1 Resilience",
+    "category": "Cybernetic Enhancements and Replacements"
+  },
+  {
+    "name": "Implant Armour",
+    "note": "Provides +1 Soak",
+    "category": "Cybernetic Enhancements and Replacements"
+  },
+  {
+    "name": "Prosthetic Replacement (Limb)",
+    "note": "Replaces a lost limb",
+    "category": "Cybernetic Enhancements and Replacements"
+  },
+  {
+    "name": "Prosthetic Replacement (Organ)",
+    "note": "Replaces a lost organ",
+    "category": "Cybernetic Enhancements and Replacements"
+  },
+  {
+    "name": "Neuro-Saav Cyborg/Droid Interface",
+    "note": "Direct connection to a droids communication port. When hooked up to a hostile droid upgrade the ability of all its computer checks once when attempting to access information",
+    "category": "Cybernetic Enhancements and Replacements"
+  },
+  {
+    "name": "Swift 78B Vessel Courier System",
+    "note": "Used to transport sensitive data in a small dataport that is secured usually beneath the courier's hairline secured by synthflesh.",
+    "category": "Cybernetic Enhancements and Replacements"
+  },
+  {
+    "name": "Appraiser's Eye",
+    "note": "Adds an automatic a on negotiation and streetwise checks to buy or sell items",
+    "category": "Cybernetic Enhancements and Replacements"
+  },
+  {
+    "name": "Cybernetic Cavity",
+    "note": "Provides 1 rank of the Hidden Storage talent",
+    "category": "Cybernetic Enhancements and Replacements"
+  },
+  {
+    "name": "Digital Lockpick",
+    "note": "provides 1 rank of the Bypass Security talent",
+    "category": "Cybernetic Enhancements and Replacements"
+  },
+  {
+    "name": "Adrenal Implant",
+    "note": "Provides 1 rank of the Rapid Recover Talent",
+    "category": "Cybernetic Enhancements and Replacements"
+  },
+  {
+    "name": "Cybernetic Reflexes",
+    "note": "Provides 1 rank of the Rapid Reaction Talent",
+    "category": "Cybernetic Enhancements and Replacements"
+  },
+  {
+    "name": "Cybernetic Respirator",
+    "note": "Provides user the same benefits of a breath mask and respirator and adds 1 rank of the Blooded Talent",
+    "category": "Cybernetic Enhancements and Replacements"
+  },
+  {
+    "name": "Gank Comm Implant",
+    "note": "Inaudible communication with other units, can be subject to jamming",
+    "category": "Cybernetic Enhancements and Replacements"
+  },
+  {
+    "name": "Implanted Cyberjack",
+    "note": "once per check, a character with an implanted cyberjack may suffer 2 strain to decrease the difficulty of a Computers check to disable a security device or slice into a computers system by one.",
+    "category": "Cybernetic Enhancements and Replacements"
+  },
+  {
+    "name": "Neuromachine Interface",
+    "note": "Allows control of a vehicle by thought, vehicle must have a control device installed, pilot using this link may use his coordination skill in place of the pilot (Planetary/Space) skill",
+    "category": "Cybernetic Enhancements and Replacements"
+  },
+  {
+    "name": "Q-22 Retinal Tracker",
+    "note": "Provides an automatic a on gunnery and Ranged (Heavy) checks.",
+    "category": "Cybernetic Enhancements and Replacements"
+  },
+  {
+    "name": "Repulsor Fist",
+    "note": "Provides one rank in the Defensive Stance talent and counts as a Brawl weapon with a Damage of 8, Critical of 3, and the Concussive 1 and Slow-Firing 2 qualities, can only be used once every 3rd round otherwise the repulsor fist acts as a normal unarmed melee attack.",
+    "category": "Cybernetic Enhancements and Replacements"
+  },
+  {
+    "name": "Biofeedback Regulator",
+    "note": "Increases the characters cybernetic implant cap by two. Does not count to implant cap. Limit 1 Regulator per person. Droids unable to use",
+    "category": "Cybernetic Enhancements and Replacements"
+  },
+  {
+    "name": "Escape Circuit",
+    "note": "(Droids only) Resisting a restraining bolt now only requires a Easy (d) Discipline check instead of the normal difficulty. The droid may spend aa from a check made to resist a restraining bolt to overload the bold rendering it entirely useless",
+    "category": "Cybernetic Enhancements and Replacements"
+  },
+  {
+    "name": "Networked Slicing uplink",
+    "note": "(Droids only) Counts as a set of slicer gear. When droid is slicing or assisting with slicing tasks, add ⬛ to Computers check to identify the user slicer based on these activities, such as Trace user action.",
+    "category": "Cybernetic Enhancements and Replacements"
+  },
+  {
+    "name": "Neural Recorder",
+    "note": "Make a Easy (d)Discipline check to recall information gained while the recorder was running. Recorded data can be copied to a more common external storage device using a included connection port",
+    "category": "Cybernetic Enhancements and Replacements"
+  },
+  {
+    "name": "Surge Override Switch",
+    "note": "Once per encounter a character can make a Average (dd) Discipline check to reactivate any number of cybernetic implants that have been overloaded by Ion weapons. Each reactivated implant causes 2 strain to the user",
+    "category": "Cybernetic Enhancements and Replacements"
+  },
+  {
+    "name": "Avionics Interface",
+    "note": "Requires at least 1 rank in piloting (Planetary) and/or (Space) gains +1 rank to the appropriate piloting skill when flying a starship or airspeeder..",
+    "category": "Cybernetic Enhancements and Replacements"
+  },
+  {
+    "name": "Cortex Bomb",
+    "note": "Upon hearing, seeing or speaking a pre-determined code a person with a implanted cortex bomb will be killed, this does no damage to the surrounding area…. Anyone watch that movie \"Scanners (1981)\"",
+    "category": "Cybernetic Enhancements and Replacements"
+  },
+  {
+    "name": "Cyber Disguise",
+    "note": "Gives advantages of a disguise kit, also grants user two ranks in Indistinguishable. This can change general features like eye or hair colour and even skin colour (do the whole Michael Jackson thing) grow hair and/or beard, With the GMs permission one could even impersonate someone of another similar shaped species (human, chiss, pantoran) it cannot change physical attributes like number of arms, size, horns. To impersonate a specific person (provided they are of similar size and shape) one must make a thorough study of the subject then make a Hard (ddd) Deception check to set the disguise. Changing can take up to 1 to 3 rounds, the more detailed the disguise the longer it takes either minutes or hours.",
+    "category": "Cybernetic Enhancements and Replacements"
+  },
+  {
+    "name": "Lockbreaker Hand",
+    "note": "Provides a rank in Bypass Security Talent and adds ⬛ to Skulduggery and Computers checks made to defeat locks",
+    "category": "Cybernetic Enhancements and Replacements"
+  },
+  {
+    "name": "Multi-Tool Hand",
+    "note": "Provides all the benefits of a tool kit \"Go go gadget screwdriver\"",
+    "category": "Cybernetic Enhancements and Replacements"
+  },
+  {
+    "name": "Pain Damper",
+    "note": "Upgrade the ability of all checks made to resist pain or physical torture once.",
+    "category": "Cybernetic Enhancements and Replacements"
+  },
+  {
+    "name": "Retinal Implant",
+    "note": "With a few minutes of studying a retinal pattern and a Average(ddd) Perception check, Retinal implants can fool most retina scanners with an Easy (d) Cool Check, More advanced scanners can have a increased difficulty up to a maximum of Hard (ddd)",
+    "category": "Cybernetic Enhancements and Replacements"
+  },
+  {
+    "name": "Vessel Implant",
+    "note": "Subdermal data storage, with a fiber optic cable that can plug into nearly any datapad or computer, the implant is non networked and can not be sliced unless user is incapacitated of the implant is removed, Finding a vessel implant on a character requires a Daunting (dddd) Perception check",
+    "category": "Cybernetic Enhancements and Replacements"
+  },
+  {
+    "name": "Vocal Emulator Implant",
+    "note": "Changing or disguising a characters voice takes one round, to mimic the voice of a specific individual the user must make a intensive study of the subject by listening to recordings, hearing the individual deliver a long speech etc. and make a Hard (ddd) Deception Check to nail down the individuals voice, speech patterns and inotations.",
+    "category": "Cybernetic Enhancements and Replacements"
+  },
+  {
+    "name": "Electrobinoculars",
+    "note": "Long distance or Low light Perception checks to identify an object may remove ⬛ from the check",
+    "category": "Scanning, Detection and Surveillance Equipment"
+  },
+  {
+    "name": "General Purpose Scanner",
+    "note": "Detect motion up to long distance; life-forms, energy signals and other common targets up to extreme distance / Intercept comlink transmissions",
+    "category": "Scanning, Detection and Surveillance Equipment"
+  },
+  {
+    "name": "Hand Scanner",
+    "note": "Detect detailed information about target or surroundings such as poisons, weaknesses, etc. up to short distance.",
+    "category": "Scanning, Detection and Surveillance Equipment"
+  },
+  {
+    "name": "Macrobionoculars",
+    "note": "Magnify targets up to 10 km.",
+    "category": "Scanning, Detection and Surveillance Equipment"
+  },
+  {
+    "name": "Scanner Goggles",
+    "note": "\"When worn, scanner goggles allow the wearer to see normally in dark conditions.\" Its suggested for balance to replace that to this \"Remove ⬛ due to low or poor light.\"",
+    "category": "Scanning, Detection and Surveillance Equipment"
+  },
+  {
+    "name": "Surveillance Tagger",
+    "note": "Must be physically attached to target. Detect targets location, direction and rate of movement up to around 100 km",
+    "category": "Scanning, Detection and Surveillance Equipment"
+  },
+  {
+    "name": "Authentication Tools",
+    "note": "A character using Authentication tools adds ⬛⬛ to checks to determine if a document has been falsified",
+    "category": "Scanning, Detection and Surveillance Equipment"
+  },
+  {
+    "name": "Concealed Recorder",
+    "note": "Add ⬛⬛ To a character's Perception checks to find a concealed recorder on a person's body",
+    "category": "Scanning, Detection and Surveillance Equipment"
+  },
+  {
+    "name": "Security Sweeper",
+    "note": "Make a Average (dd) Computers check to detect an area for any espionage tools and its location, if well hidden make a opposed Mechanics skill of the one who placed the device",
+    "category": "Scanning, Detection and Surveillance Equipment"
+  },
+  {
+    "name": "Combat Scanner",
+    "note": "Allows user to see normally in dark conditions and can track motion, heat and metal, adds ⬛⬛ to any checks made to attempt to decode and understand transmissions from the combat scanner to other combat scanners (FaD:Knights of fate version says remove ⬛⬛ to checks due to darkness)",
+    "category": "Scanning, Detection and Surveillance Equipment"
+  },
+  {
+    "name": "Demolitions Scanner",
+    "note": "Allows user to detect concealed explosive devices and adds ⬛ to any checks to do so",
+    "category": "Scanning, Detection and Surveillance Equipment"
+  },
+  {
+    "name": "Recon Remote",
+    "note": "Remote droid used for Recon and surveillance, 20 kilometre range.",
+    "category": "Scanning, Detection and Surveillance Equipment"
+  },
+  {
+    "name": "Long-Range Terrain Scanner",
+    "note": "Requires a Average (dd) Computers check on the part of the operator. Maps produced add ⬛ to any survival check made to navigate using the map plus an automatic s for every two a gained on the computers check",
+    "category": "Scanning, Detection and Surveillance Equipment"
+  },
+  {
+    "name": "Ground-Penetrating Sensor Pack",
+    "note": "Used to find things underground",
+    "category": "Scanning, Detection and Surveillance Equipment"
+  },
+  {
+    "name": "Life Form Scanner",
+    "note": "Detects up to half a kilometre away for lifeforms, Requires either an Average (dd) Survival Check or a Hard (ddd) Education or computers check to ensure the device is properly calibrated",
+    "category": "Scanning, Detection and Surveillance Equipment"
+  },
+  {
+    "name": "Hunting Goggles",
+    "note": "Grant ⬛ to any Perception skill checks made to locate prey. Removes ⬛⬛ imposed due to concealment, darkness or fog and mist from all Ranged (Light) and (Heavy) checks",
+    "category": "Scanning, Detection and Surveillance Equipment"
+  },
+  {
+    "name": "Forensic Kit",
+    "note": "Adds an automatic s to all Perception checks made by the user to spot and gather evidence.",
+    "category": "Scanning, Detection and Surveillance Equipment"
+  },
+  {
+    "name": "Holoscanner",
+    "note": "Reduce the difficulty of Perception or Vigilance checks to discover concealed items on a person or in a container or vehicle by two, typically a scanner cannot scan an item or group of items with an encumbrance higher then its own",
+    "category": "Scanning, Detection and Surveillance Equipment"
+  },
+  {
+    "name": "Hyperwave Signal Interceptor",
+    "note": "Range of 10 light years, can pickup and receive hyper communications and detect the smallest fluctuations in hyperspace, skilled operators can track vessels through hyperspace, providing several minutes warning prior to a ship exiting or giving the user a fairly good idea of the general course and direction of a vessel in hyperspace.",
+    "category": "Scanning, Detection and Surveillance Equipment"
+  },
+  {
+    "name": "Weapon Detection Goggles",
+    "note": "Add ⬛⬛ To a character's Perception checks to find a concealed weapon on a person's body",
+    "category": "Scanning, Detection and Surveillance Equipment"
+  },
+  {
+    "name": "PX-7 Heat Sensor",
+    "note": "A PX 7 heat sensor adds ⬛⬛ to Perception checks to find heat-emitting objects within short range and adds ⬛ to Mechanics checks to remove Critical Hits from starships and Critical Injuries from droids.",
+    "category": "Scanning, Detection and Surveillance Equipment"
+  },
+  {
+    "name": "Veridicator 200",
+    "note": "A character wearing a Veridicator 200 adds ⬛⬛ to checks to discern whether another character is lying or omitting significant information and adds ⬛⬛ to checks to ascertain another character's mental state",
+    "category": "Scanning, Detection and Surveillance Equipment"
+  },
+  {
+    "name": "Low Feedback Scanner",
+    "note": "Detects radiation sources of silhouette of 1 or larger within a short range, life forms within medium range, power sources within long range and Comms signals within extreme range. Extend the range of detection by 1 range for every silhouette size by which the target's size exceeds silhouette 1.",
+    "category": "Scanning, Detection and Surveillance Equipment"
+  },
+  {
+    "name": "SE-Vigilant Automated Sensor",
+    "note": "1.6 meter collapsible post with sensors, first detects audio and visual and once it senses something it triggers a second scan commences with infrared, electromagnetic and other forms of scanning and relays the data to the users datapad. Can be left to operate by itself for long periods of time due to use of a solar panel.",
+    "category": "Scanning, Detection and Surveillance Equipment"
+  },
+  {
+    "name": "Infrabinoculars",
+    "note": "A character using Infrabinoculars can see through up to two meters of wall, possibly allowing surveillance of a whole building at once. Walls made of dense materials or constructed to shield their interiors may impose one or more on Perception checks to see inside, at GM's discretion",
+    "category": "Scanning, Detection and Surveillance Equipment"
+  },
+  {
+    "name": "Infrabinoculars (with Long-Range sensors)",
+    "note": "A character using Infrabinoculars can see through up to two meters of wall, possibly allowing surveillance of a whole building at once. Walls made of dense materials or constructed to shield their interiors may impose one or more on Perception checks to see inside, at GM's discretion. Can also be switched to a long range view equivalent to that of electrobinoculars.",
+    "category": "Scanning, Detection and Surveillance Equipment"
+  },
+  {
+    "name": "Microdroid Listener",
+    "note": "Can follow a set of pre-programmed instructions from their owner, returning after a set period of time or upon detection of a specific keyword or audio cue. The microdroid does not broadcast their surveillance data and they can be quite difficult to detect until they return. Planting this device without being noticed requires an opposed Skulduggery vs Vigilance check, Once in place a character must make a Daunting (dddd) Vigilance check to locate it even when she is specifically searching for one. Has a self destruct mode in case of tampering.",
+    "category": "Scanning, Detection and Surveillance Equipment"
+  },
+  {
+    "name": "TaggeCo Privacy 7 Audio Curtain",
+    "note": "Device comprises of two matched rods, Users can plant the rods onto nearly any horizontal surface in order to create a sound-dampening field between them, multiple sets of rods can enclose a conversation or the user can place them at a physical gap such as an open door or the entry to an enclosed booth at a tapcafe. Characters attempting to listen in on a conversation which is being obscured by one or more audio curtains must make a Hard (ddd) Perception check to understand anything being said, The GM can spend t or y to have the character misunderstand key words or phrases",
+    "category": "Scanning, Detection and Surveillance Equipment"
+  },
+  {
+    "name": "BioScan",
+    "note": "Using a Bioscan to scan an area for life signs grants to any Perception checks opposing Stealth. Using the device to verify a person's identity requires an Average (dd) Computers check and a biometric identifier for comparison. The GM may modify this difficulty based upon any unusual anatomical characteristics of the target's species",
+    "category": "Scanning, Detection and Surveillance Equipment"
+  },
+  {
+    "name": "HoloNet Homing Beacon",
+    "note": "Can be attached to any ship, so long as the device is not noticed and removed or if the ship is traveling outside known systems the owner of the Homing Beacon can track the ship with no checks required.",
+    "category": "Scanning, Detection and Surveillance Equipment"
+  },
+  {
+    "name": "Tracker's Goggles",
+    "note": "Grant ⬛ to any Perception skill checks made to locate prey. Removes ⬛⬛ imposed due to concealment, darkness or fog and mist from all Ranged (Light) and (Heavy) checks",
+    "category": "Scanning, Detection and Surveillance Equipment"
+  },
+  {
+    "name": "Applied Imaging B310 Micro-Imager",
+    "note": "A Micro imager adds ⬛⬛ to any Perception, Knowledge (Lore) or Knowledge (Education) checks for which magnification of fine details can contribute to the research at hand.",
+    "category": "Scanning, Detection and Surveillance Equipment"
+  },
+  {
+    "name": "Dalabar SDS-632 Surveillance Detector",
+    "note": "A surveillance detector adds ⬛⬛ to any Perception of Vigilance checks to attempt to identify the presence of a bug within short range of the user",
+    "category": "Scanning, Detection and Surveillance Equipment"
+  },
+  {
+    "name": "Fabritech 7000 Geoscanner",
+    "note": "A Geoscanner adds ⬛ to any perception, lore or education checks related to studying the subterranean environment within medium range of the user",
+    "category": "Scanning, Detection and Surveillance Equipment"
+  },
+  {
+    "name": "Paradour Enterprises Signature Scent Synthesizer",
+    "note": "Using a signature scent synthesizer prior to a discussion removes ⬛⬛ from the first Charm, Coercion or Negotiations check made during the encounter.",
+    "category": "Scanning, Detection and Surveillance Equipment"
+  },
+  {
+    "name": "SuriTech Foodstuffs Ez1 Analyser",
+    "note": "Examines any food or drink to determine whether it is safe for consumption.",
+    "category": "Scanning, Detection and Surveillance Equipment"
+  },
+  {
+    "name": "Mine Detector",
+    "note": "Using a mine detector to locate concealed mines requires a Hard (ddd) Computers or Average (dd) Vigilance check with appropriate modifications for environmental conditions such as weather. flora, rough terrain, or the composition of the ground. On a successful check, all mines and other explosive devices within medium range are revealed to the user.",
+    "category": "Scanning, Detection and Surveillance Equipment"
+  },
+  {
+    "name": "SE-90 Structural Engineering Scanner",
+    "note": "Using an SE-90 requires an Average (dd) Computers check modified according to construction materials and environmental interference per the GM's discretion. A character who succeeds can see through walls or bulk heads up to short range until the end of the encounter or the scanner is moved.",
+    "category": "Scanning, Detection and Surveillance Equipment"
+  },
+  {
+    "name": "Shipboard Systems Scanner",
+    "note": "A shipboard system scanner removes ⬛ from checks to remove system strain from starships and vehicles.",
+    "category": "Scanning, Detection and Surveillance Equipment"
+  },
+  {
+    "name": "Surveyor's Equipment",
+    "note": "Surveyor's equipment adds ⬛⬛ to a character's Perception checks when determining locations on a planet's surface, measuring distances, plotting settlements or bases, and creating detailed planetary maps.",
+    "category": "Scanning, Detection and Surveillance Equipment"
+  },
+  {
+    "name": "Surveillance Scanner",
+    "note": "Used to check rooms for bugs or search for hidden observers or electronic surveillance, can detect and locate comms signals, electromagnetic fields, ect. Have a range of close on planetary scale or long on personal scale, using this scanner upgrades the ability of checks made to locate bugs, sweep rooms for hidden cameras, pick up data streams or engage in counter surveillance activities once.",
+    "category": "Scanning, Detection and Surveillance Equipment"
+  },
+  {
+    "name": "Bacta (Litre)",
+    "note": "For bacta tank. Replaces used bacta.",
+    "category": "Medical Equipment"
+  },
+  {
+    "name": "Bacta (Tank)",
+    "note": "Recovers 1 wound per 2 hrs of use. If incapacitated 1 wound every 6 hrs| Every 24 hrs PCs can make resilience check to heal 1 crit injury",
+    "category": "Medical Equipment"
+  },
+  {
+    "name": "Emergency Medpac",
+    "note": "Allows characters to use the Medicine skill to heal others without penalty (AoR:C pg 232/ EotE:C pg 219)",
+    "category": "Medical Equipment"
+  },
+  {
+    "name": "Medpac",
+    "note": "In addition to effects of Emergency Medpack the Medpack grants ⬛ to all Medicine Skill Checks",
+    "category": "Medical Equipment"
+  },
+  {
+    "name": "Stimpack",
+    "note": "Requires one manoeuvre to use on self or other, Immediately heals 5 wounds, a second stimpack heals 4 wounds, third 3 wounds and so on, six stimpacks in a single day has no effect",
+    "category": "Medical Equipment"
+  },
+  {
+    "name": "Synthskin/Sythflesh",
+    "note": "(Unknown)",
+    "category": "Medical Equipment"
+  },
+  {
+    "name": "XV-38 Veterinary Kit",
+    "note": "The PLAV allows a user to perform medical procedures on all manner of creatures much like a medpac for a humanoid, grants ⬛ to all medicine, survival and knowledge (Xenology) skill checks to analyse and/or treat these creatures",
+    "category": "Medical Equipment"
+  },
+  {
+    "name": "XV-09 Chemical Restraint Harness",
+    "note": "Requires a Hard (ddd) Survival Check to fit a harness properly on a animal, this difficulty can be reduced by 1 with a successful Knowledge (Xenology) check. If successful, the XV-09 grants ⬛⬛ to any survival checks made to control a beast wearing the harness in addition, creatures that are successfully pacified gain ⬛ to any discipline checks. GMs can spend any t generated by the initial survival check to trigger side effects caused by drugs and are left to the GMs discretion, ttt or y can be used to reflect a catastrophic reaction",
+    "category": "Medical Equipment"
+  },
+  {
+    "name": "Cerebral Stabilizer",
+    "note": "Apply to a patient within one round of suffering a critical injury, may be applied to a character suffering from a \"Bleeding Out\" or \"The End is Nigh\" critical injury or even a character who has died during the current round. Applying the device requires an Average (dd) Medicine check. Once applied the character is stabilized, if he died he is brought back to life and counts as suffering a gruesome injury (and all its effects) otherwise the critical injury effects are cancelled, though he suffers from the injury himself",
+    "category": "Medical Equipment"
+  },
+  {
+    "name": "Military Medpac",
+    "note": "If user has no ranks in Medicine the user counts as having 1 rank in medicine when using this medpack, also removes medicine check penalty.",
+    "category": "Medical Equipment"
+  },
+  {
+    "name": "Medical Backpack",
+    "note": "Allows characters to use the Medicine skill to heal others without penalty. Grants ⬛ to all Medicine checks made using Medical Backpack and decreases the difficulty of any Medicine checks to heal Critical Injuries by 1 to a minimum of Easy (d)",
+    "category": "Medical Equipment"
+  },
+  {
+    "name": "Blood Scanner",
+    "note": "As an action. a character with a blood scanner may make an Easy (d) Medicine check to identify foreign elements (including poisons) in a blood sample. In addition to allowing the character to treat any present toxins with the proper antidote. The extensive information about the patient's health adds automatic aa to the next Medicine check the character makes to treat the patient.",
+    "category": "Medical Equipment"
+  },
+  {
+    "name": "Med-Aid Patch",
+    "note": "When making a Medicine check to heal wounds from a character. A character can expend up to one med-aid patch to add automatic s+a to the results of the check. A character cannot use more than one med-aid patch per check.",
+    "category": "Medical Equipment"
+  },
+  {
+    "name": "Nullicaine",
+    "note": "Character may apply Nullicaine to themselves or an engaged character by making an Easy (d) Medicine check and choosing 1 Easy (d), Average (dd) or Hard (ddd) Critical injury the target is currently suffering, if successful target suffers 3 strain and ignores the chosen critical injury until the end of the encounter",
+    "category": "Medical Equipment"
+  },
+  {
+    "name": "Stimstick",
+    "note": "A character who chews a stimstick removes ⬛ from their discipline, Perception, Resilience or Vigilance checks to stay awake or notice something due to fatigue or lack of sleep until the end of the encounter, at the end of the encounter the character suffers 1 strain.",
+    "category": "Medical Equipment"
+  },
+  {
+    "name": "Military Traumapac",
+    "note": "A traumapac only allows a character to use the Medicine skill to attempt to remove Critical Injuries from others without penalty.",
+    "category": "Medical Equipment"
+  },
+  {
+    "name": "Healer's Kit",
+    "note": "Must be made by the character with a Hard (ddd) Survival check. Allows the character to use the medicine skill to heal themselves or others without penalty. GM may spend y on a Medicine check when a character is using a healer's kit to indicate that some or all of the medicinal items have been exhausted and the kit cannot be used again until restocked with a Average (dd) Survival Check.",
+    "category": "Medical Equipment"
+  },
+  {
+    "name": "XV-20 Portable Veterinary Kit",
+    "note": "Allows an individual to treat a wounded or ill creature without penalty. Additionally the kit gains ⬛ to all medicine, survival and knowledge (xenology) skill checks made to diagnose or treat such animals",
+    "category": "Medical Equipment"
+  },
+  {
+    "name": "Antishock Blanket",
+    "note": "When a character uses an antishock blanket to help heal a Critical Injury, the character may reduce the difficulty of the Medicine check made to heal the injury by one to a minimum of Easy (d).",
+    "category": "Medical Equipment"
+  },
+  {
+    "name": "Bioscan",
+    "note": "A character using a bioscan can remove ⬛⬛ from any Medicine checks the character makes.",
+    "category": "Medical Equipment"
+  },
+  {
+    "name": "Plasma Protein Replicator",
+    "note": "When a character uses a plasma protein replicator to help heal a Critical Injury, the character adds automatic s to the Medicine check made to heal the injury",
+    "category": "Medical Equipment"
+  },
+  {
+    "name": "Spray Plasto-Cast",
+    "note": "A character can make an Easy (d) Medicine check to apply a spray plasto-cast to a limb that has been crippled or disabled due to a critical injury. If successful the critical injury heals automatically after one week of narrative time.",
+    "category": "Medical Equipment"
+  },
+  {
+    "name": "Toxin Detector",
+    "note": "detects toxins and poisons in food, drink and even in the environment, Simple red/green indicators or subtle vibration to alert user to presence of dangerous substances, often built into bracelets or other jewellery for maximum subtlety.",
+    "category": "Medical Equipment"
+  },
+  {
+    "name": "\"Knack\" Restraining Bolt",
+    "note": "Allows for secret commands to be sent or triggered on droids, PC droids can attempt to resist a \"Knack\" restraining bolt like a regular restraining bolt",
+    "category": "Security, Infiltration and Espionage Equipment"
+  },
+  {
+    "name": "Advanced Flesh Camouflage Kit",
+    "note": "Drastically change appearance to a genetic level even fooling bioscanners, requires a Formidable (ddddd) Perception Check to see through it",
+    "category": "Security, Infiltration and Espionage Equipment"
+  },
+  {
+    "name": "AL-DR8 Grav-Binders",
+    "note": "Breaking free from grav binders requires a Formidable (ddddd) Athletics check (due to the restrictive effects of the artificially raised gravity on the whole body, a character cannot slip free of gravbinders using flexibility alone).",
+    "category": "Security, Infiltration and Espionage Equipment"
+  },
+  {
+    "name": "Binders",
+    "note": "Requires a Daunting (dddd) Athletics or Coordination check to escape",
+    "category": "Security, Infiltration and Espionage Equipment"
+  },
+  {
+    "name": "BlackOps/Outlaw Data Breaker",
+    "note": "Add ⬛⬛ to any Computers check made to slice computers, add ⬛ to any attempts to locate use of a data breaker in a computer system due to \" noise \" (highly illegal)",
+    "category": "Security, Infiltration and Espionage Equipment"
+  },
+  {
+    "name": "Cargo Scanner",
+    "note": "Make a Average (dd) Computers check to increase the available encumbrance capacity of a planetary vehicle or starship with a silhouette of 3 or my by 10 percent (rounding up) thanks to more efficient organization",
+    "category": "Security, Infiltration and Espionage Equipment"
+  },
+  {
+    "name": "Com Jammer",
+    "note": "Countering a com jammer requires a computers check, difficulty is determined to the proximity",
+    "category": "Security, Infiltration and Espionage Equipment"
+  },
+  {
+    "name": "Com Scrambler",
+    "note": "Adds ⬛⬛ to any checks made to decode and understand and encrypted transmission",
+    "category": "Security, Infiltration and Espionage Equipment"
+  },
+  {
+    "name": "Data Dead Drop",
+    "note": "Characters trying to find something hidden within a data dead drop must make a Daunting (dddd) Perception Check, or at the GMs discretion if an unaware character may use Vigilance instead",
+    "category": "Security, Infiltration and Espionage Equipment"
+  },
+  {
+    "name": "Dataspike",
+    "note": "May expend one spike to attempt to disable a security program as a manoeuvre (rather then an action). Reduce the difficulty of the subsequent computer check to disable the program by 2, to a minimum of simple (-) after one use the data spike become useless",
+    "category": "Security, Infiltration and Espionage Equipment"
+  },
+  {
+    "name": "Diplomatic Authorization",
+    "note": "A character with Diplomatic Authorization adds a automatic aa to all social checks involving members of a foreign government, can often get access to individuals and services that would be otherwise unavailable",
+    "category": "Security, Infiltration and Espionage Equipment"
+  },
+  {
+    "name": "Disguise Kit",
+    "note": "Skulduggery check to see if disguise works. Difficulty decided by GM. Possibly opposed check depending on who's being fooled.",
+    "category": "Security, Infiltration and Espionage Equipment"
+  },
+  {
+    "name": "Ealewon A-212 Tracing Console",
+    "note": "Computer checks to slice a system with one of these attached suffer a ⬛ due to the difficulty of avoiding notice, a defending slicer using the console gains ⬛⬛ to computers checks to identify any intruder.",
+    "category": "Security, Infiltration and Espionage Equipment"
+  },
+  {
+    "name": "Electronic Lock Breaker",
+    "note": "Qualifies the user for the \"Right Tool For the Job\" benefit for computer skill based locks, adds ⬛ to computer checks for locks",
+    "category": "Security, Infiltration and Espionage Equipment"
+  },
+  {
+    "name": "Explosive Shackles",
+    "note": "Shackles requires a Daunting (dddd) Skulduggery check to remove without the key, if character fails the shackles detonate, inflicting 10 wounds on the wearer and each character in engaged range (ignores soak)",
+    "category": "Security, Infiltration and Espionage Equipment"
+  },
+  {
+    "name": "False Credentials",
+    "note": "Requires a successful Hard (ddd) Computers check or a Daunting (dddd) Perception check (without equipment) to recognize credentials as fakes",
+    "category": "Security, Infiltration and Espionage Equipment"
+  },
+  {
+    "name": "Falsified Credentials",
+    "note": "Characters using scanners require a successful Hard (ddd) Computers check to recognize credentials as fake ( or a Daunting (dddd) Perception check without equipment)",
+    "category": "Security, Infiltration and Espionage Equipment"
+  },
+  {
+    "name": "Fingerprint Masque",
+    "note": "Depending on the scanner checking the fingerprints may fool scanner with any Cool or Deception check at GMs discretion up to Hard (ddd) depending on how advanced the scanner is, if biometric scanner operator has reason to be suspicious it may require a opposed social skill check vs the operator's computers skill. The operator must make a Daunting (dddd) Perception check to notice a fingerprint masque on a persons fingers",
+    "category": "Security, Infiltration and Espionage Equipment"
+  },
+  {
+    "name": "Forgery Tools",
+    "note": "Assists in the creations of creating fake documents and identity cards",
+    "category": "Security, Infiltration and Espionage Equipment"
+  },
+  {
+    "name": "Lockpicking Tools",
+    "note": "for non electronic locks or out of power electric locks",
+    "category": "Security, Infiltration and Espionage Equipment"
+  },
+  {
+    "name": "MCI-100 Magnacuffs",
+    "note": "Requires a Formidable (ddddd) Coordination Check, they are too strong to break though brute force",
+    "category": "Security, Infiltration and Espionage Equipment"
+  },
+  {
+    "name": "Palm Stunner",
+    "note": "A character can use a palm stunner on a unaware target with an opposed Skulduggery vs Resilience check. A successful check automatically incapacitates a minion, or deals 12 damage to the strain threshold of a rival or nemesis, in addition, each s on the Opposed stealth check increases the damage dealt by 1",
+    "category": "Security, Infiltration and Espionage Equipment"
+  },
+  {
+    "name": "Personal Stealth Field",
+    "note": "Cannot be detected by sight, any attempts to detect by scent, motion or sound make a skill check at a Formidable (ddddd) difficulty, any t or y generated may be used by the GM to indicate the field flickering or failing all together",
+    "category": "Security, Infiltration and Espionage Equipment"
+  },
+  {
+    "name": "Personal Transponder",
+    "note": "Picking up a personal Transponder's signal accurately enough to find its exact location within close range on planetary scale requires an Average (dd) Computers Check. Increase the difficulty of this check by two for each planetary scale range band beyond close, to a maximum of extreme range at the planetary scale.",
+    "category": "Security, Infiltration and Espionage Equipment"
+  },
+  {
+    "name": "Restraining Bolt",
+    "note": "Works on NPC's, But PCs can make a Daunting (dddd) Discipline check to shake off the effects",
+    "category": "Security, Infiltration and Espionage Equipment"
+  },
+  {
+    "name": "Scramble Key",
+    "note": "Attempts to guess an access code at incredible speeds to gain access through a electronic lock (simple locks within 5 minutes of application, more complicated locks at GM's discretion adding more time and/or triggering relevant alarms). Users may attempt to speed up the process with a Daunting (dddd) Skulduggery check relying on pure intuition to select the correct code, failure immediately triggers any relevant alarms. Force-sensitive characters may make a force power check as part of this check adding either s or a for each 🌓 generated",
+    "category": "Security, Infiltration and Espionage Equipment"
+  },
+  {
+    "name": "Shadowcloak",
+    "note": "Discerning any identifiable features of a character wearing a shadowcloak requires a Daunting (dddd) Perception Check | (Cyphers and mask info follows); works best when static, normally attached to chairs/furniture, can operate for an hour but then has to cool of for four, if wearer has performed a move manoeuvre in the round (or was moved by some other means) the check to discern features is reduced to Hard (ddd)",
+    "category": "Security, Infiltration and Espionage Equipment"
+  },
+  {
+    "name": "Signature Modulation Pad",
+    "note": "Add ⬛⬛ to checks attempting to acquire the user's slicing signature.",
+    "category": "Security, Infiltration and Espionage Equipment"
+  },
+  {
+    "name": "Signet Ring",
+    "note": "A character who possesses a signet ring (even if stolen) automatically adds aa to checks to establish his/her identity (even assumed identity)",
+    "category": "Security, Infiltration and Espionage Equipment"
+  },
+  {
+    "name": "Skifter",
+    "note": "While gambling a character with a skifter gains ⬛ to skulduggery checks to cheat",
+    "category": "Security, Infiltration and Espionage Equipment"
+  },
+  {
+    "name": "Slicer Gear",
+    "note": "Qualifies the user for the \"Right Tool For the Job\" benefit for computer slicing, adds ⬛ to computer checks for slicing computers",
+    "category": "Security, Infiltration and Espionage Equipment"
+  },
+  {
+    "name": "Stun Cuffs",
+    "note": "Breaking free from stun cuffs requires a Daunting (dddd) Athletics or Coordination check. The GM may spend tt or y on the check to have the character suffer 4 strain this ignores soak).",
+    "category": "Security, Infiltration and Espionage Equipment"
+  },
+  {
+    "name": "Thalassian Security Collar",
+    "note": "Collar Requires a Daunting (dddd) Skulduggery check to remove without the key, if character fails the wearer suffers 2 strain and 1 wound (ignores soak) and becomes Disoriented for 5 rounds.",
+    "category": "Security, Infiltration and Espionage Equipment"
+  },
+  {
+    "name": "Holographic Disguise Matrix",
+    "note": "A character using this item can effectively impersonate the visual appearance of whomever the device has previously recorded. This device adds ⬛⬛ to the user's Deception checks to impersonate the target and adds ⬛⬛ to onlookers Perception checks to detect the imposter.",
+    "category": "Security, Infiltration and Espionage Equipment"
+  },
+  {
+    "name": "Saline Pump",
+    "note": "Clawdite use only, Add ⬛ to Clawdite's checks to pass as another person using their species ability, and ⬛ to other characters checks to the Clawdite's physiological deception.",
+    "category": "Security, Infiltration and Espionage Equipment"
+  },
+  {
+    "name": "Holographic Image Disguiser",
+    "note": "Projects a high resolution, pre-rendered image that completely covers a target, image is very lifelike with movements, breathing, blinking twitchs, but can only be used for one pre-rendered image, droids, cameras and scanners can see through this disguise. Unless plugged into a external power supply it can only run for a few minutes. Does not modulate voice. Disguise must be the same size as the target or larger, detecting a HID by eye alone requires a Daunting (dddd) Perception Check. Droids or people using mechanical methods of viewing the user only require an Average (dd) Perception Check",
+    "category": "Security, Infiltration and Espionage Equipment"
+  },
+  {
+    "name": "Vid-Vox Scrambler",
+    "note": "Scramblers affect all electronic by jamming audio, video and holographic recording devices within a four meter radius. A Daunting (dddd) Perception check can be made to attempt to overhear a pertinent part of a conversation from within the jamming bubble, using a recording device requires a Daunting (dddd) Computers check, but that will be incomplete or spotty at best, devices outside the bubble cannot detect anything at all.",
+    "category": "Security, Infiltration and Espionage Equipment"
+  },
+  {
+    "name": "Concealed Escape Kit",
+    "note": "Normally in the heel/sole of a boot or shoe, it contains multiple tools to help escape small cells or restraints, a typical kit includes wire cutters, durasteel file, a length of slicewire, miniature memory stick, small maps of the area (player should actively update this or be left with a map from somewhere else or even another planet), a single use laser cutter (works for one round or just enough time to cut through a lock or a bar or two). Upgrade the ability of all mechanics and Skulduggery checks made to escape confinement once. Most kits in shoes/boots come with a flexible monoknife that has the following profile: (Melee; Damage +1; Critical 3; Range [Engaged]; Pierce 1). Upgrade the difficulty of checks to detect a concealed escape kit twice.",
+    "category": "Security, Infiltration and Espionage Equipment"
+  },
+  {
+    "name": "Lockpick Set",
+    "note": "Counts as a tool kit for the purposes of opening mechanical and simple electrical locks",
+    "category": "Security, Infiltration and Espionage Equipment"
+  },
+  {
+    "name": "Redirection Crystal",
+    "note": "Setting up a redirection Crystal requires a Hard (ddd) Skulduggery check, Due to its size, hitting a redirection crystal requires a Hard (ddd) Ranged (light) or (heavy) check, if player manages to hit the crystal it has the following profile (Damage 9; Critical 4; Range [Short]; Limited Ammo 1), after firing this item is destroyed immediately",
+    "category": "Security, Infiltration and Espionage Equipment"
+  },
+  {
+    "name": "Destro-6 Demolition Charge",
+    "note": "Setting up one or more Destro-6 charges with the safeties fully engaged requires an Easy (d) Mechanics check and takes five minutes per charge. Disabling the safeties for a batch of charges halves the time required but increases the difficulty of the check to Hard (ddd). The GM may spend ttt or y on any mechanics check using charges with disabled safety features to cause a premature detonation. When a charge detonates, it deals 20 damage with breach 1 quality to every character and vehicle within short range, each additional charge used increases the base damage by 5",
+    "category": "Security, Infiltration and Espionage Equipment"
+  },
+  {
+    "name": "Republic Insignia/Replica",
+    "note": "A Character with one or more Republic Insigina's adds ⬛ to checks made to impress or persuade other characters based on their past service, At GM's discretion a character with multiple of these may add an additional ⬛ to such checks. A Genuine Republic insigina cannot be purchased on the open market, however black market replicas can be found, if a replica is examined a successful Hard (ddd) Perception check reveals that they are fake.",
+    "category": "Security, Infiltration and Espionage Equipment"
+  },
+  {
+    "name": "Republic Seal of Service",
+    "note": "Can only be earned (before the fall of the republic), the award has its own transponder so faking one is also impossible. Characters who have been awarded this item add s to all checks involving formal Republic proceedings, proof of identity or verification of past actions, Presenting a Seal of Service may also upgrade the ability of checks the character makes to impress or persuade those loyal to the Republic, at the GM's discretion.",
+    "category": "Security, Infiltration and Espionage Equipment"
+  },
+  {
+    "name": "Concealed Recorder",
+    "note": "This item can record conversations and is easily concealed as small inconspicuous item like a pendant, stylus, hair clip.",
+    "category": "Security, Infiltration and Espionage Equipment"
+  },
+  {
+    "name": "Nano-Droids",
+    "note": "An expensive way to kill someone guarrenteed to send them out with a bang … because anything these Nano-Droids are in be it a person or something else, explode dealing 20 damage with Breach 1 to everything within short range. These Nano-Droids are invisible to the naked eye and are stored in a \"electrolytic transfer fluid\". Add ⬛⬛⬛ to a characters perception check to notice nano-droids, unless the searcher knows to look for them and has an appropriate scanner. Nano-droids can be reprogrammed to explode when activated (how the book doesnt say but GMs can figure that out)",
+    "category": "Security, Infiltration and Espionage Equipment"
+  },
+  {
+    "name": "Breath Mask/Respirator",
+    "note": "Allows user to breath and operate in environments and atmospheres that are not normally hospitable for them.",
+    "category": "Survival Gear & \"Unique\" Gear"
+  },
+  {
+    "name": "Crash Survival Kit",
+    "note": "Contains essential gear: Thermal Cloak, knife, beacon, 2 comlinks, wire, rations, emergency medpac, 2 respirators, water, glow rod, flare gun, high strength microfiber, and some kits are customized with small, hidden blasters to avoid detection.",
+    "category": "Survival Gear & \"Unique\" Gear"
+  },
+  {
+    "name": "Field Ration Packs",
+    "note": "One use item. Used as basic or emergency food.",
+    "category": "Survival Gear & \"Unique\" Gear"
+  },
+  {
+    "name": "Spacesuit",
+    "note": "Sealed suit for operating in space (dependant on oxygen supply).",
+    "category": "Survival Gear & \"Unique\" Gear"
+  },
+  {
+    "name": "Tent",
+    "note": "Allows basic shelter from the elements.",
+    "category": "Survival Gear & \"Unique\" Gear"
+  },
+  {
+    "name": "Thermal Cloak",
+    "note": "Removes up to ⬛⬛ from any checks made to handle extreme heat or cold",
+    "category": "Survival Gear & \"Unique\" Gear"
+  },
+  {
+    "name": "Camouflage Netting (Roll)",
+    "note": "Adds Automatic ff to all checks made to detect items concealed by it, one roll can conceal one object up to silhouette 2, two rolls conceal one object up to silhouette 3 and three rolls can conceal one object up to silhouette 4, anything silhouette 5 or larger is too large to conceal by camo netting alone. (FaD:Knights of Fate version says only 1 f)",
+    "category": "Survival Gear & \"Unique\" Gear"
+  },
+  {
+    "name": "Camouflage Paint",
+    "note": "Adds Automatic f to all checks made to detect items concealed by it, only works on items or individuals with a silhouette of 1 or smaller",
+    "category": "Survival Gear & \"Unique\" Gear"
+  },
+  {
+    "name": "Canteen",
+    "note": "1.5 litres of liquid can be held and comes equipped with a filtration system",
+    "category": "Survival Gear & \"Unique\" Gear"
+  },
+  {
+    "name": "Field Goggles",
+    "note": "Protects eyes from sun, wind, dust and other airborne debris.",
+    "category": "Survival Gear & \"Unique\" Gear"
+  },
+  {
+    "name": "Field Rations",
+    "note": "Can survive one week on one ration",
+    "category": "Survival Gear & \"Unique\" Gear"
+  },
+  {
+    "name": "Fire Paste",
+    "note": "Starts Fires with minor chemical combustion",
+    "category": "Survival Gear & \"Unique\" Gear"
+  },
+  {
+    "name": "Food Preparation System",
+    "note": "Camping hotplate",
+    "category": "Survival Gear & \"Unique\" Gear"
+  },
+  {
+    "name": "Holographic Ghillie Suit",
+    "note": "Increases difficulty to locate the wearer by 1 as long as the wearer remains immobile.",
+    "category": "Survival Gear & \"Unique\" Gear"
+  },
+  {
+    "name": "TaunTaun Pup Tent",
+    "note": "can ignore temperatures up to -20 degrees",
+    "category": "Survival Gear & \"Unique\" Gear"
+  },
+  {
+    "name": "Syntherope (20 Meters)",
+    "note": "rope",
+    "category": "Survival Gear & \"Unique\" Gear"
+  },
+  {
+    "name": "Electro-snare",
+    "note": "Make survival check, conceal with GM determined difficulty, animal or sentient makes opposed perception check against the survival skill of character who set snare, if undetected fires a powerful stun blast once it enters engaged range automatically hitting and dealing 10 stun damage to targets strain threshold but does not ignore soak, plus 2 additional damage per s scored on the initial survival check",
+    "category": "Survival Gear & \"Unique\" Gear"
+  },
+  {
+    "name": "Portable Survival Shelter",
+    "note": "No matter the weather environment the inside of this shelter remains a comfortable temperature, packs down to the size of a large datapad",
+    "category": "Survival Gear & \"Unique\" Gear"
+  },
+  {
+    "name": "Electric Perimeter Fence",
+    "note": "Anyone or thing coming into contact with the fence suffers the effects of a stun grenade.",
+    "category": "Survival Gear & \"Unique\" Gear"
+  },
+  {
+    "name": "Personal Distress Beacon",
+    "note": "Anyone Searching for an individual with an active distress beacon gains ⬛⬛ to any Perception, Computers or Surveillance checks made in the course of the search",
+    "category": "Survival Gear & \"Unique\" Gear"
+  },
+  {
+    "name": "Field Kitchen",
+    "note": "Setup takes 30 minutes, once done grants ⬛⬛ to any Survival or Education skill checks made to store, identify, cook or sterilize consumables.",
+    "category": "Survival Gear & \"Unique\" Gear"
+  },
+  {
+    "name": "Field Dressing Kit",
+    "note": "Grants ⬛ to any survival skill checks made to harvest meat, organs or bones from a prey animal",
+    "category": "Survival Gear & \"Unique\" Gear"
+  },
+  {
+    "name": "Biome Generator",
+    "note": "",
+    "category": "Survival Gear & \"Unique\" Gear"
+  },
+  {
+    "name": "Elysium Atmospheric Processor",
+    "note": "Produces breathable air and clean water",
+    "category": "Survival Gear & \"Unique\" Gear"
+  },
+  {
+    "name": "FasClean Atmospheric Reactive Damper",
+    "note": "Scrubs carbon dioxide from the air",
+    "category": "Survival Gear & \"Unique\" Gear"
+  },
+  {
+    "name": "GX-8 Water Vaporator",
+    "note": "Provides fresh, safe water",
+    "category": "Survival Gear & \"Unique\" Gear"
+  },
+  {
+    "name": "A99 Aquata Breather",
+    "note": "Once the two-hour air supply is depleted. the unit cannot be recharged",
+    "category": "Survival Gear & \"Unique\" Gear"
+  },
+  {
+    "name": "InstaMist Generator",
+    "note": "As an action. a character may activate an lnstaMist generator to fills an area out to short range of the generator with a heavy fog. Heavy fog adds ⬛⬛⬛ to Ranged (Light), Ranged (Heavy), Gunnery and Perception checks against targets obscured by it. and adds ⬛⬛⬛ to Stealth checks made by characters concealed by it. The heavy fog lasts for three rounds. At the GM's discretion. windy conditions can cause it to become fog or mist (see page 219 of the Force and Destiny Core Rulebook) or reduce the time it takes for tile vapour to disperse entirely. The generator comes with five vapour cartridges. Additional vapour cartridges cost 10 credits each. and other cartridges vary in price based on their function.",
+    "category": "Survival Gear & \"Unique\" Gear"
+  },
+  {
+    "name": "Jedi Utility Belt",
+    "note": "A Jedi utility belt contains a three-day supply of food capsules, an emergency medpac. a Jedi multi-tool, a slim glow rod. a comlink. and an aqua breather. A number of empty pouches are concealed along the belt's interior side. allowing the wearer to hide small items. In addition, a standard lightsaber can be securely hung from the belt for easy access. In addition to potentially containing the supplies listed above. a Jedi utility belt increases the wearer's encumbrance threshold by 1.",
+    "category": "Survival Gear & \"Unique\" Gear"
+  },
+  {
+    "name": "Luma Flare",
+    "note": "As an action. a character may make an Easy (d) Gunnery check to launch a luma flare into the air to provide light. If he succeeds and the flare has room to travel into the air. the flare completely illuminates an area out to long range from the location it was fired. If he fails or does not have room to fire it, the flare still ignites, but it but does not travel into the air. Instead, it remains at ground level. illuminating an area out to short range. Whether he succeeds or fails. the flare's illumination continues for five rounds. after which time it burns out.",
+    "category": "Survival Gear & \"Unique\" Gear"
+  },
+  {
+    "name": "Condenser Unit",
+    "note": "The device can gather enough water each day to sustain one person, and its battery lasts six months",
+    "category": "Survival Gear & \"Unique\" Gear"
+  },
+  {
+    "name": "Entrenching Tool",
+    "note": "Allows user to dig holes and trenches (see Fortifications on page 83 of \"Forged in battle\"), an entrenching tool counts as a small improvised weapon that deals +2 damage instead of +1 and has a Crit Rating of 4 and does not break",
+    "category": "Survival Gear & \"Unique\" Gear"
+  },
+  {
+    "name": "Portable Power Generator",
+    "note": "A portable generator can recharge a depleted piece of equipment as a manoeuvre, or a droid or larger piece of machinery in an hour. Additionally, a portable power generator can allow an engaged character to ignore an \"out of ammo\" result in the same manner as an extra reload",
+    "category": "Survival Gear & \"Unique\" Gear"
+  },
+  {
+    "name": "Pretormin Plastent",
+    "note": "Sleeping in a Plastent removes ⬛⬛ from the users checks to resist hostile temperatures while sleeping, and downgrades the difficulty of any such checks once.",
+    "category": "Survival Gear & \"Unique\" Gear"
+  },
+  {
+    "name": "Beast call",
+    "note": "Using a beast call does not require a skill check but the beat being targeted must make an Average (dd) Discipline check to resist the lure of the device, Recording a new call to the mechanism's memory requires an Average (dd) Computers check",
+    "category": "Survival Gear & \"Unique\" Gear"
+  },
+  {
+    "name": "Pannier Modular Cargo Handling System",
+    "note": "Can only be worn by riding or working animals of a silhouette 2 or larger. Increases the creatures encumbrance threshold by 6.",
+    "category": "Survival Gear & \"Unique\" Gear"
+  },
+  {
+    "name": "Pannier Modular System Extra Cargo Container",
+    "note": "Adds on to the Pannier modular Cargo Handling system for beasts, adds an additional 3 encumbrance to the threshold for each additional cargo container added to the system to a maximum increase of 12",
+    "category": "Survival Gear & \"Unique\" Gear"
+  },
+  {
+    "name": "Riding Tack",
+    "note": "Tack can only be worn by riding or working animals, Tack allows a character to ride the beast without suffering the bareback riding penalty",
+    "category": "Survival Gear & \"Unique\" Gear"
+  },
+  {
+    "name": "Saddlebags",
+    "note": "Can only be worn by riding animals, they increase the animals encumbrance threshold by 4.",
+    "category": "Survival Gear & \"Unique\" Gear"
+  },
+  {
+    "name": "Survival Equipment INC. Flashfire Camp Stove",
+    "note": "Lightweight camp stove",
+    "category": "Survival Gear & \"Unique\" Gear"
+  },
+  {
+    "name": "Survival Equipment INC. Mess Kit",
+    "note": "Pots, pans, plate, cup and eating utensils all in one compact unit.",
+    "category": "Survival Gear & \"Unique\" Gear"
+  },
+  {
+    "name": "Water Purifier",
+    "note": "Kills micro-organisms , deadly viruses and toxins in ten minutes",
+    "category": "Survival Gear & \"Unique\" Gear"
+  },
+  {
+    "name": "Czerka BC-7 Environmental Cacoon",
+    "note": "Reduces the difficulty of Resilience checks made to resist efforts of extreme cold or heat by 3. It also removes ⬛⬛⬛ added to checks due to extreme heat or cold, for as long as the user remains within it.",
+    "category": "Survival Gear & \"Unique\" Gear"
+  },
+  {
+    "name": "Kamperdine Clothing Specialists Body Glove",
+    "note": "Worn under clothing or armour, Removes ⬛ from any checks due to temperatures outside those of the wearer's preferred environment.",
+    "category": "Survival Gear & \"Unique\" Gear"
+  },
+  {
+    "name": "Pretormin Environmental WPR-60",
+    "note": "Purifies enough water for one person to drink per day.",
+    "category": "Survival Gear & \"Unique\" Gear"
+  },
+  {
+    "name": "Training Weights",
+    "note": "Wearing this adds to all brawn and Agility based checks and to all combat checks, if worn through entire game session increase the amount of XP the character receives for the session by 1 (if no checks were made during the session with the weights GM can decide not to award that XP)",
+    "category": "Survival Gear & \"Unique\" Gear"
+  },
+  {
+    "name": "Aquasuit",
+    "note": "An Aquasuit provides six hours of atmosphere to an air breather. During this time the wearer also has access to fresh water, nutrition supplements, and other biological necessities, while wearing a aquasuit the character does not suffer movement penalties for traveling through water.",
+    "category": "Survival Gear & \"Unique\" Gear"
+  },
+  {
+    "name": "Lando Calrissian's Cape Armoire",
+    "note": "Dressed for Success: Once per session, the owner of Lando's armoire may make a Hard (ddd) Perception check to select a flattering cape. If Successful, they can upgrade one Charm check they make during the next encounter while wearing the slected cape. The wearer may spend aaa or x from the Perception check to upgrade all charm checks they make during the encounter once instead. If a single cape is found, it weighs a base of 1 encumberance, has a rarity of 6, its price starts at 900 GM determines full price judging by its effect. GM Rolls a d100 to determine the cape found (descriptions shorted to just colour and effect); 01-16 - Black with blue lining (Once per encounter, the wearer may upgrade the difficulty of a Deception check they make once to add an automatic x to the result) - 17-33 - Azure with gold lining and leather trim (Once per encounter during a Negotiation check, the wearer may remove y from the results and add tt instead. - 34-50 Blue floor length cloak (Once per encounter, the weaer may add sa to the results of a leadership check) - 51-66 - Dark blue cape + Baffleweave liner (Adds bb to all checks made to detect concealed items on the wearer) - 67-83 White with turquoise lining (Adds bb to all charm checks the wearer makes) - 84-100 Poncho with armorweave liner (provides +1 soak and decreases Critical injury results inflicted on the weaer by 10 to a minimum of 1)",
+    "category": "Survival Gear & \"Unique\" Gear"
+  },
+  {
+    "name": "Leia Organa's Diplomatic Wardrobe",
+    "note": "Prepared to Lead: Once per session, the owner of Leia's Diplomatic Wardrobe may make a Hard (ddd) Knowldege or Perception Check to curate an outfit. If successful, select one social skill and add b to all checks the wearer makes during the next encounter. the wearer mays spend aa to increase the bonus to bb, or may spend x to select one additional social skill. Leia's outfits may be foudn on PCs travels, GM may choose to roll a d100 to randomly determine what outfit is discovered, if one is discovered it weighs a base of 1 encumberance, has a rarity of 6, and its price starts at 1,700 credits (GM has sole discretion on any aspect of this item), (Description shortened where possible) 01-20 Alderaan Royal Family Traveling gown (Adds ss to social skill checks made to affect citizens of Alderaan, if hood is raised, adds bb to any perception of vigilance checks made to identify the wearer. - 21-40 Hanging sleeved dress with necklace (Wearer upgrades the ability of any Charm checks and checks to use the Inspiring Rhetoric talent once) - Rebel Alliance cold-weather vest and Thermal Suit (Wearer adds b to social skill checks made to use a talent that affects an ally. wearer also downgrades the difficulty of any resilience checks they make to resist cold once) - 61-80 Bespin administrator robe and tunic (Wearer adds sa to the results of Negotiation checks they make) - 81-100 Rebel field uniform and Camoflage poncho (in forest and tropical environments weaer adds bb to Stealth checks and adds bb to Perception and Vigilance checks made to locate or notice wearer. the wearer also increases their ranged and melee defense by 1 while in those environments) Now come on guys, man up and crossdress for those sweet sweet bonuses =P",
+    "category": "Survival Gear & \"Unique\" Gear"
+  },
+  {
+    "name": "Climbing Gear",
+    "note": "Allows user to scale walls or tall structures. Includes wire and grappling hook/adhesion pads",
+    "category": "Tools and Electronics"
+  },
+  {
+    "name": "Datapad",
+    "note": "Used to store data, manifests, reports and could download data from larger computer networks.",
+    "category": "Tools and Electronics"
+  },
+  {
+    "name": "Emergency Repair Patch",
+    "note": "One time use that can be used to gain the normal bonus for having the \"right tools for the job\" of repairing droids, requires a manoeuvre when applied to droids and heals up to 3 wounds. Can only use up to 5 patches a day with the 6th being ineffective",
+    "category": "Tools and Electronics"
+  },
+  {
+    "name": "Extra Reload",
+    "note": "Allows a character to reload after that character experiences a \"out of ammo\" y result by spending a manoeuvre",
+    "category": "Tools and Electronics"
+  },
+  {
+    "name": "Fusion Cutter",
+    "note": "Can be used as a close-quarters weapon with a range of engaged, dealing 5 Damage, Critical rating of 3, Breach 1, Burn 3, Sunder and Vicious 3 weapon quality's",
+    "category": "Tools and Electronics"
+  },
+  {
+    "name": "Fusion Lantern",
+    "note": "Provides light, heat, and a portable power source.",
+    "category": "Tools and Electronics"
+  },
+  {
+    "name": "Glow Rod",
+    "note": "Flashlight",
+    "category": "Tools and Electronics"
+  },
+  {
+    "name": "Military Field Manual",
+    "note": "With GMs permission may be used to add ⬛ to any task",
+    "category": "Tools and Electronics"
+  },
+  {
+    "name": "Tool Kit",
+    "note": "Can be used make mechanics checks to repair devices and to \"heal\" droids",
+    "category": "Tools and Electronics"
+  },
+  {
+    "name": "Cultural Etiquette Manual",
+    "note": "A Character with a Cultural Etiquette Manual adds automatic a to social checks made to interact with members of the culture to which the manual pertains",
+    "category": "Tools and Electronics"
+  },
+  {
+    "name": "Communications Media Manipulator",
+    "note": "",
+    "category": "Tools and Electronics"
+  },
+  {
+    "name": "Expensive Jewellery",
+    "note": "Adds a automatic a to Charm and Deception skills but when other characters attempt to recall a character wearing expensive jewellery they add ⬛ to those checks",
+    "category": "Tools and Electronics"
+  },
+  {
+    "name": "Insider's Guide",
+    "note": "Add a automatic a to any check to find a specific location or service within the region",
+    "category": "Tools and Electronics"
+  },
+  {
+    "name": "Merr-Sonn 'Rider' Ascension Pistol",
+    "note": "As an action make a Average (dd) Ranged (Light) check to fire a grappling hook onto a object at medium range, as an action he may reel in the cord pulling himself to the target or an unsecured object to himself. To pull up a passenger as well make a Average (dd) Athletics Check to avoid losing grip of the pistol or partner",
+    "category": "Tools and Electronics"
+  },
+  {
+    "name": "Sound dampener",
+    "note": "add ⬛⬛ to checks to detect noise coming out of area of sound dampeners use",
+    "category": "Tools and Electronics"
+  },
+  {
+    "name": "Species Database",
+    "note": "Add ⬛⬛ to Knowledge (Xenology) checks",
+    "category": "Tools and Electronics"
+  },
+  {
+    "name": "AG/I mk.III Targeting Goggles",
+    "note": "Increase the silhouette of a target by one when making a gunnery check targeting a starship or vehicle",
+    "category": "Tools and Electronics"
+  },
+  {
+    "name": "Custom Tool Kit",
+    "note": "Add ⬛ to any skill check made to maintain or repair an item, Computer, weapon, vehicle or starship, if tools were not made for the user add a ⬛ instead",
+    "category": "Tools and Electronics"
+  },
+  {
+    "name": "Workshop Manual",
+    "note": "Using the manual allows the character to downgrade the difficulty of any checks to maintain or repair the vehicle or starship for the which the manual is made for.",
+    "category": "Tools and Electronics"
+  },
+  {
+    "name": "Aratech R82 Jump Boots",
+    "note": "Allows user to function as a Silhouette 1, Speed 2, Handling -1, System Strain Threshold 3 vehicle that can only operate in atmosphere, max altitude of 35 meters, Requires piloting (planetary) to operate.",
+    "category": "Tools and Electronics"
+  },
+  {
+    "name": "Mon Calamari Organic Gill",
+    "note": "Allows user to breath underwater, placed over mouth and prevents speech which can be overcome with waterproof microphone and earphones. Only lasts a couple of weeks before the organic gill begins to die. Due to a allergic reaction Sullustans are unable to use the organic gill.",
+    "category": "Tools and Electronics"
+  },
+  {
+    "name": "Verpine Bond Gauntlets",
+    "note": "With GMs permission may grant ⬛ to checks made to handle volatile materials or perform delicate work such as computers, mechanics for repairs and skulduggery checks to pick locks or disable traps due to the increased stability the gauntlets provide",
+    "category": "Tools and Electronics"
+  },
+  {
+    "name": "Verpine Headband",
+    "note": "A Character wearing this headband does not become incapacitated by exceeding his/her strain threshold, instead for each strain he/she suffers over their threshold they also suffer a wound and is disoriented for as long as the excess strain exists.",
+    "category": "Tools and Electronics"
+  },
+  {
+    "name": "Jet Pack",
+    "note": "Allows the user to function as a Silhouette 1, Speed 2, Handling 0, System Strain threshold 3 vehicle that can only operate in atmosphere, requires piloting (planetary) to operate",
+    "category": "Tools and Electronics"
+  },
+  {
+    "name": "Concealment Holster",
+    "note": "Add ⬛ to perception checks to discover the presence of the concealed weapon, may only hold light blaster pistols or holdout blasters",
+    "category": "Tools and Electronics"
+  },
+  {
+    "name": "Entrenching Tool",
+    "note": "Allows user to dig holes and entrenchments, Counts as a small improvised weapon that deals +2 Damage instead of +1, has a Crit Rating of 4, and does not break due to any y or t",
+    "category": "Tools and Electronics"
+  },
+  {
+    "name": "Beast call",
+    "note": "Targeted beast must make a Average (dd) Discipline check to resist the call",
+    "category": "Tools and Electronics"
+  },
+  {
+    "name": "Burning Gel",
+    "note": "Can be used as a weapon that deals 10 damage, Burn 5 and Pierce 5 weapon quality's (range; engaged) and at GMs discretion may require a Mechanics check",
+    "category": "Tools and Electronics"
+  },
+  {
+    "name": "Chem Lure",
+    "note": "Targeted beast must make a Hard (ddd) Discipline check to resist.",
+    "category": "Tools and Electronics"
+  },
+  {
+    "name": "Excavator's Precision Tool Kit",
+    "note": "N/A",
+    "category": "Tools and Electronics"
+  },
+  {
+    "name": "Audio/Visual Translator",
+    "note": "Grants ⬛ To any Lore or Intellect checks made to decipher or translate an unknown language",
+    "category": "Tools and Electronics"
+  },
+  {
+    "name": "Mercantile Datapad",
+    "note": "Specific to the Rim they are for, grants a ⬛ to any Negotiation skill checks made to buy and sell goods.",
+    "category": "Tools and Electronics"
+  },
+  {
+    "name": "Musical Instrument (Common)",
+    "note": "Cheap beginners instrument",
+    "category": "Tools and Electronics"
+  },
+  {
+    "name": "Musical Instrument (High Quality)",
+    "note": "Advanced musicians instrument",
+    "category": "Tools and Electronics"
+  },
+  {
+    "name": "Musical Instrument (Legendary)",
+    "note": "Experts instrument created to provide the best sound possible",
+    "category": "Tools and Electronics"
+  },
+  {
+    "name": "Thunderhead PES",
+    "note": "Portable Entertainment System",
+    "category": "Tools and Electronics"
+  },
+  {
+    "name": "Ardos Disk",
+    "note": "Upon displaying an ardos disk, a character adds ⬛⬛ to any Charm or Negotiation skill checks made with Hutts or their henchmen or servants. In general, most Hutts will honour the implicit significance of the ardos disk and refrain from overtly harming or hindering the bearer, however, if the disk bears the sigil of a rival clan the GM can upgrade the difficulty of any Charm or Negotiation skill checks with the Hutt in question once instead, Rival clans will give you safe passage through their space but don't expect warm treatment",
+    "category": "Tools and Electronics"
+  },
+  {
+    "name": "Credit Cleaner",
+    "note": "Requires a Formidable (ddddd) computers check to trace money cleaned",
+    "category": "Tools and Electronics"
+  },
+  {
+    "name": "MicroData Pocket Attaché",
+    "note": "Requires a Daunting (dddd) Computers check to slice into the pocket attaché, unsuccessful attempts wipe the data stored on the pad",
+    "category": "Tools and Electronics"
+  },
+  {
+    "name": "CZ-88 Heavy Loader Arm",
+    "note": "Lifts objects, has an Athletics skill of 1 and Brawn of 5 (if unassisted it rolls cdddd for Athletics checks). Can be installed onto a vehicle of silhouette 3 or larger as an attachment.",
+    "category": "Tools and Electronics"
+  },
+  {
+    "name": "Mechanical Dianoga",
+    "note": "Removes ⬛⬛ from checks to remove system strain from starships and vehicles",
+    "category": "Tools and Electronics"
+  },
+  {
+    "name": "Merr-Sonn VX-A Intelligent Toolbox",
+    "note": "Counts as a tool kit and reduces time required for repairs, crafting and other mechanics related tasks by 50%",
+    "category": "Tools and Electronics"
+  },
+  {
+    "name": "OR-Series Tech Recycling Station",
+    "note": "Add ⬛⬛ to Perception and Mechanics checks to scavenge parts or raw materials, can complete the task in 50% of the time or 25% with UTINNI! Talent. Additionally a character may recover supplies worth half of the material price from any failed crafting check to a maximum of the full value.",
+    "category": "Tools and Electronics"
+  },
+  {
+    "name": "Repulsor Clamp",
+    "note": "Can hold a single object of 10 encumbrance or less aloft. Also removes ⬛ from checks to repair hull trauma and critical hits on starships and vehicles",
+    "category": "Tools and Electronics"
+  },
+  {
+    "name": "Anti-Grav Chute",
+    "note": "Character takes no damage or strain from falls.",
+    "category": "Tools and Electronics"
+  },
+  {
+    "name": "EVA Powersuit",
+    "note": "Ignores penalties for moving in zero gravity (and can move in zero gravity under power from its inbuilt thrusters)",
+    "category": "Tools and Electronics"
+  },
+  {
+    "name": "Gravity Belt",
+    "note": "Funnily there is no data on this item in the book or anywhere so it doesn’t exist… The gravity of this situation escapes FFG",
+    "category": "Tools and Electronics"
+  },
+  {
+    "name": "Jedi Multi-Tool",
+    "note": "In addition to counting as a tool kit for the purposes of being able to perform most Mechanics checks (see page 189 of the Force and Destiny Core Rulebook), a Jedi multi-tool adds automatic a to checks to build, modify or repair lightsabers",
+    "category": "Tools and Electronics"
+  },
+  {
+    "name": "WJ 880 Blinding Helmet",
+    "note": "A character wearing a WJ-880 blinding helmet adds ⬛⬛⬛ to Combat checks (and any other checks that rely on sight). At the GM's discretion, training while wearing such a helmet might help a character to develop his perception of the Force that shapes and guides the universe around him",
+    "category": "Tools and Electronics"
+  },
+  {
+    "name": "Adamite Signet Ring",
+    "note": "Signifies to anyone on Weik that the character wearing the ring is one of the Paladins of the Adamite Tower, possessing a signet ring under false pretences earns the lasting enmity of all Paladins and their allies",
+    "category": "Tools and Electronics"
+  },
+  {
+    "name": "Bardottan Chronoscanner",
+    "note": "estimates what century the manufacture of a item is",
+    "category": "Tools and Electronics"
+  },
+  {
+    "name": "Sporting Macrobinoculars",
+    "note": "Recording capability, Remove b imposed due to long range or poor light",
+    "category": "Tools and Electronics"
+  },
+  {
+    "name": "Thermal Cutter",
+    "note": "Used for cutting through ice and snow, Can be used as a weapon with the following profile (Melee; Damage 4, Critical 4, Range [Engaged], Burn 1, Inaccurate 2)",
+    "category": "Tools and Electronics"
+  },
+  {
+    "name": "Vergence Starchart",
+    "note": "A Vergence star chart (if it is real), shows the location or one vergence (chosen by the GM). To read the chart correctly, the character must make a Hard ( ddd ) Astrogation check with ⬛⬛ a on a check can be spent to determine whether or not the chart is real.",
+    "category": "Tools and Electronics"
+  },
+  {
+    "name": "Disaster Relief Kit",
+    "note": "Can sustain the basic needs of four individuals of most known species for a week, or potentially up to ten days with careful rationing.",
+    "category": "Tools and Electronics"
+  },
+  {
+    "name": "Foot Speeder",
+    "note": "Allows a person to function as a silhouette 1, Speed 1, Handling -1, System strain Threshold 4 vehicle that can only operate in atmosphere and requires piloting (Planetary) to operate. It has a flight ceiling of five meters.",
+    "category": "Tools and Electronics"
+  },
+  {
+    "name": "Repulsor Assist Unit",
+    "note": "A character using a repulsor assist unit reduces the difficulty to climb by 2 (to a minimum of 0). A repulsor assist unit can also be attached to cargo to reduce the encumbrance value of the cargo by 7.",
+    "category": "Tools and Electronics"
+  },
+  {
+    "name": "Urban Compass",
+    "note": "Users remove ⬛⬛ from checks due to unfamiliarity with the city, traffic or other avoidable travel hazards. Additionally the urban compass can turn up information on local establishments and customs granting ⬛ to checks to find information about the city's operation, various landmarks of note and businesses of all types",
+    "category": "Tools and Electronics"
+  },
+  {
+    "name": "Microaxial Starmapper Handheld Navicomputer",
+    "note": "Using this Navicomputer grants a character ⬛⬛ to all Astrogation checks, Can be reduced by one ⬛ if the navicomputer has been outside the HoloNet range for an extended period of time",
+    "category": "Tools and Electronics"
+  },
+  {
+    "name": "Surveyor's Tools",
+    "note": "Adds ⬛ to a characters perception checks when plotting specific locations on a planet's surface, measuring distances or creating detailed maps. Larger kits may ad ⬛⬛ at GM's discretion.",
+    "category": "Tools and Electronics"
+  },
+  {
+    "name": "Weapon Maintenance Kit",
+    "note": "Before purchase player must specify the type of kit (Blaster, Slugthrower, etc.) . Each provides ⬛⬛ to any Mechanics checks made to repair maintain or modify a weapon, but only for that specific class of weapon.",
+    "category": "Tools and Electronics"
+  },
+  {
+    "name": "Rocket Boots",
+    "note": "Allows the user to function as a Silhouette 1, Speed 1, Handling -3, System Strain threshold 3 vehicle that can only operate in atmosphere, requires piloting (planetary) to operate. At the end of each round of activation, the rocket boots suffer 1 system strain as their fuel depletes.",
+    "category": "Tools and Electronics"
+  },
+  {
+    "name": "Consolidated Learning Systems Transliterator",
+    "note": "Removes ⬛⬛ from any Charm, Coercion or Negotiation checks that are added due to linguistic difficulties or misunderstandings.",
+    "category": "Tools and Electronics"
+  },
+  {
+    "name": "Data Goggles",
+    "note": "At beginning of an encounter, a character may select one knowledge skill. For the remainder of the encounter the character adds an automatic s to all checks he makes using that skill while wearing the data goggles. The GM may rule that a character needs to obtain specialized data files to upload into the data goggles before using them.",
+    "category": "Tools and Electronics"
+  },
+  {
+    "name": "Hologoggles",
+    "note": "When purchasing a set of hologoggles, a character selects one non-combat skill. That skill now counts as a career skill as long as the character owns the goggles (at gm's discretion the goggles must be used for several hours, a day or even several months to gain this bonus), only good for one skill and can only have the bonus of one effect at a time.",
+    "category": "Tools and Electronics"
+  },
+  {
+    "name": "Synoptic Teacher",
+    "note": "Player Character makes a Hard (ddd) Discipline check. Success means the user counts having one skill of the users choice at Rank 3 for the remainder of the session (or a few days within the session), Failure means the users strain threshold is halved for the remainder of the session instead. By spending a y during the check GM can cause the player character \"minor neural scarring\" at which point the user can no longer use the synoptic teacher.",
+    "category": "Tools and Electronics"
+  },
+  {
+    "name": "Foamcast",
+    "note": "Foamcast adds ⬛ to checks to repair structures and vehicle hulls. The GM may spend t on such checks to indicate the foamcast dispenser can is depleted. A can of foamcast can be made into an improvised explosive with a Hard (ddd) Mechanics check. When used in this way, a can of foamcast has the following profile: Mechanics; Damage 4; Critical 5; Range (Short); Blast 4, Ensnare 4, Inferior, Prepare 2. f on the Mechanics check means the can ruptures and covers the user in foamcast",
+    "category": "Tools and Electronics"
+  },
+  {
+    "name": "Model 40 Field Repulsor Hoist (set of 6)",
+    "note": "The Model 40 can lift a vehicle as large as silhouette 4 up to two meters off the ground. When suspended, the vehicle can be pushed, pulled, or rotated (slowly) in any direction via an Athletics check with a difficulty equal to the vehicle's silhouette.",
+    "category": "Tools and Electronics"
+  },
+  {
+    "name": "PSF Mk III Power Fence",
+    "note": "Power fences provide a energy wall that can prevent objects or energy beams from passing through it. Power fences can be destroyed by either attacking the energy walls with ion weapons or by attacking the amplification pylons with regular energy or slugthrowing weapons. When attacked. power fences have the following profile: Defence 2. Armour 2. Wound Threshold (pylons) 15. Strain Threshold (energy wall) 20.",
+    "category": "Tools and Electronics"
+  },
+  {
+    "name": "Tool Belt",
+    "note": "The wearer counts as having a tool kit, .Once per encounter, the wearer may draw a tool from the tool belt as an incidental.",
+    "category": "Tools and Electronics"
+  },
+  {
+    "name": "\"Breaker\" Heavy Hydrospanner",
+    "note": "Using a Breaker adds an automatic a to Mechanics checks. When used as a weapon, a Breaker heavy hydrospanner has the following profile: Melee; Damage + 2; Critical 4; Range (Engaged); Cumbersome 3, Disorient 1, Inaccurate 1.",
+    "category": "Tools and Electronics"
+  },
+  {
+    "name": "Demolitions Tool Kit",
+    "note": "A demolitions tool kit counts as a tool kit for checks involving preparing, setting, or defusing explosives. When using it for these checks, the wielder may spend aaaa to remove y.",
+    "category": "Tools and Electronics"
+  },
+  {
+    "name": "DF-15 Fusion Generator",
+    "note": "As a manoeuvre, a character may use a DF-15 to recharge an energy weapon or device that has run out of power or ammunition in the manner of an extra reload/power pack",
+    "category": "Tools and Electronics"
+  },
+  {
+    "name": "Engineer's Hammer",
+    "note": "Using an engineer's hammer adds ⬛⬛ to any checks made to build or demolish structures. When used as a weapon, it has the following profile: Melee; Damage + 3; Critical 5; Range (Engaged); Cumbersome 3, Disorient 1, Knockdown.",
+    "category": "Tools and Electronics"
+  },
+  {
+    "name": "EOD Kit",
+    "note": "An EOD kit adds automatic aa on any checks made to detect and disarm or otherwise neutralize explosive compounds and devices.",
+    "category": "Tools and Electronics"
+  },
+  {
+    "name": "Pioneer Squad Tool Kit",
+    "note": "The tools and equipment included in a pioneer squad tool kit adds ⬛⬛ on checks made to clear land, build structures, set up obstacles, set up or disable explosives, or engage in other construction or engineering tasks in the field.",
+    "category": "Tools and Electronics"
+  },
+  {
+    "name": "Powered Entrenching Tool",
+    "note": "A character using a powered entrenching tool gains automatic s on checks to build structures.",
+    "category": "Tools and Electronics"
+  },
+  {
+    "name": "Vibro-Pickaxe",
+    "note": "A vibro-pickaxe requires two hands to use and adds automatic ⬛ to checks involving breaking rocks, ground clearing, and similar activities. When used as a weapon, it has the following profile: Melee; Damage +2; Critical 2: Range [Engaged]; Cumbersome 4, Pierce 3, Sunder, Vicious 1.",
+    "category": "Tools and Electronics"
+  },
+  {
+    "name": "Mem-Stik",
+    "note": "Its like a USB drive, stores data for datapads, can be used for dead drops",
+    "category": "Tools and Electronics"
+  },
+  {
+    "name": "Slicewire",
+    "note": "Multipurpose cutting tool and makeshift weapon, meter long monofiliament cable contained within a carbonite rod, can cut through nearly any material from flesh and bone to duranium and plasteel, also available in spools in lengths of up to 100 meters, can be used for traps, snares and strung across corridors or alleys at neck height to catch pursuers unaware, can be dangerous to ones self as others, when used as a weapon it has the following profile; (Brawl; Damage +2; Critical 2; Range [Engaged]; Pierce 2, Vicious 3) if user fails a brawl check when using this weapon the GM can spend ttt or y to inflict the weapons full damage onto the user.",
+    "category": "Tools and Electronics"
+  },
+  {
+    "name": "Lightsaber Maintenance Kit",
+    "note": "Counts as a tool kit, also adds an automatic a to checks to build, modify, or repair lightsabers.",
+    "category": "Tools and Electronics"
+  },
+  {
+    "name": "X5R Heavy demolitions Kit",
+    "note": "Gives ⬛⬛ on Mechanics checks to Prepare, set or disarm explosives, in addition, once per session, a character using a X5R can remove one y or up to ttt from a mechanics check dealing with explosives.",
+    "category": "Tools and Electronics"
+  },
+  {
+    "name": "JT-12C Jetpack",
+    "note": "A JT-12C jetpack allows a person to function as a silhouette 1, speed 2, handling 0, system strain threshold of 4 vehicle that can only operate in atmosphere and requires piloting (Planetary) to operate",
+    "category": "Tools and Electronics"
+  },
+  {
+    "name": "Z-6 Jetpack",
+    "note": "A Z-6 jetpack allows a person to function as a silhouette 1, speed 2, handling 0, system strain threshold of 3 vehicle that can only operate in atmosphere and requires piloting (Planetary) to operate. The Z-6 also features an integrated missile launcher with the following profile (Ranged [Heavy]; Damage 15; Critical 3; Range [Long]; Blast 10, Breach 1, Inaccurate 1, Limited Ammo 1, Prepare 1)",
+    "category": "Tools and Electronics"
+  },
+  {
+    "name": "Backpack",
+    "note": "increases the wearers encumbrance threshold by 4",
+    "category": "Load Bearing, Carrying and Storage Equipment"
+  },
+  {
+    "name": "Load-Bearing Gear",
+    "note": "increases the wearers encumbrance threshold by 3",
+    "category": "Load Bearing, Carrying and Storage Equipment"
+  },
+  {
+    "name": "Utility Belt",
+    "note": "increases the wearers encumbrance threshold by 1",
+    "category": "Load Bearing, Carrying and Storage Equipment"
+  },
+  {
+    "name": "Sleight Box",
+    "note": "False bottom box, hidden items can take up half the encumbrance of the box size, a character must make a Daunting (dddd) Perception check or at GMs discretion an unaware character might use Vigilance instead",
+    "category": "Load Bearing, Carrying and Storage Equipment"
+  },
+  {
+    "name": "Military Belt Pouch",
+    "note": "Can hold two items that have encumbrance 0 and user can draw these items as an incidental.",
+    "category": "Load Bearing, Carrying and Storage Equipment"
+  },
+  {
+    "name": "Military Backpack",
+    "note": "increases user's encumbrance capacity by 6, but has the cumbersome 2 quality.",
+    "category": "Load Bearing, Carrying and Storage Equipment"
+  },
+  {
+    "name": "Modular Backpack",
+    "note": "Increases the wearers encumbrance threshold by 3",
+    "category": "Load Bearing, Carrying and Storage Equipment"
+  },
+  {
+    "name": "Modular Backpack Extra Pouch",
+    "note": "Adds onto the modular backpack and adds 1 point of encumbrance threshold for every pouch (Max 3)",
+    "category": "Load Bearing, Carrying and Storage Equipment"
+  },
+  {
+    "name": "MK.III Modular Backpack",
+    "note": "Increases the wearer's encumbrance Threshold by 2.",
+    "category": "Load Bearing, Carrying and Storage Equipment"
+  },
+  {
+    "name": "MK.III Modular Backpack Extra Pouch",
+    "note": "Adds on to the MK III Modular backpack, increasing the wearer's encumbrance by 1 for each pouch added (max of 6)",
+    "category": "Load Bearing, Carrying and Storage Equipment"
+  },
+  {
+    "name": "Surveyor's Bag",
+    "note": "Increases the wearers encumbrance threshold by 2",
+    "category": "Load Bearing, Carrying and Storage Equipment"
+  },
+  {
+    "name": "Spacer's Duffel",
+    "note": "Increases the wearers encumbrance threshold by 2 but also have the Cumbersome 3 Quality",
+    "category": "Load Bearing, Carrying and Storage Equipment"
+  },
+  {
+    "name": "Specimen Container",
+    "note": "used to carry specimens",
+    "category": "Load Bearing, Carrying and Storage Equipment"
+  },
+  {
+    "name": "Shift Coffer",
+    "note": "Sizes vary but most store about 10 encumbrance. Require a Formidable (ddddd) Perception Check to find due to light bending technology, Requires a Hard (ddd) Skulduggery check to pick",
+    "category": "Load Bearing, Carrying and Storage Equipment"
+  },
+  {
+    "name": "Magna-Lock Safe",
+    "note": "Requires a Formidable (ddddd) Skulduggery check to pick",
+    "category": "Load Bearing, Carrying and Storage Equipment"
+  },
+  {
+    "name": "Wizard Pouch",
+    "note": "Increase encumbrance threshold by 1",
+    "category": "Load Bearing, Carrying and Storage Equipment"
+  },
+  {
+    "name": "Modular Backpack Frame",
+    "note": "A frame that can hold two of the following at extra cost. -Temperature Control Unit (500 credits, Encumbrance 2, Rarity 3): This Unit comes with a specialized bodysuit that attaches to the module's cooling or heating system, removing up to ⬛⬛ from the users checks to resist extreme heat or cold -Power Unit (250 credits, Encumbrance 3, Rarity 3): This portable power unit can recharge a depleted piece of equipment as an action, or a droid or larger piece of machinery in two hours, Once per encounter it can allow the wearer of the backpack to ignore an \"out of ammo\" result in the same manner as an extra reload. -Comms Unit (500 credits, Encumbrance 2, Rarity 4): This pack functions as a Comms hub, routing Alliance communications up to long range on the planetary scale. Its encryption adds ⬛⬛ to checks made to unscramble the signal. -Sensor Unit (3,000 credits, Encumbrance 2, Rarity 3): This unit features a raised rotating dish not unlike the similar, smaller unit common to astromech droids. The sensor feeds a wrist- mounted touchscreen and can be set to alert a soldier to movement nearby, or scan the area in general up to long range. In addition to receiving narrative benefits such as advance warning of movement, the wearer adds automatic a to vigilance checks -Oxygen Unit (300 credits, Encumbrance 3, Rarity 3): This unit can provide an additional 12 hours of oxygen when connected to any rebreather, breath mask or environmentally sealed suit. -Storage Unit (25 credits, Encumbrance -, Rarity 2): This empty module has a variety of pockets and pouches designed to store survival gear, spare blaster gas canisters, power packs, field rations and a variety of other pieces of equipment used by the Rebel Alliance. This unit increases the wearer's encumbrance capacity by 3.",
+    "category": "Load Bearing, Carrying and Storage Equipment"
+  },
+  {
+    "name": "Agents bag",
+    "note": "Many different versions and uses, some are shielded from sensors, some have hidden compartments, explode if opened without a proper combination entered, some have pouches for knives, listening bugs, scanners… Talk to the GM and discuss thoroughly what this bag will do for you, gear attachments in the customization and modifications tab can help with ideas.",
+    "category": "Load Bearing, Carrying and Storage Equipment"
+  },
+  {
+    "name": "Chance Cubes",
+    "note": "",
+    "category": "Recreation/Entertainment"
+  },
+  {
+    "name": "Dejarik Table",
+    "note": "",
+    "category": "Recreation/Entertainment"
+  },
+  {
+    "name": "Sabacc Deck",
+    "note": "",
+    "category": "Recreation/Entertainment"
+  },
+  {
+    "name": "Marked Sabacc Deck",
+    "note": "Players using a marked Sabacc deck gain ⬛ to Deception checks when gambling. Noticing a marked deck requires a Hard (ddd) or Daunting (dddd) Perception check depending on the quality of the deck (higher quality costs 1,000 credits)",
+    "category": "Recreation/Entertainment"
+  },
+  {
+    "name": "Loaded Chance Cubes",
+    "note": "Characters using these cubes may add up to ⬛⬛ to Deception checks when gambling. Noticing that chance cubes are weighted requires a Formidable (ddddd) Perception check on the first roll but decreases by one for each subsequent roll.",
+    "category": "Recreation/Entertainment"
+  },
+  {
+    "name": "R7 Astromech",
+    "note": "Skills: Astrogation 3, Computers 3, Cool 2, Mechanics 3, Piloting (Space) 2. Talents: Galaxy Mapper 1 (remove ⬛ from all Astrogation checks, and Astrogation checks take 50% less time), Hold Together (spend one Destiny Point to make a Hold Together incidental immediately after a the droid's starship takes damage. The droid's controlling character explains why the apparently serious damage was in fact superficial, and the damage from the attack becomes system strain instead). Abilities: Droid (does not need to breathe, eat, or drink, and can survive indefinitely underwater or in vacuum. Immune to poisons and toxins). Equipment: Arc Welder (Melee; Damage 3; Critical - ; Range [Engaged]; Stun Damage), built-in repair and diagnostic suite (counts as tool kit).",
+    "category": "Droids"
+  },
+  {
+    "name": "Q7 Astromech",
+    "note": "Skills: Astrogation 3, Computers 3, Cool 2, Mechanics 2, Piloting (Space) 2. Talents: None. Abilities: Droid (does not need to breathe, eat, or drink, and can survive indefinitely underwater or in vacuum. Immune to poisons and toxins). Equipment: On-board repair and diagnostic suite (counts as tool kit).",
+    "category": "Droids"
+  },
+  {
+    "name": "CT-4 Medical Droid (Rival)",
+    "note": "Skills: Computers 1. Discipline 1, Knowledge (Xenology) 3, Medicine 3, Perception 2. Talents: Bacta Specialist 2 (patients heal 2 additional wounds when they heal wounds via bacta tanks or long-term care), Surgeon 1 (when making a Medicine check to help a character heal wounds, the target heals I additional wound). Abilities: Droid (does not need to breathe, eat, or drink, and can survive in vacuum and underwater; immune to poisons or toxins). Equipment: Built-in diagnostic and surgical tools (counts as medpac as well as stimpack that can be used once per session), synthflesh applicator (can administer application of synthflesh five times per session).",
+    "category": "Droids"
+  },
+  {
+    "name": "Q4 Borer Droid (Minion)",
+    "note": "(For searching for ore) Skills (group only): Perception, Ranged (Light). Talents: None. Abilities: Droid (does not need to breathe, eat, or drink, and can survive in vacuum and underwater; immune to poisons or toxins). Equipment: Heavy-duty drilling laser (Ranged [Light]; Damage 6; Critical 3; Range [Engaged]; Pierce 4), rock-scanning sensors (⬛⬛ to Perception checks made to locate ore deposits).",
+    "category": "Droids"
+  },
+  {
+    "name": "Roche J9 Worker Drone (Rival)",
+    "note": "Used for menial tasks or translation and analysis. Skills: Charm 1, Knowledge (Education) 4, Knowledge (Xenology) 3, Negotiation 2. Talents: None. Abilities: Droid (does not need to breathe, eat, or drink, and can survive in vacuum and underwater; immune to poisons or toxins). Equipment: Olfactory and microwave sensors (add ⬛⬛ to Perception checks).",
+    "category": "Droids"
+  },
+  {
+    "name": "Roche Saik-Series Protocol Droid (Rival)",
+    "note": "Skills: Charm 3, Knowledge (Education) 2, Knowledge (Xenology) 3, Negotiation 3. Talents: None. Abilities: Droid (does not need to breathe, eat, or drink, and can survive in vacuum and underwater; immune to poisons or toxins). Equipment: None.",
+    "category": "Droids"
+  },
+  {
+    "name": "SoroSuub G2 Repair Droid (Repair Droid)",
+    "note": "Designed for shipboard repair. Skills: Astrogation 2, Computers 3, Knowledge (Core Worlds) 1, Knowledge (Outer Rim) 1, Mechanics 3, Piloting (Space) 2. Talents: None. Abilities: Droid (does not need to breathe, eat, or drink, and can survive in vacuum and underwater; immune to poisons or toxins). Equipment: None.",
+    "category": "Droids"
+  },
+  {
+    "name": "SoroSuub Wanderer Scout Survey Droid (Rival)",
+    "note": "Used as scouts and collectors of indigenous wildlife. Skills: Perception 3, Ranged (Light) 1, Stealth 2, Survival 3. Talents: Hunter 1 (adds ⬛ to all skill checks when interacting with wild beasts and animals, including combat checks. This character adds +20 to all Critical Injury rolls against animals), Swift (does not suffer usual penalties for moving through difficult terrain). Abilities: Droid (does not need to breathe, eat, or drink, and can survive indefinitely underwater and in vacuum; immune to poisons and toxins). Equipment: Stun blaster (Ranged [Light]; Damage 6; Critical -; Range [Short]; Stun Damage).",
+    "category": "Droids"
+  },
+  {
+    "name": "Cybot Galactica K-9 Series Hunting Droid (Rival)",
+    "note": "Skills: Brawl 3. Perception 3, Stealth 3, Survival 3. Talents: Hunter 2 (adds ⬛⬛ to all skill checks when interacting with wild beasts and animals, including combat checks. This character adds + 20 to all Critical Injury rolls against animals) . Abilities: Droid (does not need to breathe, eat, or drink, and can survive indefinitely underwater or in vacuum. Immune to poisons and toxins). Equipment: Teeth and claws (Brawl; Damage 5; Critical 5; Range Engaged; Pierce 1 ). Built-in Fabritech \"Hound\" sensor suite (allows the droid to see in dim and dark conditions and to hear sounds far above and below a human's range of hearing at great distances. Add ⬛ to any Perception or Survival checks).",
+    "category": "Droids"
+  },
+  {
+    "name": "Cybot Galactica/KDY All Terrain Exploration Droid (Rival)",
+    "note": "Skills: Coordination 2. Perception 3, Ranged (Heavy) 1, Vigilance 3. Talents: Outdoorsman 2 (remove ⬛⬛ from checks to move through terrain or manage environmental effects. Decrease overland travel time by half). Abilities: Droid (does not need to breathe, eat, or drink, and can survive indefinitely underwater or in vacuum. Immune to poisons and toxins). Equipment: Forward-mounted blaster (Ranged [Heavy]; Damage 9: Critical 3: Range [Medium]: Stun Setting). Fabritech \"Surveyor\" mapping-and-surveying suite (can create maps of terrain features within ten kilometres. transmit information to ships in orbit, scan through up to fifty meters of earth or rock, and analyse environment for any dangerous conditions. In addition, add ⬛⬛ to all Perception and Vigilance checks made by the droid).",
+    "category": "Droids"
+  },
+  {
+    "name": "JC Series Pilot Droid (Rival)",
+    "note": "Skills: Cool 2. Piloting (Planetary) 2, Piloting (Space) 2, Ranged (Light) 1 . Talents: Full Throttle (may make a Hard (ddd) Piloting check to increase top speed of vehicle by 1 for one round). Abilities: Droid (does not need to breathe, eat, or drink, and can survive indefinitely underwater or in vacuum. Immune to poisons and toxins). Equipment: Light pop-up blaster (Ranged [Light]; Damage 5; Range [Short]; Critical 4; Stun Setting).",
+    "category": "Droids"
+  },
+  {
+    "name": "Merendata KLC Series Exchequer Droid (Rival)",
+    "note": "\"Merchants best friend\" Skills: Charm 2, Computers 2, Cool 2, Negotiation 2. Talents: Wheel and Deal 2 (when selling goods legally, gain 20% more credits). Abilities: Droid (does not need to breathe. eat. or drink, and can survive indefinitely underwater or in vacuum. Immune to poisons and toxins). Equipment: Mercantile computer with holonet connection (add ⬛ to all Negotiation checks while in the Outer Rim and ⬛⬛ to Negotiation checks while in the Core) .",
+    "category": "Droids"
+  },
+  {
+    "name": "87-RM Scout Collector (Rival)",
+    "note": "Skills: Knowledge (Xenology) 4, Perception 3. Talents: None. Abilities: Droid (does not need to breathe, eat, or drink, and can survive indefinitely underwater or in vacuum. Immune to poisons and toxins). Silhouette 3. Hoverer (floats up to several meters in the air and may move through difficult terrain without spending additional manoeuvres). Equipment: Grapple arms (Brawl; Damage 6; Critical 5; Range [Engaged]; Ensnare 3), cryostorage bay .",
+    "category": "Droids"
+  },
+  {
+    "name": "Wanderer Scout Surveyor (Rival)",
+    "note": "Skills: Perception 3. Ranged [Light] 1. Stealth 2. Survival 3. Talents: Hunter 1 (adds ⬛ to all skill checks when interacting with wild beasts and animals, including combat checks. This character adds + 20 to all Critical Injury rolls against animals). Swift (does not suffer usual penalties for moving through difficult terrain). Abilities: Droid (does not need to breathe, eat, or drink, and can survive indefinitely underwater or in vacuum. Immune to poisons and toxins). Equipment: Stun blaster (Ranged [Light]; Damage 8, Critical-; Range [Short]; Disorient 3, Stun Damage)",
+    "category": "Droids"
+  },
+  {
+    "name": "AC Series Law Enforcement Droid (Rival)",
+    "note": "Skills: Coercion 2, Discipline 2, Melee 2, Piloting (Planetary) 2, Streetwise 3, Vigilance 3. Talents: Nobody's Fool 1 (the difficulty of any Charm, Coercion, or Deception checks made against the droid are upgraded once). Abilities: None. Equipment: Stun baton (Melee; Damage 5; Critical 6; Range [Engaged); Disorient 2, Stun Damage), riot shield (Melee; Damage 3; Critical 6; Range [Engaged]; Cumbersome 3, Defensive 2, Deflection 2, Disorient 1), binders, built-in commlink.",
+    "category": "Droids"
+  },
+  {
+    "name": "DZ-70 Fugitive Tracker (Rival)",
+    "note": "Skills: Ranged (Light) 2, Stealth 2, Survival 3, Vigilance 2. Talents: Adversary 1 (upgrade all combat checks targeting this character once), Expert Tracker 2 (Remove ⬛⬛ from checks to find or follow tracks. Survival checks made to track targets take 50% less time than normal). Abilities: None. Equipment: Blaster Pistol (Ranged [Light]; Damage 6; Critical 3; Range [Medium]; Stun Setting), Ionization Blaster (Ranged [Light]; Damage 10; Critical 5; Range [Short]; Disorient 5, Stun Damage [Droid Only]).",
+    "category": "Droids"
+  },
+  {
+    "name": "Cgyrowheel 1.42.08 series recycling droid (Minion)",
+    "note": "Skills: Athletics, Coordination (Group Only). Talents: None. Abilities: None. Equipment: Cleaning devices, grabber claws.",
+    "category": "Droids"
+  },
+  {
+    "name": "Mini-Med (Minion)",
+    "note": "Skills: None. Talents: None. Abilities: Surgeon's Aid (When a minion group of one or more Mini-Meds performs the Assist manoeuvre to help a character with a Medicine check, that character counts as having + 1 rank in the Surgeon talent per Mini-Med in the group.) Silhouette 0. Equipment: None.",
+    "category": "Droids"
+  },
+  {
+    "name": "SDMN Series Session Droid (Rival)",
+    "note": "Skills: Charm 2, Cool 2, Computers 2, Coordination 2, Deception 2. Talents: Plausible Deniability 1 (remove ⬛ from all Coercion and Deception checks made by the character), Smooth Talker (Charm) 2 (character may spend x to gain ss to any Charm check). Abilities: Backup Entertainer (When a SDMN Session Droid performs the Assist manoeuvre to help a character make a check as part of a performance, that character adds automatic aa to the results instead of the usual benefits). Equipment: None.",
+    "category": "Droids"
+  },
+  {
+    "name": "Generic Remote (Minion)",
+    "note": "Skills (Group Only): Perception. Talents: None. Abilities: Droid (docs not need to breathe, eat. Or drink and can survive in vacuum or underwater; immune to poisons or toxins), Silhouette 0. Equipment: None.",
+    "category": "Droids"
+  },
+  {
+    "name": "Butterbug Remote (Minion)",
+    "note": "Skills (Group Only): Mechanics, Melee. Talents: None. Abilities: Droid (does not need to breathe, eat, or drink. it can survive in vacuum or underwater; immune to poisons or toxins), Vulnerable to Blasts (add ⬛⬛ to checks made with weapons with the Blast quality targeting minion groups of butterbug remotes), Silhouette 0. Equipment: Micro-tools and drills (Melee; Damage 2; Critical 3; Range (Engaged]; Pierce 2)",
+    "category": "Droids"
+  },
+  {
+    "name": "Service Patch Remote",
+    "note": "Skills (Group Only): Computers, Mechanics. Talents: Technical Aptitude 1 (computer-related tasks take 25% less time). Abilities: Droid {does not need to breathe, eat, or drink and can survive in vacuum or underwater; immune to poisons or toxins). Silhouette 0. Equipment: Built-in toolkit.",
+    "category": "Droids"
+  },
+  {
+    "name": "Shield Remote (Minion)",
+    "note": "Skills (Group Only): Vigilance. Talents: Body Guard l (once per round, a shield remote may suffer 1 wound to take the Body Guard manoeuvre to protect an engaged ally; until the end of the shield remote's next turn, upgrade the difficulty of all combat checks targeting the protected ally once). Abilities: Droid (does not need to breathe, eat, or drink and can survive in vacuum or underwater; immune to poisons or toxins). Silhouette 0 Equipment: General purpose scanner.",
+    "category": "Droids"
+  },
+  {
+    "name": "Industrial Automation Hologlide J57 Cam Droid (Minion)",
+    "note": "Skills (group only): Perception, Vigilance. Talents: None. Abilities: Droid (does not need to breathe, eat, or drink and can survive in vacuum or underwater. Immune to poisons and toxins), Flyer (the cam droid can fly). Equipment: Holocam.",
+    "category": "Droids"
+  },
+  {
+    "name": "Fire Suppression Droid (Minion)",
+    "note": "Skills (group only): Athletics. Talents: None. Abilities: Droid (does not need to breathe, eat, or drink and can survive in vacuum or underwater. Immune to poisons and toxins), Firefighter (may make an Average (dd) Athletics check to extinguish a fire; success extinguishes the fire within a number of rounds determined by the GM, and additional successes may reduce the time needed to extinguish the fire. Particularly large or dangerous fires may require more difficult checks at the GM's discretion), Fire Resistant (immune to fire damage or damage from weapons with the Burn quality). Equipment: Fire suppression equipment.",
+    "category": "Droids"
+  },
+  {
+    "name": "GV/3 Series Guardian Droid (Rival)",
+    "note": "Skills: Brawl 3. Perception 3, Ranged (Light ) 2. Vigilance 2. Talents: None. Abilities: Droid (does not need to breathe. eat. or drink, and can survive in vacuum or underwater; immune to poisons or toxins). Loyalty Imprint (add D lo all checks made to defend its designated master). Olfactory Sensor Suite (reduces the difficulty of scent-based Perception checks by 1 ). Equipment: Retractable blade incisors (Brawl; Damage 5; Critical 3; Range [Engaged]; Ensnare 1 ). Retractable light blaster (Ranged [Light]; Damage 5; Critical 4; Range [Medium]; Stun setting).",
+    "category": "Droids"
+  },
+  {
+    "name": "Marksman-H Combat Training Remote (Minion)",
+    "note": "Skills (group only): Perception, Ranged (Light). Talents: None. Abilities: Droid (does not need to breathe. eat. or drink, and can survive in vacuum or underwater ; immune to poisons or toxins). Hoverer (does not need to spend extra manoeuvres to navigate difficult terrain), Silhouette 0. Equipment: Micro stun blaster (Ranged [Light]: Damage 1; Critical -; Range (Short]; Stun Damage).",
+    "category": "Droids"
+  },
+  {
+    "name": "RMD-20 \"Eye in the Sky\"",
+    "note": "Skills (group only): Perception, Vigilance. Talents: None. Abilities: Droid (does not need to breathe, eat, or drink. and can survive in vacuum or underwater; immune to poisons or toxins). Hoverer (does not need to spend extra manoeuvres to navigate difficult terrain). Silhouette 0. Equipment: Recording holocam.",
+    "category": "Droids"
+  },
+  {
+    "name": "3PX-Series Protocol Droid (Rival)",
+    "note": "Skills: Charm 1, Knowledge (Education) 3, Knowledge (Outer Rim) 3, Knowledge (Xenology) 3, Negotiation 2. Talents: None. Abilities: Droid (does not need to breathe, eat, or drink and can survive in vacuum or underwater; immune to poisons and toxins), etiquette and protocol (3PX-series protocol droids allow allies to add ⬛ to any Negotiation checks or other checks made to negotiate or mediate). Equipment: None.",
+    "category": "Droids"
+  },
+  {
+    "name": "5YQ-Series Protocol Droid (Rival)",
+    "note": "Skills: Charm 1, Knowledge (Education) 1, Knowledge (Core Worlds) 1, Knowledge (Lore) 1, Knowledge (Outer Rim) 1, Knowledge (Underworld) 1, Knowledge (Warfare) 1, Knowledge (Xenology) 1. Talents: None. Abilities: Droid (does not need to breathe, eat, or drink and can survive in vacuum or underwater; immune to poisons and toxins), etiquette and protocol (5YQ-series protocol droids allow allies to add ⬛ to any Negotiation checks or other checks made to negotiate or mediate). Equipment: None.",
+    "category": "Droids"
+  },
+  {
+    "name": "CZ-Series Communications/Business Droid (Rival)",
+    "note": "Skills: Knowledge (Education) 3, Knowledge (Core Worlds) 2, Negotiation 4, Perception 1. Talents: None. Abilities: Droid (does not need to breathe, eat, or drink and can survive in vacuum or underwater; immune to poisons and toxins), etiquette and protocol (CZ-series communications/business droids allow allies to add ⬛ to any Negotiation checks or other checks made to negotiate or mediate). Equipment: Inbuilt datapad, long-range comlink.",
+    "category": "Droids"
+  },
+  {
+    "name": "M-3PO-Series Military Protocol Droid (Rival)",
+    "note": "Skills: Discipline 1, Knowledge (Education) 3, Knowledge (Warfare) 3, Vigilance 2. Talents: None. Abilities: Droid (does not need to breathe, eat, or drink and can survive in vacuum or underwater; immune to poisons and toxins), military analyst (M-3PO-series military protocol droids allow allies to add ⬛ to any Knowledge (Warfare) checks that benefit from an understanding of logistics or military procedure). Equipment: None.",
+    "category": "Droids"
+  },
+  {
+    "name": "TC-Series Protocol Droid (Rival)",
+    "note": "Skills: Charm 2, Knowledge (Education) 3, Knowledge (Xenology) 3, Negotiation 1, Perception 2. Talents: None. Abilities: Droid (does not need to breathe, eat, or drink and can survive in vacuum or underwater; immune to poisons and toxins), etiquette and protocol (TC-series protocol droids allow allies to add ⬛ to any Negotiation checks or other checks made to negotiate or mediate), advanced language module (when encountering a new species or language not in its databases, a TC- series protocol droid may make an Easy [d] Knowledge [Education] check to learn enough of the new dialect to communicate). Equipment: None.",
+    "category": "Droids"
+  },
+  {
+    "name": "LRD-Series Envoy Droid (Rival)",
+    "note": "Skills: Charm 2, Knowledge (Education) 2, Negotiation 2, Perception 2. Talents: None. Abilities: Droid (does not need to breathe, eat, or drink and can survive in vacuum or underwater; immune to poisons and toxins), rhetorical mimic (may make Charm, Deception, and Negotiation checks using the characteristics and skills of its master; such checks suffer ⬛⬛ due to the imperfect mimicry, and the droid does not benefit from any relevant talents that its master possesses). Equipment: None.",
+    "category": "Droids"
+  },
+  {
+    "name": "LOM-Series Protocol Droid (Rival)",
+    "note": "Skills: Charm 2, Knowledge (Education) 3, Knowledge (Outer Rim) 2, Knowledge (Xenology) 3, Negotiation 2. Talents: None. Abilities: Droid (does not need to breathe, eat, or drink and can survive in vacuum or underwater; immune to poisons and toxins), etiquette and protocol (LOM-series protocol droids allow allies to add ⬛ to any Negotiation checks or other checks made to negotiate or mediate), insectoid appearance (LOM-series protocol droids allow allies to remove ⬛ from Negotiation checks or other checks made to negotiate or mediate when dealing with insectoid species). Equipment: None",
+    "category": "Droids"
+  },
+  {
+    "name": "Antiquated battle Droid (Minion)",
+    "note": "Skills (group only): Ranged (Heavy). Talents: None. Abilities: Droid (does not need to breathe, eat, or drink and can survive in vacuum or underwater. Immune to poisons or toxins.). Equipment: Blaster rifle (Ranged (Heavy); Damage 9; Critical 3; Range (Long), Stun setting).",
+    "category": "Droids"
+  },
+  {
+    "name": "Assassin Droid (Nemesis)",
+    "note": "Skills: Coercion 3, Computers 4, Gunnery 5, Mechanics 3, Melee 3, Ranged (Heavy) 5, Ranged (Light) 5, Piloting (Planetary) 3, Piloting (Space) 3, Vigilance 2. Talents: Adversary 2 (upgrade difficulty of all combat checks against this target twice), Barrage 3 (add three to the damage of all Gunnery or Ranged attacks at medium or long range), Point Blank 3 (add 3 damage to all Ranged (Heavy) or Ranged (Light) attacks made at short or engaged range). Abilities: Droid (does not need to breathe, eat, or drink and can survive in vacuum or underwater. Immune to poisons or toxins.). Equipment: Light repeating blaster (Ranged (Heavy); Damage 11; Critical 3; Range [Long]; Auto-fire, Cumbersome 4, Pierce 1), built-in light blaster pistol (Ranged (Light); Damage 5; Critical 3; Range (Medium); Stun Setting), built-in missile tube (Gunnery; Damage 20; Critical 3; Range (Extreme); Blast 10, Breach 1, Cumbersome 3, Guided 3, Limited Ammo 6), built in razor- claws (Melee; Damage 6; Critical 4; Range (Engaged)).",
+    "category": "Droids"
+  },
+  {
+    "name": "Astromech Droid (Rival)",
+    "note": "Skills: Astrogation 3, Computers 3, Cool 2, Mechanics 2, Piloting (Space) 2. Talents: None. Abilities: Droid (does not need to breathe, eat, or drink and can survive in vacuum or underwater. Immune to poisons or toxins.). Equipment: Arc welder (Melee; Damage 3; Critical -; Range [Engaged]; Stun Damage), built-in repair tools (counts as tool kit).",
+    "category": "Droids"
+  },
+  {
+    "name": "Maintenance Droid (Minion)",
+    "note": "Skills (group only): Mechanics. Talents: None. Abilities: Droid (does not need to breathe, eat, or drink and can survive in vacuum or underwater. Immune to poisons or toxins.). Equipment: Arc welder (Melee; Damage 3; Critical Range [Engaged]; Stun Damage) built-in repair tools (counts as tool kit as well as emergency repair kit that can be used once per session).",
+    "category": "Droids"
+  },
+  {
+    "name": "Medical Droid (Rival)",
+    "note": "Skills: Discipline 1, Medicine 3, Perception 2. Talents: None. Abilities: Droid (does not need to breathe, eat, or drink, and can survive in vacuum or underwater. Immune to poisons or toxins.). Equipment: Built-in diagnostic and surgical tools (count as medpac as well as stimpack that can be used once per session).",
+    "category": "Droids"
+  },
+  {
+    "name": "Protocol Droid (Rival)",
+    "note": "Skills: Charm 2, Knowledge (Education) 3, Knowledge (Xenology) 3, Negotiation 2, Perception 1. Talents: None. Abilities: Droid (does not need to breathe, eat, or drink and can survive in vacuum or underwater. Immune to poisons or toxins.), etiquette and protocol (protocol droids allow allies to add ⬛ to any Negotiation checks or other checks made to negotiate or mediate). Equipment: None.",
+    "category": "Droids"
+  },
+  {
+    "name": "Security Droid (Rival)",
+    "note": "Skills: Ranged (Light) 3, Vigilance 3. Talents: None. Abilities: Droid (does not need to breathe, eat, or drink, and can survive in vacuum or underwater. Immune to poisons or toxins.). Equipment: Built-in blaster pistol (Ranged (Light); Damage 6; Critical 3; Range [Medium]; Stun Setting), Snare launcher (Ranged (Light); Damage -; Critical -; Range (Short); Ensnare 5, Limited Ammo 1).",
+    "category": "Droids"
+  },
+  {
+    "name": "T-Series Tactical Droid (Rival)",
+    "note": "Skills: Cool 3, Discipline 2, Knowledge (Warfare) 3, Leadership 3, Perception 2, Vigilance 2. Talents: Field Commander (as an action, may make an Average (dd) Leadership check; three allies may immediately suffer 1 strain to perform a free manoeuvre). Abilities: Droid (does not need to breathe, eat, or drink, and can survive indefinitely underwater and in vacuum; immune to poisons and toxins), CDE-T Tactical Computer (T-Series tactical droids adds ⬛⬛ when making Leadership and Knowledge [Warfare] checks). Equipment: None.",
+    "category": "Droids"
+  },
+  {
+    "name": "IG-100 MagnaGuard (Nemesis)",
+    "note": "Skills: Athletics 3, Brawl 3, Coordination 4, Melee 4, Perception 3, Vigilance 3. Talents: Adversary 2 (upgrade difficulty of all combat checks against this target twice), Durable 2 (MagnaGuards may reduce Critical Injury results they suffer by 20, to a minimum of 1), Parry 4 (when struck by a melee attack but before applying soak, suffer 3 strain to reduce damage by 6), Pin (as an action, upon a successful opposed Athletics check against an engaged opponent, immobilize that opponent until the end of the MagnaGuard’s next turn; may spend any x on check to increase duration one round). Abilities: Droid (does not need to breathe, eat, or drink and can survive in vacuum and underwater; immune to poisons and toxins). Equipment: Electrostaff (Melee; Damage 9; Critical 3; Range [Engaged]; Cortosis, Cumbersome 3, Defensive 1, Linked 1, Stun setting, Unwieldy 3), armour plating (+2 soak, +1 defence).",
+    "category": "Droids"
+  },
+  {
+    "name": "Interrogation Droid (Rival)",
+    "note": "Skills: Coercion 4, Medicine 3, Perception 2, Ranged (Light) 3. Talents: None. Abilities: Droid (does not need to breathe, eat, or drink and can survive in vacuum and underwater; immune to poisons and toxins), Hoverer (interrogation droids have repulsor lifts that allow them to hover slightly off the ground; when hovering, they do not have to spend additional manoeuvres when navigating difficult terrain), Silhouette 0. Equipment: Built-in acid jet (Ranged [Light]; Damage 5; Critical 2; Range [Short]; Burn 2), built-in sonic torture device (Ranged [Light]; Damage 5; Critical –; Range [Short]; Concussive 3, Stun Damage), built-in interrogation drug syringe.",
+    "category": "Droids"
+  },
+  {
+    "name": "Probe Droid (Rival)",
+    "note": "Skills: Perception 4, Ranged (Light) 2. Talents: None. Abilities: Droid (does not need to breathe, eat, or drink and can survive in vacuum and underwater; immune to poisons and toxins), Hover (when hovering, does not have to spend additional manoeuvres when navigating difficult terrain; otherwise, does not allow probe droid extra capabilities beyond those of a normal, walking character), Self-Destruct Mechanism (should the probe droid’s mission become compromised, it may self-destruct as an out of turn incidental; this explosion does 10 damage to engaged characters). Equipment: Built-in heavy blaster pistol (Ranged [Light]; Damage 7; Critical 3; Range [Medium]; Stun setting), holo-messenger, life-form scanner, long-range terrain scanner.",
+    "category": "Droids"
+  },
+  {
+    "name": "BD10-Series Assay Support Droid (Rival)",
+    "note": "Skills: Charm 2, Knowledge (Outer Rim) 3, Negotiation 2. Talents: None Abilities: Droid (does not need to breathe, eat, or drink and can survive in vacuum and underwater; immune to poisons and toxins), Outland Etiquette and Protocol (BD10-Series droids allow allies to add ⬛ to any Negotiation checks or other checks made to negotiate or mediate in the Outer Rim) Equipment: None",
+    "category": "Droids"
+  },
+  {
+    "name": "BL0-Series Non-Lethal Combat Droid (Rival)",
+    "note": "Skills: Brawl 3, Cool 2, Coordination 1, Ranged (Light) 1, Resilience 2. Talents: None. Abilities: Droid (does not need to breathe, eat, or drink and can survive in vacuum and underwater; immune to poisons and toxins), Equipment: 2 Stun Grenades (Ranged [Light]; Damage 8; Critical -; Range [Short]; Blast 8, Disorient 3, Limited ammo 1, Stun Damage), 2 Built-in Stun whips (Melee; Damage 5; Critical -' Range [Short]; Stun 3), Built-in armour plating (+1 defence, +1 soak).",
+    "category": "Droids"
+  },
+  {
+    "name": "ED-V8 Series Envoy Droid (Rival)",
+    "note": "Skills: Knowledge (Education) 2, Knowledge (Outer Rim) 3, Negotiation 4, Perception 1. Talents: None Abilities: Droid (does not need to breathe, eat, or drink and can survive in vacuum and underwater; immune to poisons and toxins), Non-humanoid Etiquette and Protocol (ED-V8-Series droids allow allies to add ⬛ to any Negotiation checks or other checks made to negotiate or mediate with any non-humanoid species). Equipment: None",
+    "category": "Droids"
+  },
+  {
+    "name": "P2F Hostile Environment Remote (Minion)",
+    "note": "Skills (group only): Athletics, Cool, Perception, Resilience. Talents: None Abilities: Droid (does not need to breathe, eat, or drink and can survive in vacuum and underwater; immune to poisons and toxins), Equipment: Built in long range comlink, built in holoprojector, scanner suite.",
+    "category": "Droids"
+  },
+  {
+    "name": "SBD Series Assistance and Rescue Droid (Rival)",
+    "note": "Skills: Cool 1, Coordination 2, Mechanics 1, Medicine 2, Perception 3. Talents: Keen Eyed 2 (Droid removes ⬛⬛ from Perception checks. Checks made to search a specific area take 50% less time than usual.). Abilities: Droid (does not need to breathe, eat, or drink and can survive in vacuum and underwater; immune to poisons and toxins), Equipment: Built in long range comlink, 2 emergency medpacs, built in general purpose scanner, built in physician's kit, 8 stimpacks, built in tool kit.",
+    "category": "Droids"
+  },
+  {
+    "name": "TRD-2 Sparring Droid (Rival)",
+    "note": "Skills: Athletics 2, Brawl 3, Coordination 1, Lightsaber 3, Melee 3, Ranged (Heavy) 2. Talents: None Abilities: Droid (does not need to breathe, eat, or drink and can survive in vacuum and underwater; immune to poisons and toxins), Combat Training (TRD-2-Series sparring droids allow any character who has spent at least one hour practicing with them to increase their melee defence rating by 2 for the remainder of the session) Equipment: Double bladed training saber (Lightsaber; Damage 6; Critical -; Range [Engaged]; Linked 1, Stun damage, Unwieldy 3), Stun cannon (Ranged [Heavy] Damage 8; Critical -; Range [Medium]; Stun Damage), Z6 Riot control baton (Melee; Damage 5; Critical 5; Range [Engaged]; Cortosis, Disorient 2, Stun Damage)",
+    "category": "Droids"
+  },
+  {
+    "name": "TTS20-Series Dialectic Droid (Rival)",
+    "note": "Skills: Charm 2, Cool 1, Deception 2, Knowledge (Core Worlds) 1 Knowledge (Education) 1, Negotiation 3, Perception 2, Streetwise 1. Talents: None Abilities: Droid (does not need to breathe, eat, or drink and can survive in vacuum and underwater; immune to poisons and toxins),Master of Rhetoric (TTS20-Series droids allow allies to add ⬛⬛ to any opposed presence or willpower based checks or other checks made to negotiate or mediate in the Outer Rim). Equipment: None",
+    "category": "Droids"
+  },
+  {
+    "name": "DTS series Dismantler droid",
+    "note": "Skills: Computers 3, Mechanics 4, Perception 3, Ranged (Heavy) 1. Talents: Adversary 1, Gearhead 1, Solid Repairs 2 Abilities: Droid (does not need to breathe, eat, or drink and can survive in vacuum and underwater; immune to poisons and toxins), Flying (sidebar in \"Chapter VI: Conflict and Combat in the core rulebook), Silhouette 2 Equipment: Cutting Torch (Ranged [Heavy]; Damage 10; Critical 3, Range [Short]; Blast 5, Breach1, Burn 3, Sunder, Vicious 2), Dismantling manipulators (Brawl; Damage 4, Critical 4, Range [Engaged]; Sunder), Built in repair tools (counts as a tool kit and an emergency repair kid that can be used once per session)",
+    "category": "Droids"
+  },
+  {
+    "name": "ID9 Seeker Droid",
+    "note": "Skills: Computers, Coordination, Melee, Stealth Talents: None Abilities: Droid (does not need to breathe, eat, or drink and can survive in vacuum and underwater; immune to poisons and toxins), Flying (sidebar in \"Chapter VI: Conflict and Combat in the core rulebook), Silhouette 0 Equipment: Shock Prod (Melee; Damage 5; Critical 5; Range [Engaged]; Disorient 2, Stun damage), Ion Disruptor (Melee; Damage 5; Critical 4; Range [Engaged]; Ion)",
+    "category": "Droids"
+  },
+  {
+    "name": "IG-RM Series Enforcer Droid",
+    "note": "Skills: Brawl 3, Coercion 3, Cool 2, Melee 3, Perception 3, Ranged (Heavy) 3, Vigilance 4 Talents: Adversary 1, Body Guard 2 Abilities: Droid (does not need to breathe, eat, or drink and can survive in vacuum and underwater; immune to poisons and toxins), Equipment: DLT-18 Heavy blaster rifle (Ranged [Heavy]; Damage 10; Critical 3; Range [Long]; Auto-fire; Cumbersome 3)",
+    "category": "Droids"
+  },
+  {
+    "name": "KX Series Enforcer Droid",
+    "note": "Skills: Brawl 3, Coercion 4, Computers 3, Cool 3, Perception 3, Ranged (Heavy) 3, Ranged (Light) 3, Vigilance 3 Talents: Adversary 2, Nobody's fool 2 Abilities: Droid (does not need to breathe, eat, or drink and can survive in vacuum and underwater; immune to poisons and toxins), Equipment: None",
+    "category": "Droids"
+  },
+  {
+    "name": "MSE- Series Maintenance Droid",
+    "note": "Skills (Group only): Computers, Mechanics, Perception Talents: None Abilities: Droid (does not need to breathe, eat, or drink and can survive in vacuum and underwater; immune to poisons and toxins), Silhouette 0 Equipment: Built in repair tools (counts as tool kit and emergency repair kit that can be used once per session), comlink, retractable manipulators",
+    "category": "Droids"
+  },
+  {
+    "name": "BT - Series Ordnance Droid",
+    "note": "Skills: Gunnery 1, Mechanics 2 Talents: None Abilities: Droid (does not need to breathe, eat, or drink and can survive in vacuum and underwater; immune to poisons and toxins), Equipment: Built in tool kit, built in ordnance loading computer (adds ⬛ to checks made to work on ordnance delivery systems or with explosive devices or compounds",
+    "category": "Droids"
+  },
+  {
+    "name": "EG-6 Power Droid",
+    "note": "Skills (group only): Computers, Mechanics Talents: None Abilities: Droid (does not need to breathe, eat, or drink and can survive in vacuum and underwater; immune to poisons and toxins), Equipment: Built-in DF-15 fusion generator (see page 47 AoR Fully Operational), spectrometer, multi-spectral scanner, manipulator arm, power diagnostics package (removes ⬛ to checks made to remove system strain from vehicles or starships).",
+    "category": "Droids"
+  },
+  {
+    "name": "EOD-MK IV Remote",
+    "note": "Skills (group only): Mechanics, Perception, Vigilance Talents: None Abilities: Droid (does not need to breathe, eat, or drink and can survive in vacuum and underwater; immune to poisons and toxins), Equipment: Demolitions scanner (add ⬛ to checks made to locate explosive compounds or devices), built-in EOD tool kit (see page 48 AoR Fully Operational), controlled demolition device (as an action, the remote can detonate a single explosive device at engaged range, destroying the remote and the explosive and inflicting damage as per the explosive's normal rules).",
+    "category": "Droids"
+  },
+  {
+    "name": "GT - Series Construction Droid",
+    "note": "Skills: Computers 2, Mechanics 3, Perception 1. Talents: Natural Tinkerer (once per session, may reroll anyone Mechanics check). Abilities: Droid (does not need to breathe, eat, or drink and can survive in vacuum and underwater; immune to poisons and toxins), Equipment: Fusion cutter (Melee; Damage 5; Critical 3; Range [Engaged); Breach 1, Burn 3, Sunder, Vicious 3), built-in construction tools (counts as a tool kit). I-C4a droid interface programming suite.",
+    "category": "Droids"
+  },
+  {
+    "name": "RH - Series Research Droid",
+    "note": "Skills: Computers 2, Knowledge (Core Worlds) 2, Knowledge (Education) 3, Knowledge (Lore) 2, Knowledge (Xenology) 3. Talents: Natural Scholar (once per session, may reroll anyone Knowledge check). Abilities: Droid (does not need to breathe, eat, or drink and can survive in vacuum and underwater; immune to poisons and toxins), Equipment: Built-in science database (adds automatic a to Knowledge checks and adds automatic aa when assisting with a Knowledge check in addition to the standard assistance benefits)",
+    "category": "Droids"
+  },
+  {
+    "name": "ASP-19 Battle Droid",
+    "note": "Skills: Brawl 2, Coercion 3, Lightsaber 2, Melee 2, Ranged (Heavy) 2, Vigilance 3. Talents: Adversary 1 (upgrade the difficulty of all attacks made against this target once). Feint 2 (after missing a target with a Brawl, Lightsaber, or Melee check, spend x or aaa to upgrade the difficulty of the opponent's next combat check against the character twice) Abilities: Droid (does not need to breathe, eat, or drink and can survive in vacuum and underwater; immune to poisons and toxins), Breakaway Systems (reduce the difficulty of any Mechanics or Computers checks made to repair this droid by one, to a minimum of Easy (d). Difficulty Setting (a character may perform a manoeuvre to adjust the droid's Brawl, Melee, and Lightsaber skills to a minimum of 1 or maximum of 3). Equipment: Retractable vibroblade (Melee; Damage 6: Critical 2; Range [Engaged]; Defensive 2. Pierce 3. Vicious 1). Training lightsaber [Lightsaber; Damage 6; Critical -; Range (Engaged); Stun Damage).",
+    "category": "Droids"
+  },
+  {
+    "name": "SR-Series Scout/Observation Droid",
+    "note": "Skills: Athletics 2, Computers 3, Knowledge (Warfare) 3, Perception 4, Ranged (Heavy) 2, Stealth 4, Vigilance 3 Talents: None Abilities: Droid (does not need to breathe, eat, or drink and can survive in vacuum and underwater; immune to poisons and toxins), Flyer (can fly), Forward Observer (while observing a target. the SR-series droid may perform a manoeuvre to upgrade the ability of the next Gunnery or Ranged [Heavy] check an ally makes this turn against that target). Optical Camouflage System (when activated the OCS upgrades the ability of all Stealth checks the SR-series droid makes twice) . Equipment: Blaster scout carbine (Ranged [Heavy]; Damage 6; Critical 3; Range [Medium]; Auto-fire. Stun setting). on-board optical camouflage system, on-board optics/observation suite, on-board Comms suite with holotransceiver",
+    "category": "Droids"
+  },
+  {
+    "name": "WSW Mk III \"Harrier\" Combat Remote",
+    "note": "Skills: (group only): Perception. Ranged (Heavy]. Ranged [light],Vigilance. Talents: None Abilities: Droid (does not need to breathe, eat, or drink and can survive in vacuum and underwater; immune to poisons and toxins), Equipment: Repeating blaster (Ranged [Heavy]; Damage 10; Critical 3; Range [Long]; Auto-fire). Stun blaster (Ranged [light]; Damage 9; Critical 3; Range (Short); Stun Damage)",
+    "category": "Droids"
+  },
+  {
+    "name": "AC1-Series Surveillance Droid",
+    "note": "Skills: (group only) Perception, Ranged (light), Stealth Talents: None Abilities: Droid (does not need to breathe, eat, or drink and can survive in vacuum and underwater; immune to poisons and toxins), Flying Equipment: Light blaster pistol (Ranged [Light]; Damage 5; Critical 4; Range [Medium]; Stun setting), High-intensity spotlight, Holotransiver suite",
+    "category": "Droids"
+  },
+  {
+    "name": "E522 Assassin Droid",
+    "note": "Skills: Brawl 3, Coercion 4, Computers 2, Gunnery 3, Mechanics 2, Melee 3, Ranged (Light) 4, Vigilance 4 Talents: Adversary 2 (upgrade difficulty of all combat checks against this droid twice), Barrage 2 (add 2 damage of all gunnery, Ranged (light) and (heavy) attacks made at medium or long range), Brace 2 (as a manoeuvre, remove up to ⬛⬛ added due to environmental conditions from next skill check), Point Blank (add 4 to the damage of all ranged (light) and (heavy) attacks made at engaged or short range) Abilities: Droid (does not need to breathe, eat, or drink and can survive in vacuum and underwater; immune to poisons and toxins), Combat Computer (add ⬛⬛ to all combat checks Equipment: Heavy repeating blaster (Gunnery; Damage 15; Critical 2; Range [Long]; Auto-fire, Cumbersome 5, Pierce 2, Vicious 1), Ion Blaster (Ranged [light]; Damage 10; Critical 5; Range [Short]; Disorient 5, Ion), Needler gun (ranged [light]; Damage 5; Critical -; Range [Short]; Peirce 3), Mini-missile pack - Uses planetary scale (Gunnery; Damage 4;Critical 4; Range [Short]; Blast 2, Breach 2, guided 3, Limited Ammo 2, Slow-Firing 1)",
+    "category": "Droids"
+  },
+  {
+    "name": "LSx-Series Slicer Droid",
+    "note": "Skills: Computers 4, Cool 3, Deception 3, Discipline 2, Mechanics 2, Perception 4, Skulduggery 3, Stealth 2 Talents: Adversary 1 (upgrade the difficulty of all attacks against this droid once), Code-Breaker 2 (Remove ⬛⬛ from checks made to decrypt codes or encrypted comms; reduce the difficulty of computers checks made to break codes or decrypt comms by one), Defensive Slicing 2 (add ⬛⬛ to any attempts to slice into a computer or system controlled by this character) Abilities: Droid (does not need to breathe, eat, or drink and can survive in vacuum and underwater; immune to poisons and toxins), Equipment: Scomp-Spiker (melee; Damage 8; Critical 4; Range [Engaged]; Burn 3, Slow-Firing 3, Stun setting), Built-in slicer gear.",
+    "category": "Droids"
+  },
+  {
+    "name": "M4-series Messenger Droid",
+    "note": "Skills: Cool 2, Perception 3, Ranged (Light) 1, Resilience 3, Skulduggery 3, Stealth 3, Vigilance 2 Talents: Durable 2 (Reduce all Critical Injury results by 20, to a minimum of 1) Abilities: Droid (does not need to breathe, eat, or drink and can survive in vacuum and underwater; immune to poisons and toxins), Flyer Equipment: Light Blaster pistol (ranged [Light]; Damage 5; Critical 4; Range [Medium]; Stun Setting[, Holo-projector, Holorecorder, Small locking storage compartment (holds items totalling up to 3 encumbrance)",
+    "category": "Droids"
+  },
+  {
+    "name": "Q-Signal Messenger Drone",
+    "note": "Skills: Astrogation 1, Perception 2, Piloting (Space) 2, Stealth 2 Talents: None Abilities: Droid (does not need to breathe, eat, or drink and can survive in vacuum and underwater; immune to poisons and toxins), Equipment: Messenger Drone Vehicle (Silhouette 2, speed 0, Handling +0, Defence Fore/Port/Starboard/Aft 0/-/-/0, Armor 2, HT Threshold 15, SS Threshold 10, hyperdrive: primary class 2, Navicomputer: None, Sensor Range: None, Encumbrance capacity: 10, Passenger capacity: 0, Price/Rarity: 12,000 credits/5, Customization hard points 1, Weapons: None, Additional rules upgrade checks to detect this vessel twice, add 2 setback if the vessel did not move this round).",
+    "category": "Droids"
+  },
+  {
+    "name": "RA-7 Protocol Droid",
+    "note": "Skills: Deception 2, Knowledge (Education) 3, Knowledge (Xenology) 3, Negotiation 3, Perception 4, Skulduggery 3, Stealth 2, Vigilance 3. Talents: Adversary 1 (Attacks made against this droid are upgraded once), Plausible Deniability 2 ( Remove ⬛⬛ from Coercion and Deception checks) Abilities: Droid (does not need to breathe, eat, or drink and can survive in vacuum and underwater; immune to poisons and toxins), Etiquette and Protocol (droid allows allies to add ⬛ to all Negotiation checks and other checks made to negotiate or mediate) Equipment: None",
+    "category": "Droids"
+  },
+  {
+    "name": "RM-Series Military Intelligence Droid",
+    "note": "Skills: Computers 3, Cool 2, Deception 3, Knowledge (Warfare) 4, Mechanics 4, Perception 4, Ranged (Heavy) 4, Skulduggery 3, Stealth 3, Vigilance 2. Talents: Adversary 2 (Attacks against this droid are upgraded twice) Abilities: Droid (does not need to breathe, eat, or drink and can survive in vacuum and underwater; immune to poisons and toxins),Improvised Explosive Device (Once per session, can make an Average (dd) Mechanics check to build an explosive device out of available materials that deals 11 damage plus 1 for every s on the mechanics check; Can spend x to increase damage by 2; GM can spend y to have the explosive device detonate immediately in the users face). Equipment: Heavy blaster Rifle (Ranged [Heavy]; Damage 10; Critical 3; Range [Long]; Auto-fire, Cumbersome 3), ion blaster (Ranged [Light]; Damage 10; Critical 5; Range [Short]; Disorient 5, Ion) Built-In Demolitions kid (acts as tool kit), Built0in sensory and recording equipment.",
+    "category": "Droids"
+  },
+  {
+    "name": "TS-Series Interrogation Droid",
+    "note": "Skills: Coercion 4, Knowledge (Education) 3, Knowledge (xenology) 4, Mechanics 3, Medicine 4, Perception 4, Skulduggery 3. Talents: Adversary 1 (Attack rolls made against this droid are upgraded by one) Abilities: Droid (does not need to breathe, eat, or drink and can survive in vacuum and underwater; immune to poisons and toxins),Interrogation subroutine (once per session, can reroll a Coercion or Medicine check while interrogating or torturing subjects). Equipment: Medical tool hands (Brawl; Damage 4; Critical 2; Range [Engaged]; Burn 1, Disorient 1, Pierce 2, Vicious 2), Chem injector hypo, two high intensity miniature spotlights, on-board medical scanner, built-om ,ed[ac, 4 stimpacks.",
+    "category": "Droids"
+  },
+  {
+    "name": "Demon Mask",
+    "note": "Dark side force users with this item increase their wound threshold by 2. Any Discipline checks to resist fear caused by a character wearing a demon mask adds ⬛ equal to that of the character's force rating",
+    "category": "Relics, Focuses, Fetishes, Holocrons and Ancient Talsimans"
+  },
+  {
+    "name": "Holocron",
+    "note": "Extremely rare and often the goal of a long campaign, Requires a Hard (ddd) Knowledge (Lore) check to activate the device and summon the gatekeeper, GM has complete discretion on what benefits and how long of study it would take to gain said benefits would be but generally two skills, determined by the holocron (GM) become career skills for the holocron's user as long as it remains in the users possession (see Table 2-7: Holocron Skills on page 109 of Force and Destiny Core Rulebook for examples)",
+    "category": "Relics, Focuses, Fetishes, Holocrons and Ancient Talsimans"
+  },
+  {
+    "name": "Meditation Focus",
+    "note": "Light Side paragons with this item increases their strain threshold by 2.",
+    "category": "Relics, Focuses, Fetishes, Holocrons and Ancient Talsimans"
+  },
+  {
+    "name": "Talisman of Iron Fists",
+    "note": "Wearer of this item gains Cortosis quality for the characters armour and brawl attacks. Brawl attacks also gain Pierce X where X is the users force rating. (Force Users only)",
+    "category": "Relics, Focuses, Fetishes, Holocrons and Ancient Talsimans"
+  },
+  {
+    "name": "Bardottan Sphere",
+    "note": "Increase force rating by 1, Sacrifice a force user with a force rating of a minimum of 1 to increase your force rating by the same rating but generates 5 conflict at the end of a session if used in addition to the act of sacrificing someone to the sphere",
+    "category": "Relics, Focuses, Fetishes, Holocrons and Ancient Talsimans"
+  },
+  {
+    "name": "Crown of Verity",
+    "note": "A Force-sensitive character who dons the Crown of Verity automatically fails all Deception checks while wearing it. At the same time, they gain automatic sss on any checks to detect lies or determine whether someone is telling the truth.",
+    "category": "Relics, Focuses, Fetishes, Holocrons and Ancient Talsimans"
+  },
+  {
+    "name": "Dram of Orphne",
+    "note": "A Force-sensitive character who possesses the Dram of Orphne heals 1 additional strain at the end of an encounter. A Force-sensitive character who possesses the Dram of Orphne also heals 1 additional wound when benefiting from natural rest. Finally, when making a Medicine check to heal another character, any character with the Dram of Orphne may add ⬛ to the check.",
+    "category": "Relics, Focuses, Fetishes, Holocrons and Ancient Talsimans"
+  },
+  {
+    "name": "Dolina Ring Seeds",
+    "note": "A Force-sensitive character who possesses a dolina ring seed may perform one free Move manoeuvre during each of his turns. This Move manoeuvre may be in addition to any other manoeuvres performed this turn and can allow the character to perform three manoeuvres in a turn. (The user also ignores the ring seed’s weight.)",
+    "category": "Relics, Focuses, Fetishes, Holocrons and Ancient Talsimans"
+  },
+  {
+    "name": "Eyes of Laqasa",
+    "note": "When wearing the Eyes of Laqasa, Force-sensitive characters remove all ⬛ imposed due to darkness, concealment, camouflage, or similar effects, and can see normally as if in normal daylight.",
+    "category": "Relics, Focuses, Fetishes, Holocrons and Ancient Talsimans"
+  },
+  {
+    "name": "Grimoire of Syclos the Lame",
+    "note": "Studying the Grimoire of Syclos the Lame for at least one hour allows a Force-sensitive character to add C to all Force power checks or checks involving Force talents when dealing with creatures detailed in the Grimoire. The bonus lasts until the end of the game session. (What creatures the bonus applies to is ultimately up to the GM, as some creatures may not be covered in the Grimoire.) However, until the end of the game session, the difficulty of all fear checks made while confronting these creatures is upgraded twice. Any Conflict generated by a y result on a fear check is doubled.",
+    "category": "Relics, Focuses, Fetishes, Holocrons and Ancient Talsimans"
+  },
+  {
+    "name": "Herder's Gauntlet",
+    "note": "A Force-sensitive character who wears the Herder’s Gauntlet counts as possessing the Move basic power, and may make a Move Force power action as a manoeuvre. A character who does so may not attack an opponent with this use of the Force power (what constitutes an attack is ultimately up to the GM, but should include disarming or incapacitating opponents as well as dealing damage).",
+    "category": "Relics, Focuses, Fetishes, Holocrons and Ancient Talsimans"
+  },
+  {
+    "name": "Master Lodaka's Lightsaber",
+    "note": "Master Lodaka’s Lightsaber is a weapon with the following profile: (Lightsaber; Damage 10; Critical 1; Range [Engaged]; Breach 1, Sunder, Vicious 2). Master Lodaka’s Lightsaber has an encumbrance of 1 and zero hard points. Attacks made with this lightsaber ignore the Cortosis quality. It also cannot be shut down due to contact with refined cortosis.",
+    "category": "Relics, Focuses, Fetishes, Holocrons and Ancient Talsimans"
+  },
+  {
+    "name": "Taradon's Helm",
+    "note": "A Force-sensitive character who possesses Taradon’s Helm may reroll one C when making checks that involve piloting or using a starship or vehicle. If there is some question as to whether the check involves piloting or using a starship or vehicle, the GM is the final arbiter.",
+    "category": "Relics, Focuses, Fetishes, Holocrons and Ancient Talsimans"
+  },
+  {
+    "name": "Tear of the Elders",
+    "note": "Once per game session, when a Force-sensitive character hold the Tear of the Elders, the character may make a force power check and spend 2 light or dark side power to detect one threat the PC is likely to encounter during the current game session. GM has final say on what the threat is and how the character perceives it, either clearly or metaphorical sense e.g. a battalion of storm troopers metaphorically could be a solid white wall that is impossible to penetrate.",
+    "category": "Relics, Focuses, Fetishes, Holocrons and Ancient Talsimans"
+  },
+  {
+    "name": "Dai Bendu Holocron",
+    "note": "Took a few reads to understand but the basics of it is, need to be a force sensitive to use (don’t have to be strong in force to use it) GM decides how long this will take but should be a very long while for study, Select a characteristic, must complete 4 lessons by doing discipline checks with increasing difficulty from average dd to hard ddd to daunting dddd to formidable ddddd. Once all 4 lessons are complete in a characteristic (tract is what the book calls it) character may (once per day) upgrade the ability dice pool of any single check related to that characteristic by two steps. Player may once completed all 4 lessons in a characteristic may move onto another keeping the same benefit they have acquired",
+    "category": "Relics, Focuses, Fetishes, Holocrons and Ancient Talsimans"
+  },
+  {
+    "name": "Lasan Chronicles of the Three",
+    "note": "Spend 1 hour and successfully pass a Hard (ddd) check with one of the following skills to receive a bonus that can be used once in your current session. Knowledge (Lore): Add ⬛ to any one Knowledge skill check Perception: Once with a combat skill check a character may reroll one d of their choice Discipline: Remove ⬛ on any single skill check your character makes",
+    "category": "Relics, Focuses, Fetishes, Holocrons and Ancient Talsimans"
+  },
+  {
+    "name": "Thisspiasian Puzzle Ring",
+    "note": "Make a hard ( ddd ) Discipline check, failure heals 2 strain, success grants the character a vision learning one thing that involves them that may (at GM's discretion) come to pass in the next week. After the puzzle is solved it falls apart and cannot be used again until a new puzzle is purchased",
+    "category": "Relics, Focuses, Fetishes, Holocrons and Ancient Talsimans"
+  },
+  {
+    "name": "Vision Cubes",
+    "note": "While performing a check (including force power checks) a character may use this item to divine the future, if the check results in having at least one uncanceled a the character adds s and 🌕 to the results as well, if the check results in having at least one uncanceled t, the character instead adds f and z to the results, if no t or a it does nothing other then maybe look impressive",
+    "category": "Relics, Focuses, Fetishes, Holocrons and Ancient Talsimans"
+  },
+  {
+    "name": "Vurk Meditation Orb",
+    "note": "Meditate with this for an hour and for the next 24 hours after meditation a character may suffer 2 strain to add 🌓 to the results of the next check to use the Alter or Battle Meditation force powers",
+    "category": "Relics, Focuses, Fetishes, Holocrons and Ancient Talsimans"
+  },
+  {
+    "name": "Avabush Spice (dose)",
+    "note": "User can only upgrade one d to a c on any given check, when user attempts to lie or conceal the truth the GM upgrades any one d in the dice pool into a c, lasts for one scene or combat encounter.",
+    "category": "Illegal Drugs (Don’t do drugs kids)"
+  },
+  {
+    "name": "Avabush Spice (100 dose cargo container)",
+    "note": "Same as single dose",
+    "category": "Illegal Drugs (Don’t do drugs kids)"
+  },
+  {
+    "name": "Booster Blue (dose)",
+    "note": "User may upgrade the ability of any Agility, Intellect or cunning related check he undertakes once, however user may not remove strain at the end of any scenes or encounters for the remainder of the session",
+    "category": "Illegal Drugs (Don’t do drugs kids)"
+  },
+  {
+    "name": "Booster Blue (100 dose cargo container)",
+    "note": "Same as single dose",
+    "category": "Illegal Drugs (Don’t do drugs kids)"
+  },
+  {
+    "name": "Death Sticks (1 dose)",
+    "note": "basically cigarettes, lasts for one scene or combat encounter and adds ⬛ to any task the character attempts, may also reduce characters connection to the force in certain ways",
+    "category": "Illegal Drugs (Don’t do drugs kids)"
+  },
+  {
+    "name": "Death Sticks (100 dose cargo container)",
+    "note": "HELLO CHAIN SMOKERS!!!",
+    "category": "Illegal Drugs (Don’t do drugs kids)"
+  },
+  {
+    "name": "Glitterstim (dose)",
+    "note": "Adds three ⬛ to all perception and vigilance checks for the remainder of a scene, may at GMs discretion grant telepathic abilities.",
+    "category": "Illegal Drugs (Don’t do drugs kids)"
+  },
+  {
+    "name": "Glitterstim (100 dose cargo container)",
+    "note": "Same as single dose",
+    "category": "Illegal Drugs (Don’t do drugs kids)"
+  },
+  {
+    "name": "Lesai (dose)",
+    "note": "User does not require sleep and may remove strain as if they did sleep provided user did not engage in any stressful activities (such as combat intense mental effort or emotionally charged discussion), after 24 hours of not taking the drug user starts to feel very sleepy.",
+    "category": "Illegal Drugs (Don’t do drugs kids)"
+  },
+  {
+    "name": "Lesai (100 dose cargo container)",
+    "note": "Same as single dose",
+    "category": "Illegal Drugs (Don’t do drugs kids)"
+  },
+  {
+    "name": "Yarrock (1 dose)",
+    "note": "Fear checks count automatically as succeeding , User must add ⬛ to any willpower or presence related checks for the remainder of the session.",
+    "category": "Illegal Drugs (Don’t do drugs kids)"
+  },
+  {
+    "name": "Yarrock (100 dose cargo container)",
+    "note": "Same as single dose",
+    "category": "Illegal Drugs (Don’t do drugs kids)"
+  },
+  {
+    "name": "Impact (Dose)",
+    "note": "Lasts for one encounter and allows the user to upgrade the ability of any Agility based checks until the end of the encounter, after the effects of impact wear off the character suffers to any Agility, cunning or intellect based checks for the remainder of the game session.",
+    "category": "Illegal Drugs (Don’t do drugs kids)"
+  },
+  {
+    "name": "Impact (100 dose cargo container)",
+    "note": "Same as single dose",
+    "category": "Illegal Drugs (Don’t do drugs kids)"
+  },
+  {
+    "name": "Muon Gold (dose)",
+    "note": "adds ⬛ to all cunning and presence based checks until the end of the encounter, at GMs discretion, repeated use of the spice can cause cognitive impairment imposing temporary or lasting ⬛ to a characters intellect and cunning based checks.",
+    "category": "Illegal Drugs (Don’t do drugs kids)"
+  },
+  {
+    "name": "Muon Gold (100 dose cargo container)",
+    "note": "Same as single dose",
+    "category": "Illegal Drugs (Don’t do drugs kids)"
+  },
+  {
+    "name": "Nala Tree Frog (12 Frogs)",
+    "note": "Tastes good to hutts",
+    "category": "Illegal Drugs (Don’t do drugs kids)"
+  },
+  {
+    "name": "Marcan Herb (1 dose)",
+    "note": "Mild Narcotic normally bought and sold in hutt space",
+    "category": "Illegal Drugs (Don’t do drugs kids)"
+  },
+  {
+    "name": "Marcan Herb (100-dose cargo container)",
+    "note": "Same as single dose",
+    "category": "Illegal Drugs (Don’t do drugs kids)"
+  },
+  {
+    "name": "Ryll (1 dose)",
+    "note": "ignore the effects of a single easy or average critical injury result until the end of the scene, 2 doses allow character to ignore a hard critical injury until the end of the scene or combat encounter instead, after the effects end the user suffers the critical injury as normal and also suffers ⬛⬛ on all checks the character makes until the end of the game session.",
+    "category": "Illegal Drugs (Don’t do drugs kids)"
+  },
+  {
+    "name": "Ryll (100 dose cargo container)",
+    "note": "Same as single dose",
+    "category": "Illegal Drugs (Don’t do drugs kids)"
+  },
+  {
+    "name": "Gunjak spice (1 dose)",
+    "note": "Increases the users brawn by 1 to a maximum of 6 until the end of scene or combat encounter, additionally, each dose a character consumes upgrades the difficulty of agility, intellect and cunning related checks once until the game session ends.",
+    "category": "Illegal Drugs (Don’t do drugs kids)"
+  },
+  {
+    "name": "Gunjak spice (100 dose cargo container)",
+    "note": "Same as single dose",
+    "category": "Illegal Drugs (Don’t do drugs kids)"
+  },
+  {
+    "name": "Neutron Pixie (1 dose)",
+    "note": "Grants the user an automatic aa on Agility and willpower related checks until the end of the encounter. Once effects end the character suffers a automatic t on all brawn, intellect and cunning related checks for the remainder of the game session.",
+    "category": "Illegal Drugs (Don’t do drugs kids)"
+  },
+  {
+    "name": "Neutron Pixie (100 dose cargo container)",
+    "note": "Same as single dose",
+    "category": "Illegal Drugs (Don’t do drugs kids)"
+  },
+  {
+    "name": "Corellian Whiskey (Bottle)",
+    "note": "N/A",
+    "category": "Illegal Drugs (Don’t do drugs kids)"
+  },
+  {
+    "name": "Corellian Whiskey (25 Bottle case)",
+    "note": "N/A",
+    "category": "Illegal Drugs (Don’t do drugs kids)"
+  },
+  {
+    "name": "Whyren's Reserve (Bottle)",
+    "note": "Same as Corellian whiskey but aged 20 years and often traded on the black market",
+    "category": "Illegal Drugs (Don’t do drugs kids)"
+  },
+  {
+    "name": "Whyren's Reserve (20 Bottle case)",
+    "note": "Same as Corellian whiskey but aged 20 years and often traded on the black market",
+    "category": "Illegal Drugs (Don’t do drugs kids)"
+  },
+  {
+    "name": "Ji Rikknit (dose)",
+    "note": "No benefits, if character tries the narcotic they make a Easy (d) Resilience check or gain 1 value addiction obligation",
+    "category": "Illegal Drugs (Don’t do drugs kids)"
+  },
+  {
+    "name": "Ji Rikknit (100 dose cargo Container)",
+    "note": "Same as single dose",
+    "category": "Illegal Drugs (Don’t do drugs kids)"
+  },
+  {
+    "name": "Nannarium Root (dose)",
+    "note": "Character may upgrade the ability of any intelligence or cunning related check once, causes 2 strain. Dose lasts about an hour",
+    "category": "Illegal Drugs (Don’t do drugs kids)"
+  },
+  {
+    "name": "Ryshcate (Cake)",
+    "note": "Cake for special occasions, alcohol used in baking it",
+    "category": "Illegal Drugs (Don’t do drugs kids)"
+  },
+  {
+    "name": "Frangawl Force Powder (1 dose)",
+    "note": "Use as a manoeuvre, Gain 10 conflict and adds an automatic zz to the PC's next Force Power check",
+    "category": "Illegal Drugs (Don’t do drugs kids)"
+  },
+  {
+    "name": "Longsight (1 dose)",
+    "note": "Injected as a manoeuvre, Increase users willpower by 1 until the end of the encounter, however at the beginning of each of the users turns until the end of the encounter suffers 2 strain",
+    "category": "Illegal Drugs (Don’t do drugs kids)"
+  },
+  {
+    "name": "Sulfer Inhaler (10 doses)",
+    "note": "Suffer 2 strain and add ⬛ to any brawn or agility checks the user makes until the end of the encounter, Additional doses inflict more strain but do not give any additional bonuses, Dose is ineffective and unpleasant for any race other than Devarorians.",
+    "category": "Illegal Drugs (Don’t do drugs kids)"
+  },
+  {
+    "name": "Karrak Spice (1 dose)",
+    "note": "Removes added to checks from pain or illness for 12 hours but imposes a t on all checks for 24 hours, Force users who take the drug receive both effects but for twice the duration as well as count their force rating as one lower while active.",
+    "category": "Illegal Drugs (Don’t do drugs kids)"
+  },
+  {
+    "name": "Karrak Spice (100 dose cargo container)",
+    "note": "Same as single dose",
+    "category": "Illegal Drugs (Don’t do drugs kids)"
+  },
+  {
+    "name": "Questioner-9 (1 dose)",
+    "note": "After a delay of 5 minutes after application of the serum the victim upgrades the difficulty of all checks to withhold information or resist manipulation (including resisting force powers such as influence) by 1 for the next 24 hours",
+    "category": "Illegal Drugs (Don’t do drugs kids)"
+  },
+  {
+    "name": "Questioner-9 (100 cargo dose container)",
+    "note": "Same as single dose",
+    "category": "Illegal Drugs (Don’t do drugs kids)"
+  },
+  {
+    "name": "Yaladai Spice (1 dose)",
+    "note": "Lasts one encounter, when a character under the effects of the spice suffers strain they suffer three less strain to a minimum of 1 (does not apply to voluntary strain loss), Additionally a force user under the effects of yaladai spice can add c to any force power checks they make, when they do the spice doubles any strain and conflict suffered for using 🌑 to generate 🌓",
+    "category": "Illegal Drugs (Don’t do drugs kids)"
+  },
+  {
+    "name": "Yaladai Spice (100 dose cargo container)",
+    "note": "Same as single dose",
+    "category": "Illegal Drugs (Don’t do drugs kids)"
+  }
+]

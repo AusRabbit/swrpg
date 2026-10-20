@@ -1,0 +1,503 @@
+{
+  "campaign": "[Campaign Name]",
+  "vehicle": {
+    "name": "[Ship Name]",
+    "class": "[Ship class / model — one-line description]",
+    "silhouette": 0,
+    "speed": 0,
+    "handling": 0,
+    "defense": 0,
+    "armor": 0,
+    "hullTrauma": {
+      "threshold": 0
+    },
+    "systemStrain": {
+      "threshold": 0
+    },
+    "sensors": "[Sensor range / suite]",
+    "specialFeatures": [
+      "[Notable feature, modification, or quirk]"
+    ],
+    "weapons": [
+      {
+        "name": "[Weapon name (mount)]",
+        "fireArc": "[Forward / Aft / Port / Starboard / All]",
+        "range": "[Short / Medium / Long / Extreme]",
+        "damage": 0,
+        "crit": 0,
+        "qualities": ""
+      }
+    ],
+    "crewPositions": [
+      {
+        "id": "pilot",
+        "name": "Pilot",
+        "description": "Flies the vehicle — keeps everyone safe and positions the ship wherever necessary. Benefits from one Pilot Only Manoeuvre per round (a second is available for 2 System Strain).",
+        "manoeuvres": [
+          {
+            "name": "Accelerate / Decelerate",
+            "requirement": "Any",
+            "description": "Increase or decrease vehicle speed by 1 or more, up to maximum speed. The vehicle suffers 1 System Strain for each increase/decrease over 1."
+          },
+          {
+            "name": "Reposition",
+            "requirement": "Speed 1+",
+            "description": "Move the vehicle 1 range band — carefully position within the environment, close the distance, or become Engaged (e.g. to dock)."
+          },
+          {
+            "name": "Evade",
+            "requirement": "Silhouette 0-4, Speed 3+",
+            "description": "Dodge incoming fire. Upgrade the difficulty of attacks against the vehicle, and of attacks made by the vehicle, until your next turn."
+          },
+          {
+            "name": "Brace for Impact",
+            "requirement": "Any",
+            "description": "The vehicle can suffer System Strain instead of Hull Trauma, up to its Silhouette. You may also suffer System Strain (up to Silhouette) to reduce collision damage by 10 per point suffered."
+          }
+        ],
+        "actions": [
+          {
+            "name": "Dangerous Driving",
+            "skill": "Piloting: Space",
+            "requirement": "Speed 1+",
+            "description": "An improbable feat of piloting prowess. Piloting check, difficulty equal to the vehicle's Silhouette, further modified by its current speed. Can help shake pursuit, and is sometimes a mandatory check the GM calls for."
+          },
+          {
+            "name": "Gain the Advantage",
+            "skill": "Piloting: Space",
+            "requirement": "Silhouette 1-4, Speed 4+",
+            "description": "Dogfight for an advantageous position over one target vehicle. Difficulty is based on relative speed: faster than target ♦, same speed ♦♦, slower ♦♦♦, 2+ speeds slower ♦♦♦♦. Success upgrades your combat checks against the target twice, and upgrades the target's combat checks against you twice. The target can later spend an action to try to cancel this (same check, +1 difficulty)."
+          },
+          {
+            "name": "Fire Forward Weapons (Slaved)",
+            "skill": "Gunnery",
+            "requirement": "Forward-arc weapon, no seated gunner needed",
+            "description": "Slaves the ship's forward-facing weapon(s) to the pilot's own console and fires them as a crude, automated volley — locking the turret dead ahead or running a rudimentary auto-fire routine rather than tracking a target properly. Resolves as the Gunner's Fire [Weapon] action, but add ⬛ Setback to the check for the system's lack of finesse and the pilot's divided attention."
+          }
+        ]
+      },
+      {
+        "id": "copilot",
+        "name": "Copilot",
+        "description": "Runs the support console — plots the course, jams enemy comms, coordinates fire, and keeps the ship's systems a step ahead of whatever's shooting at it.",
+        "manoeuvres": [
+          {
+            "name": "Assist the Pilot",
+            "requirement": "Any",
+            "description": "Spend your manoeuvre helping execute one of the Pilot's own manoeuvre options above."
+          }
+        ],
+        "actions": [
+          {
+            "name": "Plot Course (Piloting)",
+            "skill": "Piloting: Space",
+            "requirement": "Any",
+            "description": "Each uncancelled success reduces the Setback suffered for difficult terrain by one."
+          },
+          {
+            "name": "Plot Course (Perception)",
+            "skill": "Perception",
+            "requirement": "Any",
+            "description": "Same effect as the Piloting version of Plot Course, at a higher difficulty."
+          },
+          {
+            "name": "Copilot",
+            "skill": "Piloting: Space",
+            "requirement": "Any",
+            "description": "Each uncancelled success downgrades the difficulty of the pilot's next Piloting check once."
+          },
+          {
+            "name": "Jamming",
+            "skill": "Computers",
+            "requirement": "Any",
+            "description": "Forces the enemy to make an Average Computers check to use communications. Difficulty increases per additional success, and jamming affects additional targets per Advantage spent."
+          },
+          {
+            "name": "Boost Defenses",
+            "skill": "Mechanics",
+            "requirement": "Any",
+            "description": "The vehicle suffers 1 System Strain and increases Defense by one until the start of your next turn. Each additional success extends the duration by one round."
+          },
+          {
+            "name": "Fire Discipline (Leadership)",
+            "skill": "Leadership",
+            "requirement": "Any",
+            "description": "The next crew member firing a weapon adds a Boost die (additional crew members can be added per extra success). May spend Advantage to let hits inflict 1 System Strain on the target."
+          },
+          {
+            "name": "Fire Discipline (Discipline)",
+            "skill": "Discipline",
+            "requirement": "Any",
+            "description": "Same effect as the Leadership version of Fire Discipline, alternate skill."
+          },
+          {
+            "name": "Scan the Enemy",
+            "skill": "Perception",
+            "requirement": "Any",
+            "description": "Learn what weapons the target vehicle has, its modifications, and its System Strain/Hull Trauma thresholds. Spend Advantage to also learn its current System Strain and Hull Trauma levels."
+          },
+          {
+            "name": "Hack Enemy's Systems",
+            "skill": "Computers",
+            "requirement": "Any",
+            "description": "Reduce the target vehicle's Defense to 0 for one round per success. A Triumph may compromise a weapon of the character's choice; spending Advantage can inflict 1 System Strain on the target."
+          },
+          {
+            "name": "Intercept Projectiles (Vigilance)",
+            "skill": "Vigilance",
+            "requirement": "Any",
+            "description": "Upgrades the difficulty of incoming Guided-weapon attacks against the vehicle once (plus once per additional success), until the start of your next turn."
+          },
+          {
+            "name": "Intercept Projectiles (Computers)",
+            "skill": "Computers",
+            "requirement": "Any",
+            "description": "Same effect as the Vigilance version of Intercept Projectiles, alternate skill."
+          }
+        ]
+      },
+      {
+        "id": "gunner",
+        "name": "Gunner",
+        "description": "Fires the vehicle's weapons — and heckles the pilot. That's it.",
+        "weaponIndex": 0,
+        "manoeuvres": [
+          {
+            "name": "Aim",
+            "requirement": "Any",
+            "description": "Add a Boost die to your next combat check this round. A second manoeuvre (suffer 2 strain, or forego your action) lets you Aim Twice for two Boost dice."
+          }
+        ],
+        "actions": [
+          {
+            "name": "Fire Forward Weapon",
+            "skill": "Gunnery",
+            "requirement": "Any",
+            "description": "Each vehicle weapon can be fired once per round as an action, within its firing arc (GM-adjudicated, narrative). Difficulty by range: Engaged –, Short ♦, Medium ♦♦, Long ♦♦♦, Extreme ♦♦♦♦, Strategic ♦♦♦♦♦. +1 difficulty if the target is 2+ Silhouette smaller; −1 if 2+ Silhouette larger. Hull Trauma inflicted = weapon damage + successes, minus the target's Armor."
+          },
+          {
+            "name": "Fire Discipline (Leadership)",
+            "skill": "Leadership",
+            "requirement": "Any",
+            "description": "The next crew member firing a weapon adds a Boost die (additional crew members can be added per extra success). May spend Advantage to let hits inflict 1 System Strain on the target."
+          },
+          {
+            "name": "Fire Discipline (Discipline)",
+            "skill": "Discipline",
+            "requirement": "Any",
+            "description": "Same effect as the Leadership version of Fire Discipline, alternate skill."
+          },
+          {
+            "name": "Intercept Projectiles (Gunnery)",
+            "skill": "Gunnery",
+            "requirement": "Any",
+            "description": "Upgrades the difficulty of incoming Guided-weapon attacks against the vehicle once (plus once per additional success), until the start of your next turn."
+          }
+        ]
+      },
+      {
+        "id": "engineer",
+        "name": "Engineer",
+        "description": "Keeps the ship running and its systems humming — repairs damage, manages system loads, and pitches in on sensor/comms work when nothing's actively on fire.",
+        "manoeuvres": [
+          {
+            "name": "Assist the Pilot",
+            "requirement": "Any",
+            "description": "Spend your manoeuvre helping execute one of the Pilot's own manoeuvre options above."
+          }
+        ],
+        "actions": [
+          {
+            "name": "Damage Control",
+            "skill": "Mechanics",
+            "requirement": "Any",
+            "description": "Choose one: reduce Hull Trauma (once per encounter), reduce System Strain (unlimited uses), or repair a Critical Hit (unlimited uses). Difficulty scales with the chosen track's current total: below half threshold ♦, at/above half ♦♦, exceeding threshold ♦♦♦ (Critical Hit repair: as per the critical hit). Success reduces the chosen track by 1 per uncancelled success, or removes the Critical Hit."
+          },
+          {
+            "name": "Manual Repairs",
+            "skill": "Athletics",
+            "requirement": "Any",
+            "description": "Remove 1 Hull Trauma, plus 1 more per additional 2 uncancelled successes. Once per encounter — replaces Damage Control that encounter."
+          },
+          {
+            "name": "Plot Course (Piloting)",
+            "skill": "Piloting: Space",
+            "requirement": "Any",
+            "description": "Each uncancelled success reduces the Setback suffered for difficult terrain by one."
+          },
+          {
+            "name": "Plot Course (Perception)",
+            "skill": "Perception",
+            "requirement": "Any",
+            "description": "Same effect as the Piloting version of Plot Course, at a higher difficulty."
+          },
+          {
+            "name": "Jamming",
+            "skill": "Computers",
+            "requirement": "Any",
+            "description": "Forces the enemy to make an Average Computers check to use communications. Difficulty increases per additional success, and jamming affects additional targets per Advantage spent."
+          },
+          {
+            "name": "Boost Defenses",
+            "skill": "Mechanics",
+            "requirement": "Any",
+            "description": "The vehicle suffers 1 System Strain and increases Defense by one until the start of your next turn. Each additional success extends the duration by one round."
+          },
+          {
+            "name": "Fire Discipline (Leadership)",
+            "skill": "Leadership",
+            "requirement": "Any",
+            "description": "The next crew member firing a weapon adds a Boost die (additional crew members can be added per extra success). May spend Advantage to let hits inflict 1 System Strain on the target."
+          },
+          {
+            "name": "Fire Discipline (Discipline)",
+            "skill": "Discipline",
+            "requirement": "Any",
+            "description": "Same effect as the Leadership version of Fire Discipline, alternate skill."
+          },
+          {
+            "name": "Scan the Enemy",
+            "skill": "Perception",
+            "requirement": "Any",
+            "description": "Learn what weapons the target vehicle has, its modifications, and its System Strain/Hull Trauma thresholds. Spend Advantage to also learn its current System Strain and Hull Trauma levels."
+          },
+          {
+            "name": "Hack Enemy's Systems",
+            "skill": "Computers",
+            "requirement": "Any",
+            "description": "Reduce the target vehicle's Defense to 0 for one round per success. A Triumph may compromise a weapon of the character's choice; spending Advantage can inflict 1 System Strain on the target."
+          }
+        ]
+      },
+      {
+        "id": "support1",
+        "name": "Support Crew",
+        "description": "Supports the rest of the crew and gets the most out of the ship. Use your manoeuvre to assist the pilot (see the Pilot's Manoeuvre options), or suffer 2 personal strain to take a second manoeuvre.",
+        "manoeuvres": [
+          {
+            "name": "Assist the Pilot",
+            "requirement": "Any",
+            "description": "Spend your manoeuvre helping execute one of the Pilot's own manoeuvre options above."
+          }
+        ],
+        "actions": [
+          {
+            "name": "Damage Control",
+            "skill": "Mechanics",
+            "requirement": "Any",
+            "description": "Choose one: reduce Hull Trauma (once per encounter), reduce System Strain (unlimited uses), or repair a Critical Hit (unlimited uses). Difficulty scales with the chosen track's current total: below half threshold ♦, at/above half ♦♦, exceeding threshold ♦♦♦ (Critical Hit repair: as per the critical hit). Success reduces the chosen track by 1 per uncancelled success, or removes the Critical Hit."
+          },
+          {
+            "name": "Manual Repairs",
+            "skill": "Athletics",
+            "requirement": "Any",
+            "description": "Remove 1 Hull Trauma, plus 1 more per additional 2 uncancelled successes. Once per encounter — replaces Damage Control that encounter."
+          },
+          {
+            "name": "Plot Course (Piloting)",
+            "skill": "Piloting: Space",
+            "requirement": "Any",
+            "description": "Each uncancelled success reduces the Setback suffered for difficult terrain by one."
+          },
+          {
+            "name": "Plot Course (Perception)",
+            "skill": "Perception",
+            "requirement": "Any",
+            "description": "Same effect as the Piloting version of Plot Course, at a higher difficulty."
+          },
+          {
+            "name": "Jamming",
+            "skill": "Computers",
+            "requirement": "Any",
+            "description": "Forces the enemy to make an Average Computers check to use communications. Difficulty increases per additional success, and jamming affects additional targets per Advantage spent."
+          },
+          {
+            "name": "Boost Defenses",
+            "skill": "Mechanics",
+            "requirement": "Any",
+            "description": "The vehicle suffers 1 System Strain and increases Defense by one until the start of your next turn. Each additional success extends the duration by one round."
+          },
+          {
+            "name": "Fire Discipline (Leadership)",
+            "skill": "Leadership",
+            "requirement": "Any",
+            "description": "The next crew member firing a weapon adds a Boost die (additional crew members can be added per extra success). May spend Advantage to let hits inflict 1 System Strain on the target."
+          },
+          {
+            "name": "Fire Discipline (Discipline)",
+            "skill": "Discipline",
+            "requirement": "Any",
+            "description": "Same effect as the Leadership version of Fire Discipline, alternate skill."
+          },
+          {
+            "name": "Scan the Enemy",
+            "skill": "Perception",
+            "requirement": "Any",
+            "description": "Learn what weapons the target vehicle has, its modifications, and its System Strain/Hull Trauma thresholds. Spend Advantage to also learn its current System Strain and Hull Trauma levels."
+          },
+          {
+            "name": "Hack Enemy's Systems",
+            "skill": "Computers",
+            "requirement": "Any",
+            "description": "Reduce the target vehicle's Defense to 0 for one round per success. A Triumph may compromise a weapon of the character's choice; spending Advantage can inflict 1 System Strain on the target."
+          }
+        ]
+      },
+      {
+        "id": "support2",
+        "name": "Support Crew",
+        "description": "A second support seat — same options as the first. Handy when the whole party is aboard for a fight.",
+        "manoeuvres": [
+          {
+            "name": "Assist the Pilot",
+            "requirement": "Any",
+            "description": "Spend your manoeuvre helping execute one of the Pilot's own manoeuvre options above."
+          }
+        ],
+        "actions": [
+          {
+            "name": "Damage Control",
+            "skill": "Mechanics",
+            "requirement": "Any",
+            "description": "Choose one: reduce Hull Trauma (once per encounter), reduce System Strain (unlimited uses), or repair a Critical Hit (unlimited uses). Difficulty scales with the chosen track's current total: below half threshold ♦, at/above half ♦♦, exceeding threshold ♦♦♦ (Critical Hit repair: as per the critical hit). Success reduces the chosen track by 1 per uncancelled success, or removes the Critical Hit."
+          },
+          {
+            "name": "Manual Repairs",
+            "skill": "Athletics",
+            "requirement": "Any",
+            "description": "Remove 1 Hull Trauma, plus 1 more per additional 2 uncancelled successes. Once per encounter — replaces Damage Control that encounter."
+          },
+          {
+            "name": "Plot Course (Piloting)",
+            "skill": "Piloting: Space",
+            "requirement": "Any",
+            "description": "Each uncancelled success reduces the Setback suffered for difficult terrain by one."
+          },
+          {
+            "name": "Plot Course (Perception)",
+            "skill": "Perception",
+            "requirement": "Any",
+            "description": "Same effect as the Piloting version of Plot Course, at a higher difficulty."
+          },
+          {
+            "name": "Jamming",
+            "skill": "Computers",
+            "requirement": "Any",
+            "description": "Forces the enemy to make an Average Computers check to use communications. Difficulty increases per additional success, and jamming affects additional targets per Advantage spent."
+          },
+          {
+            "name": "Boost Defenses",
+            "skill": "Mechanics",
+            "requirement": "Any",
+            "description": "The vehicle suffers 1 System Strain and increases Defense by one until the start of your next turn. Each additional success extends the duration by one round."
+          },
+          {
+            "name": "Fire Discipline (Leadership)",
+            "skill": "Leadership",
+            "requirement": "Any",
+            "description": "The next crew member firing a weapon adds a Boost die (additional crew members can be added per extra success). May spend Advantage to let hits inflict 1 System Strain on the target."
+          },
+          {
+            "name": "Fire Discipline (Discipline)",
+            "skill": "Discipline",
+            "requirement": "Any",
+            "description": "Same effect as the Leadership version of Fire Discipline, alternate skill."
+          },
+          {
+            "name": "Scan the Enemy",
+            "skill": "Perception",
+            "requirement": "Any",
+            "description": "Learn what weapons the target vehicle has, its modifications, and its System Strain/Hull Trauma thresholds. Spend Advantage to also learn its current System Strain and Hull Trauma levels."
+          },
+          {
+            "name": "Hack Enemy's Systems",
+            "skill": "Computers",
+            "requirement": "Any",
+            "description": "Reduce the target vehicle's Defense to 0 for one round per success. A Triumph may compromise a weapon of the character's choice; spending Advantage can inflict 1 System Strain on the target."
+          }
+        ]
+      }
+    ]
+  },
+  "characters": [
+    {
+      "name": "[PC 1 Name]",
+      "liveId": "pc1",
+      "career": "[Career — Specialization]",
+      "species": "[Species (species abilities)]",
+      "updated": "2026-01-01T00:00:00Z",
+      "vitals": {
+        "wounds": {
+          "threshold": 10
+        },
+        "strain": {
+          "threshold": 10
+        },
+        "soak": 2
+      },
+      "xp": {
+        "available": 0,
+        "total": 0
+      },
+      "credits": 0,
+      "inventory": [
+        {
+          "name": "[Item]",
+          "note": "[Optional note]"
+        }
+      ],
+      "motivationObligation": {
+        "motivation": "[Motivation]",
+        "obligation": {
+          "type": "[Obligation type]",
+          "value": 0,
+          "note": "[Obligation note]"
+        }
+      },
+      "hooks": [
+        "[Character hook]"
+      ],
+      "characteristics": {
+        "brawn": 2,
+        "agility": 2,
+        "intellect": 2,
+        "cunning": 2,
+        "willpower": 2,
+        "presence": 2
+      },
+      "skills": [
+        {
+          "name": "Perception",
+          "rank": 0,
+          "career": true
+        }
+      ],
+      "talents": [
+        {
+          "name": "[Talent]",
+          "tier": 1,
+          "activation": "Active (Incidental)",
+          "ranked": false,
+          "description": "[Talent effect]"
+        }
+      ],
+      "weapons": [
+        {
+          "name": "[Weapon]",
+          "skill": "Ranged: Light",
+          "damage": 0,
+          "crit": 0,
+          "range": "Short",
+          "special": ""
+        }
+      ],
+      "armor": {
+        "name": "[Armour]",
+        "soakBonus": 0,
+        "defenseBonus": 0
+      }
+    }
+  ],
+  "npcs": [],
+  "locations": []
+}
