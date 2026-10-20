@@ -55,9 +55,11 @@ new deployment. The site never reads it directly.
    [`dashboard/README.md`](dashboard/README.md)) and add `GM_PASSWORD` as a
    secret there.
 4. Wiki: in GitHub, Settings → Pages → Source: **GitHub Actions**. Push, and
-   the wiki appears at `https://<user>.github.io/<repo>/`. Put that URL in
-   the campaign's `wikiUrl` (Export, edit, Import) to show it on the
-   dashboard's Wiki tab.
+   the wiki appears at `https://<user>.github.io/<repo>/`. Paste that URL
+   into GM page → Campaign settings → Wiki link.
+5. Ship: GM page → Vehicle. Pick a stock ship (or start blank), rename it,
+   adjust the numbers and crew seats, then Add vehicle. The Vehicle tab
+   appears for everyone.
 
 ## Privacy
 

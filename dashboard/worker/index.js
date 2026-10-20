@@ -1505,6 +1505,7 @@ function publicMapView(tokens, enemies) {
 // One previous campaign is kept as `snapshot` whenever an import replaces
 // the current one, so "Undo last import" can put it back.
 const CAMPAIGN_BODY_MAX = 1_500_000; // bytes of JSON accepted on import
+const CAMPAIGN_EDIT_MAX = 200_000; // bytes accepted by the settings / vehicle editors
 const CAMPAIGN_CHARACTERS_MAX = 40;
 const CAMPAIGN_DEPTH_MAX = 12;
 const CAMPAIGN_STRING_MAX = 20_000;
@@ -1552,6 +1553,50 @@ function sanitizeCampaignImport(raw) {
   campaign.npcs = Array.isArray(campaign.npcs) ? campaign.npcs : [];
   campaign.locations = Array.isArray(campaign.locations) ? campaign.locations : [];
   return { campaign };
+}
+
+// GM page settings: campaign title and wiki link. Returns { patch } or { error }.
+function sanitizeCampaignSettings(raw) {
+  const patch = {};
+  if (raw && typeof raw.title === "string") patch.campaign = raw.title.trim().slice(0, 120);
+  if (raw && typeof raw.wikiUrl === "string") {
+    const w = raw.wikiUrl.trim();
+    if (w) {
+      let u;
+      try { u = new URL(w); } catch { return { error: "That wiki link isn't a valid web address." }; }
+      if (u.protocol !== "https:" && u.protocol !== "http:") return { error: "The wiki link must start with https://" };
+      patch.wikiUrl = u.toString().slice(0, 500);
+    } else {
+      patch.wikiUrl = "";
+    }
+  }
+  if (!Object.keys(patch).length) return { error: "Nothing to change." };
+  return { patch };
+}
+
+// GM page vehicle editor. Keeps the shape the Vehicle tab reads; numbers are
+// forced to numbers so a typo can't break the pips. Returns { vehicle } or { error }.
+const VEHICLE_NUMBER_FIELDS = ["silhouette", "speed", "handling", "defense", "armor"];
+function sanitizeVehicle(raw) {
+  if (raw === null) return { vehicle: null };
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) return { error: "That isn't a vehicle." };
+  const v = cleanCampaignValue(raw, 0) || {};
+  v.name = String(v.name || "").trim().slice(0, 120);
+  if (!v.name) return { error: "The vehicle needs a name." };
+  const num = (x, lo, hi) => {
+    const n = Math.round(Number(x));
+    return Number.isFinite(n) ? Math.max(lo, Math.min(hi, n)) : 0;
+  };
+  for (const f of VEHICLE_NUMBER_FIELDS) v[f] = num(v[f], f === "handling" ? -10 : 0, 99);
+  v.hullTrauma = { threshold: num(v.hullTrauma?.threshold, 0, 999) };
+  v.systemStrain = { threshold: num(v.systemStrain?.threshold, 0, 999) };
+  v.weapons = (Array.isArray(v.weapons) ? v.weapons : [])
+    .filter((w) => w && typeof w === "object" && String(w.name || "").trim())
+    .map((w) => ({ ...w, name: String(w.name).trim(), damage: num(w.damage, 0, 99), crit: num(w.crit, 0, 99) }));
+  v.crewPositions = (Array.isArray(v.crewPositions) ? v.crewPositions : []).filter((c) => c && typeof c === "object" && c.id && c.name);
+  v.specialFeatures = (Array.isArray(v.specialFeatures) ? v.specialFeatures : []).map((x) => String(x || "").trim()).filter(Boolean);
+  v.hidden = !!v.hidden;
+  return { vehicle: v };
 }
 
 function campaignSummary(campaign) {
@@ -1875,6 +1920,23 @@ export class CampaignLog {
         hasSnapshot: !!this.snapshot,
         snapshotSummary: campaignSummary(this.snapshot?.campaign),
       });
+    }
+    if (request.method === "POST" && (url.pathname === "/settings" || url.pathname === "/vehicle")) {
+      let raw;
+      try { raw = await request.json(); } catch { return this.json({ error: "That request isn't valid JSON." }, 400); }
+      const campaign = this.campaign ? { ...this.campaign } : { campaign: "", characters: [], npcs: [], locations: [] };
+      if (url.pathname === "/settings") {
+        const { patch, error } = sanitizeCampaignSettings(raw);
+        if (error) return this.json({ error }, 400);
+        Object.assign(campaign, patch);
+      } else {
+        const { vehicle, error } = sanitizeVehicle(raw?.vehicle === undefined ? undefined : raw.vehicle);
+        if (error) return this.json({ error }, 400);
+        if (vehicle) campaign.vehicle = vehicle;
+        else delete campaign.vehicle;
+      }
+      await this.save(campaign, this.snapshot);
+      return this.json({ ok: true, revision: this.revision });
     }
     if (request.method === "POST" && url.pathname === "/import") {
       let raw;
@@ -2246,6 +2308,8 @@ export default {
     //   POST /gm/campaign/import  GM: replace with an uploaded ledger.json
     //   POST /gm/campaign/restore GM: undo the last import
     //   GET  /gm/campaign/export  GM: download the whole campaign
+    //   POST /gm/campaign/settings GM: title and wiki link
+    //   POST /gm/campaign/vehicle  GM: add, edit or remove the vehicle
     // Both GETs accept ?since=<revision> and answer { unchanged: true } when
     // nothing has moved, so the 5-second poll costs almost nothing.
     if (url.pathname === "/campaign" || url.pathname.startsWith("/gm/campaign")) {
@@ -2269,6 +2333,17 @@ export default {
           return new Response(JSON.stringify({ error: "That file is too big for a campaign (over 1.5 MB)." }), { status: 413, headers: jsonHeaders });
         }
         return stub.fetch(new Request(`https://campaign.internal${sub}`, { method: "POST", body: sub === "/import" ? body : undefined }));
+      }
+
+      // POST /gm/campaign/settings  { title?, wikiUrl? }
+      // POST /gm/campaign/vehicle   { vehicle: {...} | null }
+      if (isGm && request.method === "POST" && (sub === "/settings" || sub === "/vehicle")) {
+        const declared = Number(request.headers.get("content-length") || 0);
+        const body = declared > CAMPAIGN_EDIT_MAX ? "" : await request.text();
+        if (declared > CAMPAIGN_EDIT_MAX || body.length > CAMPAIGN_EDIT_MAX) {
+          return new Response(JSON.stringify({ error: "That's too large to save." }), { status: 413, headers: jsonHeaders });
+        }
+        return stub.fetch(new Request(`https://campaign.internal${sub}`, { method: "POST", body }));
       }
 
       if (request.method !== "GET") {

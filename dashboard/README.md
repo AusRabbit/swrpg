@@ -90,7 +90,7 @@ for anything outside GM-only fields.
   any weapon Special text if the roll was loaded from a weapon. Click a
   log entry to copy it to your clipboard.
 - **Wiki tab** — the campaign wiki, from the campaign's top-level
-  `wikiUrl`. Shown inline when the wiki's host allows embedding, with an
+  `wikiUrl` (set on GM page → Campaign settings). Shown inline when the wiki's host allows embedding, with an
   "Open in new tab" link either way.
 - **GM Notes** tab — a private inbox of notes players have sent from
   their character tab.
@@ -115,7 +115,11 @@ for anything outside GM-only fields.
   likely action (e.g. "Fire Forward Light Laser Cannon") that loads the
   assigned character's actual skill dice pool into the Dice Roller, greyed
   out until someone's assigned. Only shown when the campaign has a
-  `vehicle` object.
+  `vehicle` object. The GM adds and edits it on GM page → Vehicle,
+  starting from a stock ship (`public/data/starship-index.json`, Genesys
+  conversions built from `reference/starships.json` by
+  `reference/scripts/build_starship_index.py`) or a blank one. The crew
+  positions come from `public/data/vehicle-template.json`.
 
 ## Data model
 
@@ -208,7 +212,8 @@ for everything else:
   (`CampaignLog`): import/export/undo, character-creation drafts,
   `/campaign/advance` (player XP purchase requests),
   `/gm/campaign/advance/<id>/approve|reject` and `/gm/campaign/xp`
-  (GM XP awards).
+  (GM XP awards), `/gm/campaign/settings` (title, wiki link) and
+  `/gm/campaign/vehicle` (add, edit or remove the ship).
 - **`GET/POST /manual`** — the shared session state described under Data
   model above (`ManualLog` Durable Object).
 - **`/enemies`, `/gear`, `/map`, `/visibility`** (plus their `/gm/*`

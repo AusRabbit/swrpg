@@ -4082,8 +4082,7 @@ function WikiPanel({ url }) {
         </div>
         {!href ? (
           <p className="text-[13px]" style={{ color: "#5a5f62" }}>
-            No wiki link set yet — add a top-level <code style={{ color: "#e7e2d2" }}>"wikiUrl"</code> to the campaign file
-            (Export it from the GM page, add the link, Import it again).
+            No wiki link set yet. The GM sets it on the GM page, under Campaign settings.
           </p>
         ) : (
           <>
@@ -4171,7 +4170,7 @@ function VehicleTab({ vehicle, party, partySkillSets, live, loadSkillIntoRoller,
     return (
       <div className="relative overflow-hidden border" style={{ borderColor: "#3a3f42", background: "#16191b" }}>
         <div className="p-5 sm:p-7">
-          <span className="text-[13px]" style={{ color: "#5a5f62" }}>No vehicle data in the loaded ledger yet.</span>
+          <span className="text-[13px]" style={{ color: "#5a5f62" }}>No vehicle yet. The GM adds one on the GM page, under Vehicle.</span>
         </div>
       </div>
     );
@@ -6140,6 +6139,8 @@ function useCampaignStore(gmKey) {
     refresh: () => fetchCampaign(true),
     importCampaign: (text) => gmPost("/gm/campaign/import", text),
     restorePrevious: () => gmPost("/gm/campaign/restore", ""),
+    saveSettings: (settings) => gmPost("/gm/campaign/settings", JSON.stringify(settings)),
+    saveVehicle: (vehicle) => gmPost("/gm/campaign/vehicle", JSON.stringify({ vehicle })),
     async exportCampaign() {
       const res = await fetch("/gm/campaign/export", { headers: { "x-gm-key": keyRef.current || "" }, cache: "no-store" });
       if (!res.ok) {
@@ -6221,7 +6222,7 @@ function GmCampaignDataSection({ store }) {
         The characters and vehicle everyone sees. <strong style={{ color: "#e7e2d2" }}>Import</strong> loads
         a campaign file (an existing <code>ledger.json</code> works) and replaces what's here; the campaign it replaces is kept so
         you can undo. <strong style={{ color: "#e7e2d2" }}>Export</strong> downloads everything as one file: your backup, and
-        for now the way to make edits (export, edit, import). Players never receive hidden characters or gear.
+        the way to make bulk edits (export, edit, import). Players never receive hidden characters or gear.
       </p>
       <div className="text-[12px] mb-3" style={{ color: "#e7e2d2" }}>
         Loaded now: {store.status === "loading" ? "checking…" : describeCampaign(current)}
@@ -6289,6 +6290,364 @@ function GmCampaignDataSection({ store }) {
       {status.msg && (
         <p className="mt-2 text-[12px]" style={{ color: status.state === "error" ? "#c23b3b" : status.state === "busy" ? "#8a8f93" : "#6fae60" }}>{status.msg}</p>
       )}
+    </div>
+  );
+}
+
+// GM page: campaign title and the wiki link the Wiki tab shows.
+function GmCampaignSettingsSection({ store }) {
+  const savedTitle = store.campaign?.campaign || "";
+  const savedWiki = store.campaign?.wikiUrl || "";
+  const [title, setTitle] = useState(savedTitle);
+  const [wiki, setWiki] = useState(savedWiki);
+  const [status, setStatus] = useState({ state: "idle", msg: "" });
+  const dirty = title !== savedTitle || wiki !== savedWiki;
+
+  // Follow the server while the GM hasn't typed anything.
+  useEffect(() => {
+    if (!dirty) { setTitle(savedTitle); setWiki(savedWiki); }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [savedTitle, savedWiki]);
+
+  async function save() {
+    setStatus({ state: "busy", msg: "Saving…" });
+    try {
+      await store.saveSettings({ title, wikiUrl: wiki });
+      setStatus({ state: "ok", msg: wiki.trim() ? "Saved. The Wiki tab now opens this link." : "Saved. The Wiki tab has no link now." });
+    } catch (err) {
+      setStatus({ state: "error", msg: err.message });
+    }
+  }
+
+  const field = "w-full bg-[#0b0d0e] border px-2.5 py-1.5 text-[13px] outline-none focus:border-[#5ec8d8]";
+  const btn = "text-[11px] tracking-[0.15em] uppercase px-3 py-1.5 border transition-colors disabled:opacity-40";
+  return (
+    <div className="border p-4 mb-5" style={{ borderColor: "#3a3f42", background: "#101315" }}>
+      <div className="text-[11px] tracking-[0.2em] uppercase mb-1" style={{ color: "#5ec8d8" }}>Campaign settings</div>
+      <p className="text-[11px] leading-relaxed mb-3" style={{ color: "#8a8f93" }}>
+        The campaign's name, and the wiki link players get on the Wiki tab (for example your GitHub Pages address).
+      </p>
+      <label className="block text-[10px] tracking-[0.15em] uppercase mb-1" style={{ color: "#8a8f93" }}>Campaign name</label>
+      <input value={title} onChange={(e) => setTitle(e.target.value)} maxLength={120} className={`${field} mb-3`} style={{ borderColor: "#3a3f42", color: "#e7e2d2" }} placeholder="Campaign name" />
+      <label className="block text-[10px] tracking-[0.15em] uppercase mb-1" style={{ color: "#8a8f93" }}>Wiki link</label>
+      <input value={wiki} onChange={(e) => setWiki(e.target.value)} maxLength={500} className={`${field} mb-3`} style={{ borderColor: "#3a3f42", color: "#e7e2d2" }} placeholder="https://your-name.github.io/your-repo/" inputMode="url" />
+      <div className="flex flex-wrap items-center gap-2">
+        <button type="button" onClick={save} disabled={!dirty || status.state === "busy"} className={btn} style={{ color: "#101315", background: "#5ec8d8", borderColor: "#5ec8d8", fontFamily: "'Rajdhani', sans-serif", fontWeight: 700 }}>
+          Save
+        </button>
+        {savedWiki && (
+          <a href={savedWiki} target="_blank" rel="noopener noreferrer" className="text-[11px] underline" style={{ color: "#8fd3f4" }}>Open wiki</a>
+        )}
+        {status.msg && <span className="text-[12px]" style={{ color: status.state === "error" ? "#c23b3b" : status.state === "busy" ? "#8a8f93" : "#6fae60" }}>{status.msg}</span>}
+      </div>
+    </div>
+  );
+}
+
+// Static lists the vehicle editor picks from: every starship (Genesys
+// conversions, from reference/starships.json via
+// reference/scripts/build_starship_index.py), the vehicle weapon table, and
+// the generic crew positions with their manoeuvres and actions.
+function useVehicleReference() {
+  const [ref, setRef] = useState({ ships: [], weapons: [], positions: [], status: "loading" });
+  useEffect(() => {
+    let cancelled = false;
+    Promise.all([
+      fetch("/data/starship-index.json").then((r) => r.json()).catch(() => []),
+      fetch("/data/vehicle-weapons.json").then((r) => r.json()).catch(() => ({})),
+      fetch("/data/vehicle-template.json").then((r) => r.json()).catch(() => ({})),
+    ]).then(([ships, weapons, template]) => {
+      if (cancelled) return;
+      setRef({
+        ships: Array.isArray(ships) ? ships : [],
+        weapons: Array.isArray(weapons?.weapons) ? weapons.weapons : [],
+        positions: Array.isArray(template?.crewPositions) ? template.crewPositions : [],
+        status: "ok",
+      });
+    });
+    return () => { cancelled = true; };
+  }, []);
+  return ref;
+}
+
+const BLANK_VEHICLE_WEAPON = { name: "", fireArc: "Forward", range: "Long", damage: 0, crit: 0, qualities: "" };
+
+function vehicleFromShip(ship, positions) {
+  // A one-seat starfighter gets just a pilot; anything bigger gets the full crew.
+  const smallCraft = (ship.silhouette || 0) <= 3 && /^1\b/.test(ship.crew || "");
+  const crewPositions = positions
+    .filter((p) => !smallCraft || p.id === "pilot")
+    .map((p) => ({ ...p, ...(p.weaponIndex != null ? { weaponIndex: ship.weapons?.length ? 0 : null } : {}) }));
+  return {
+    name: ship.name,
+    class: [ship.model, ship.manufacturer].filter(Boolean).join(" · ") || ship.category,
+    silhouette: ship.silhouette, speed: ship.speed, handling: ship.handling, defense: ship.defense, armor: ship.armor,
+    hullTrauma: { threshold: ship.hullTrauma },
+    systemStrain: { threshold: ship.systemStrain },
+    sensors: ship.sensors || "",
+    specialFeatures: [ship.hyperdrive && `Hyperdrive: ${ship.hyperdrive}`, ship.crew && `Crew: ${ship.crew}`, ship.passengers ? `Passengers: ${ship.passengers}` : null, ship.encumbrance != null ? `Encumbrance capacity: ${ship.encumbrance}` : null, ship.notes || null].filter(Boolean),
+    weapons: (ship.weapons || []).map((w) => ({ ...w })),
+    crewPositions,
+    hidden: false,
+  };
+}
+
+// GM page: add, edit or remove the party's vehicle (drives the Vehicle tab).
+function GmVehicleSection({ store }) {
+  const saved = store.campaign?.vehicle || null;
+  const ref = useVehicleReference();
+  const [draft, setDraft] = useState(saved);
+  const [dirty, setDirty] = useState(false);
+  const [query, setQuery] = useState("");
+  const [status, setStatus] = useState({ state: "idle", msg: "" });
+  const savedJson = JSON.stringify(saved);
+
+  useEffect(() => {
+    if (!dirty) setDraft(saved);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [savedJson]);
+
+  function edit(fn) {
+    setDraft((d) => fn(JSON.parse(JSON.stringify(d))));
+    setDirty(true);
+    setStatus({ state: "idle", msg: "" });
+  }
+  const setField = (k, v) => edit((d) => { d[k] = v; return d; });
+  const setNum = (k, v) => setField(k, v === "" ? "" : Number(v));
+
+  const matches = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    if (q.length < 2) return [];
+    return ref.ships.filter((s) => `${s.name} ${s.model} ${s.category} ${s.manufacturer}`.toLowerCase().includes(q)).slice(0, 25);
+  }, [query, ref.ships]);
+
+  function startFrom(ship) {
+    setDraft(ship ? vehicleFromShip(ship, ref.positions) : {
+      name: "", class: "", silhouette: 3, speed: 3, handling: 0, defense: 0, armor: 0,
+      hullTrauma: { threshold: 10 }, systemStrain: { threshold: 10 }, sensors: "", specialFeatures: [],
+      weapons: [], crewPositions: ref.positions.map((p) => ({ ...p })), hidden: false,
+    });
+    setDirty(true);
+    setQuery("");
+    setStatus({ state: "idle", msg: ship ? `Loaded ${ship.name}. Rename it and check the numbers, then Save.` : "" });
+  }
+
+  async function save() {
+    setStatus({ state: "busy", msg: "Saving…" });
+    try {
+      await store.saveVehicle(draft);
+      setDirty(false);
+      setStatus({ state: "ok", msg: "Saved. The Vehicle tab shows it now." });
+    } catch (err) {
+      setStatus({ state: "error", msg: err.message });
+    }
+  }
+
+  async function remove() {
+    if (!window.confirm(`Remove ${saved?.name || "the vehicle"} from the campaign? Export first if you might want it back.`)) return;
+    setStatus({ state: "busy", msg: "Removing…" });
+    try {
+      await store.saveVehicle(null);
+      setDirty(false);
+      setDraft(null);
+      setStatus({ state: "ok", msg: "Vehicle removed." });
+    } catch (err) {
+      setStatus({ state: "error", msg: err.message });
+    }
+  }
+
+  function cancel() {
+    setDraft(saved);
+    setDirty(false);
+    setStatus({ state: "idle", msg: "" });
+  }
+
+  const field = "w-full bg-[#0b0d0e] border px-2 py-1 text-[13px] outline-none focus:border-[#5ec8d8]";
+  const fs = { borderColor: "#3a3f42", color: "#e7e2d2" };
+  const lbl = "block text-[10px] tracking-[0.15em] uppercase mb-1";
+  const btn = "text-[11px] tracking-[0.15em] uppercase px-3 py-1.5 border transition-colors disabled:opacity-40";
+  const ghost = { color: "#e7e2d2", borderColor: "#3a3f42", fontFamily: "'Rajdhani', sans-serif" };
+
+  const picker = (
+    <div className="mb-3">
+      <label className={lbl} style={{ color: "#8a8f93" }}>{draft ? "Replace with a stock ship" : "Find a stock ship"}</label>
+      <input value={query} onChange={(e) => setQuery(e.target.value)} className={field} style={fs} placeholder={ref.status === "loading" ? "Loading ships…" : "Type a ship name, e.g. YT-1300, X-wing, Lambda"} />
+      {matches.length > 0 && (
+        <div className="mt-1 border max-h-64 overflow-y-auto" style={{ borderColor: "#3a3f42" }}>
+          {matches.map((s, i) => (
+            <button key={i} type="button" onClick={() => startFrom(s)} className="w-full text-left px-2.5 py-1.5 border-b hover:bg-[#1c2023]" style={{ borderColor: "#2a2e31" }}>
+              <span className="text-[13px]" style={{ color: "#e7e2d2" }}>{s.name}</span>
+              <span className="text-[11px] ml-2" style={{ color: "#8a8f93" }}>{s.category} · Sil {s.silhouette} · Spd {s.speed} · HT {s.hullTrauma}</span>
+            </button>
+          ))}
+        </div>
+      )}
+      {query.trim().length >= 2 && matches.length === 0 && ref.status === "ok" && (
+        <p className="text-[11px] mt-1" style={{ color: "#8a8f93" }}>No ship matches that.</p>
+      )}
+    </div>
+  );
+
+  return (
+    <div className="border p-4 mb-5" style={{ borderColor: "#3a3f42", background: "#101315" }}>
+      <div className="text-[11px] tracking-[0.2em] uppercase mb-1" style={{ color: "#5ec8d8" }}>Vehicle</div>
+      <p className="text-[11px] leading-relaxed mb-3" style={{ color: "#8a8f93" }}>
+        The party's ship, shown on the Vehicle tab. Start from a stock ship (Genesys-converted stats) or a blank one, then
+        adjust it. Hull Trauma, System Strain and Critical Hits are tracked live on the Vehicle tab and the Session Tracker.
+      </p>
+
+      {!draft && (
+        <>
+          {picker}
+          <button type="button" onClick={() => startFrom(null)} className={btn} style={ghost}>Start a blank vehicle</button>
+        </>
+      )}
+
+      {draft && (
+        <>
+          {picker}
+          <div className="grid gap-3 sm:grid-cols-2 mb-3">
+            <div>
+              <label className={lbl} style={{ color: "#8a8f93" }}>Name</label>
+              <input value={draft.name || ""} onChange={(e) => setField("name", e.target.value)} className={field} style={fs} placeholder="e.g. Rusty Mynock" />
+            </div>
+            <div>
+              <label className={lbl} style={{ color: "#8a8f93" }}>Class / description</label>
+              <input value={draft.class || ""} onChange={(e) => setField("class", e.target.value)} className={field} style={fs} />
+            </div>
+          </div>
+          <div className="grid grid-cols-4 sm:grid-cols-7 gap-2 mb-3">
+            {[["silhouette", "Silhouette"], ["speed", "Speed"], ["handling", "Handling"], ["defense", "Defense"], ["armor", "Armor"]].map(([k, l]) => (
+              <div key={k}>
+                <label className={lbl} style={{ color: "#8a8f93" }}>{l}</label>
+                <input type="number" value={draft[k] ?? ""} onChange={(e) => setNum(k, e.target.value)} className={field} style={fs} />
+              </div>
+            ))}
+            <div>
+              <label className={lbl} style={{ color: "#8a8f93" }}>Hull Trauma</label>
+              <input type="number" min={0} value={draft.hullTrauma?.threshold ?? ""} onChange={(e) => edit((d) => { d.hullTrauma = { threshold: e.target.value === "" ? "" : Number(e.target.value) }; return d; })} className={field} style={fs} />
+            </div>
+            <div>
+              <label className={lbl} style={{ color: "#8a8f93" }}>System Strain</label>
+              <input type="number" min={0} value={draft.systemStrain?.threshold ?? ""} onChange={(e) => edit((d) => { d.systemStrain = { threshold: e.target.value === "" ? "" : Number(e.target.value) }; return d; })} className={field} style={fs} />
+            </div>
+          </div>
+          <div className="mb-3">
+            <label className={lbl} style={{ color: "#8a8f93" }}>Sensors</label>
+            <input value={draft.sensors || ""} onChange={(e) => setField("sensors", e.target.value)} className={field} style={fs} />
+          </div>
+
+          <div className="mb-3">
+            <div className={lbl} style={{ color: "#8a8f93" }}>Weapons</div>
+            {(draft.weapons || []).map((w, i) => (
+              <div key={i} className="grid grid-cols-12 gap-1.5 mb-1.5 items-center">
+                <input value={w.name} onChange={(e) => edit((d) => { d.weapons[i].name = e.target.value; return d; })} className={`${field} col-span-12 sm:col-span-4`} style={fs} placeholder="Weapon name" />
+                <input value={w.fireArc || ""} onChange={(e) => edit((d) => { d.weapons[i].fireArc = e.target.value; return d; })} className={`${field} col-span-3 sm:col-span-2`} style={fs} placeholder="Arc" title="Fire arc" />
+                <input value={w.range || ""} onChange={(e) => edit((d) => { d.weapons[i].range = e.target.value; return d; })} className={`${field} col-span-3 sm:col-span-1`} style={fs} placeholder="Range" title="Range" />
+                <input type="number" value={w.damage ?? 0} onChange={(e) => edit((d) => { d.weapons[i].damage = Number(e.target.value); return d; })} className={`${field} col-span-2 sm:col-span-1`} style={fs} title="Damage" />
+                <input type="number" value={w.crit ?? 0} onChange={(e) => edit((d) => { d.weapons[i].crit = Number(e.target.value); return d; })} className={`${field} col-span-2 sm:col-span-1`} style={fs} title="Critical" />
+                <input value={w.qualities || ""} onChange={(e) => edit((d) => { d.weapons[i].qualities = e.target.value; return d; })} className={`${field} col-span-10 sm:col-span-2`} style={fs} placeholder="Qualities" title="Qualities, comma separated" />
+                <button type="button" onClick={() => edit((d) => {
+                  d.weapons.splice(i, 1);
+                  for (const p of d.crewPositions || []) {
+                    if (p.weaponIndex == null) continue;
+                    if (p.weaponIndex === i) p.weaponIndex = d.weapons.length ? 0 : null;
+                    else if (p.weaponIndex > i) p.weaponIndex -= 1;
+                  }
+                  return d;
+                })} className="col-span-2 sm:col-span-1 text-[12px]" style={{ color: "#c23b3b" }} title="Remove weapon">✕</button>
+              </div>
+            ))}
+            <div className="text-[10px] mb-1.5" style={{ color: "#5a5f62" }}>Columns: name · fire arc · range · damage · critical · qualities</div>
+            <div className="flex flex-wrap gap-2 items-center">
+              <button type="button" onClick={() => edit((d) => { d.weapons = [...(d.weapons || []), { ...BLANK_VEHICLE_WEAPON }]; return d; })} className={btn} style={ghost}>+ Blank weapon</button>
+              {ref.weapons.length > 0 && (
+                <select
+                  value=""
+                  onChange={(e) => {
+                    const w = ref.weapons[Number(e.target.value)];
+                    if (w) edit((d) => { d.weapons = [...(d.weapons || []), { fireArc: "Forward", ...w }]; return d; });
+                  }}
+                  className="bg-[#0b0d0e] border px-2 py-1 text-[12px]"
+                  style={fs}
+                >
+                  <option value="">+ From the weapon table…</option>
+                  {ref.weapons.map((w, i) => <option key={i} value={i}>{w.name} (Dam {w.damage}, Crit {w.crit}, {w.range})</option>)}
+                </select>
+              )}
+            </div>
+          </div>
+
+          <div className="mb-3">
+            <label className={lbl} style={{ color: "#8a8f93" }}>Special features (one per line)</label>
+            <textarea
+              rows={3}
+              value={(draft.specialFeatures || []).join("\n")}
+              onChange={(e) => setField("specialFeatures", e.target.value.split("\n"))}
+              className={field}
+              style={fs}
+            />
+          </div>
+
+          <div className="mb-3">
+            <div className={lbl} style={{ color: "#8a8f93" }}>Crew positions</div>
+            <div className="space-y-1.5">
+              {ref.positions.map((tp) => {
+                const idx = (draft.crewPositions || []).findIndex((p) => p.id === tp.id);
+                const on = idx !== -1;
+                const pos = on ? draft.crewPositions[idx] : null;
+                return (
+                  <div key={tp.id} className="flex flex-wrap items-center gap-2 text-[12px]" style={{ color: "#e7e2d2" }}>
+                    <label className="flex items-center gap-1.5 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={on}
+                        onChange={() => edit((d) => {
+                          const list = d.crewPositions || [];
+                          if (on) d.crewPositions = list.filter((p) => p.id !== tp.id);
+                          else {
+                            const order = ref.positions.map((p) => p.id);
+                            const added = { ...tp, ...(tp.weaponIndex != null ? { weaponIndex: (d.weapons || []).length ? 0 : null } : {}) };
+                            d.crewPositions = [...list, added].sort((a, b) => order.indexOf(a.id) - order.indexOf(b.id));
+                          }
+                          return d;
+                        })}
+                      />
+                      {tp.name}
+                    </label>
+                    {on && tp.weaponIndex !== undefined && (
+                      <select
+                        value={pos.weaponIndex ?? ""}
+                        onChange={(e) => edit((d) => { d.crewPositions[idx].weaponIndex = e.target.value === "" ? null : Number(e.target.value); return d; })}
+                        className="bg-[#0b0d0e] border px-1.5 py-0.5 text-[11px]"
+                        style={fs}
+                        title="The weapon this seat fires"
+                      >
+                        <option value="">No weapon</option>
+                        {(draft.weapons || []).map((w, i) => <option key={i} value={i}>{w.name || `Weapon ${i + 1}`}</option>)}
+                      </select>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          <label className="flex items-center gap-2 text-[12px] mb-3 cursor-pointer" style={{ color: "#e7e2d2" }}>
+            <input type="checkbox" checked={!!draft.hidden} onChange={(e) => setField("hidden", e.target.checked)} />
+            Hidden from players (they won't see the Vehicle tab)
+          </label>
+
+          <div className="flex flex-wrap items-center gap-2">
+            <button type="button" onClick={save} disabled={!dirty || status.state === "busy" || !String(draft.name || "").trim()} className={btn} style={{ color: "#101315", background: "#5ec8d8", borderColor: "#5ec8d8", fontFamily: "'Rajdhani', sans-serif", fontWeight: 700 }}>
+              {saved ? "Save changes" : "Add vehicle"}
+            </button>
+            {dirty && <button type="button" onClick={cancel} className={btn} style={ghost}>Cancel</button>}
+            {saved && !dirty && <button type="button" onClick={remove} disabled={status.state === "busy"} className={btn} style={{ color: "#c23b3b", borderColor: "#c23b3b66", fontFamily: "'Rajdhani', sans-serif" }}>Remove vehicle</button>}
+          </div>
+        </>
+      )}
+      {status.msg && <p className="mt-2 text-[12px]" style={{ color: status.state === "error" ? "#c23b3b" : status.state === "busy" ? "#8a8f93" : "#6fae60" }}>{status.msg}</p>}
     </div>
   );
 }
@@ -9801,6 +10160,8 @@ function GmPanel({ auth, campaignStore, party, overrides, onOverride, onResetOve
         ) : (
           <>
             <GmCampaignDataSection store={campaignStore} />
+            <GmCampaignSettingsSection store={campaignStore} />
+            <GmVehicleSection store={campaignStore} />
             <GmCharacterCreationSection gmKey={auth.key} onAdded={() => campaignStore.refresh()} />
             <GmExperienceSection gmKey={auth.key} party={party} onChanged={() => campaignStore.refresh()} />
             <GmManualModeSection manual={manual} party={party} vehicle={vehicle} />

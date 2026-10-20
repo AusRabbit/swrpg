@@ -23,8 +23,8 @@ wiki/content/*.md  ->  wiki/build.py  ->  wiki/docs/index.html  ->  GitHub Pages
   and both the dashboard and the wiki pick up the change.
 
 One-time GitHub setup: Settings → Pages → Build and deployment → Source:
-**GitHub Actions**. To link the wiki from the dashboard's Wiki tab, put the
-Pages address in the campaign's wiki link.
+**GitHub Actions**. To link the wiki from the dashboard's Wiki tab, paste the
+Pages address into GM page → Campaign settings → Wiki link.
 
 GitHub Pages from a **private** repo needs a paid GitHub plan, and the
 published site is public either way. Keep anything secret out of `content/`.
