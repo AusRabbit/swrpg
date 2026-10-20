@@ -1,3 +1,15 @@
 # Canonical names only - pass to the transcriber with --names.
 # Do NOT add misspellings here; they belong in corrections.json.
-
+The Criminal Underworld
+The Empire
+The Galactic Empire
+The Imperials
+The Outer Rim
+The Rebel Alliance
+The Rebellion
+The Rebels
+The Ship
+The Underworld
+the Alliance
+the Empire
+the underworld

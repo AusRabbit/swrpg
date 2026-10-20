@@ -953,7 +953,7 @@ function GMNoteBox({ characterName }) {
 // exactly like every other advancement — this never writes XP anywhere.
 //
 // Cost rules (Star Wars FFG core, plus this campaign's Genesys Talents
-// Expanded v5.0 simplification — see ledgers/Ledger.md):
+// Expanded v5.0 simplification):
 //   - Skill rank: new rank x 5 XP, +5 XP more if the skill isn't a career
 //     skill.
 //   - Talent: tier x 5 XP, flat — regardless of which specialization the
@@ -1063,12 +1063,16 @@ function TalentTierSearch({ tier, value, onSelect, library, forceSensitive = fal
   );
 }
 
-function AdvancementPlanner({ character, skills, talents, xpAvailable, onBack, forceSensitive = false }) {
+function AdvancementPlanner({ character, skills, talents, xpAvailable, onBack, forceSensitive = false, onSubmitted }) {
+  const characterId = character.liveId || character.name;
+  const { requests: allRequests, refresh: refreshRequests } = useAdvanceRequests(true);
+  const myRequests = allRequests.filter((r) => r.characterId === characterId).slice(0, 5);
+  const myPending = myRequests.find((r) => r.status === "pending");
+  const [submitStatus, setSubmitStatus] = useState({ state: "idle" });
   const [plannedSkillRanks, setPlannedSkillRanks] = useState({}); // skill name -> planned rank
   const [plannedTalents, setPlannedTalents] = useState({ 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 }); // tier -> count to add
   const [selectedTalents, setSelectedTalents] = useState({ 1: [], 2: [], 3: [], 4: [], 5: [] });
   const talentLibrary = useTalentLibrary();
-  const [sendStatus, setSendStatus] = useState({ state: "idle" });
   const [copyStatus, setCopyStatus] = useState(false);
   // The message sent/copied is editable free text, not just the computed
   // summary — the planner only knows tiers, not talent names, so players
@@ -1080,8 +1084,10 @@ function AdvancementPlanner({ character, skills, talents, xpAvailable, onBack, f
   // a re-fill; only the +/- buttons above do.
   const [message, setMessage] = useState("");
 
+  // Counted in talent ranks (Grit ×2 counts as two Tier 1 talents), the same
+  // way the Worker checks the pyramid when a purchase is approved.
   const existingByTier = [1, 2, 3, 4, 5].reduce((acc, t) => {
-    acc[t] = talents.filter((tal) => tal.tier === t).length;
+    acc[t] = talents.filter((tal) => Number(tal.tier) === t).reduce((n, tal) => n + Math.max(1, Number(tal.rank) || 1), 0);
     return acc;
   }, {});
 
@@ -1181,28 +1187,40 @@ function AdvancementPlanner({ character, skills, talents, xpAvailable, onBack, f
     }
   }
 
-  async function handleSendToGM() {
-    setSendStatus({ state: "sending" });
+  // The real purchase: sent to the Worker, which prices it again and holds
+  // it for the GM to approve on the GM page.
+  async function handleSubmitPurchase() {
+    setSubmitStatus({ state: "sending" });
     try {
-      const res = await fetch("/notes", {
+      const res = await fetch("/campaign/advance", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ player: character.name || "Unknown", text: message.trim().slice(0, 500) }),
+        body: JSON.stringify({
+          characterId,
+          skills: Object.fromEntries(skillLines.map((l) => [l.name, l.to])),
+          talents: talentLines.flatMap((l) => l.choices.map((t) => ({ name: t.name, tier: l.tier, ranked: t.ranked, force: t.force, activation: t.activation, text_swrpg: t.text_swrpg }))),
+          note: message.split("\n").filter((line) => !line.startsWith("Advancement plan") && !line.startsWith("Total:") && !line.startsWith("Projected pyramid")).join("\n").slice(0, 500),
+        }),
       });
-      if (!res.ok) throw new Error(`${res.status}`);
-      setSendStatus({ state: "sent" });
-      setTimeout(() => setSendStatus({ state: "idle" }), COPY_CONFIRM_MS);
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(body.error || `The Worker said ${res.status}`);
+      setSubmitStatus({ state: "sent" });
+      reset();
+      refreshRequests();
+      onSubmitted?.();
     } catch (err) {
-      setSendStatus({ state: "error", msg: err.message });
+      setSubmitStatus({ state: "error", msg: err.message });
     }
   }
+
+
 
   return (
     <div className="relative overflow-hidden border" style={{ borderColor: "#3a3f42", background: "#16191b", boxShadow: "0 0 30px rgba(94,200,216,0.06)" }}>
       <div className="p-5 sm:p-7">
         <div className="flex items-start justify-between mb-1">
           <div>
-            <div className="text-[11px] tracking-[0.25em] uppercase mb-1" style={{ color: "#5ec8d8" }}>PLANNING ONLY — NOT SAVED</div>
+            <div className="text-[11px] tracking-[0.25em] uppercase mb-1" style={{ color: "#5ec8d8" }}>SPEND XP</div>
             <h1 className="text-2xl sm:text-3xl uppercase tracking-wide" style={{ color: "#e7e2d2", fontFamily: "'Rajdhani', sans-serif", fontWeight: 700 }}>
               🧮 Advancement Planner
             </h1>
@@ -1217,9 +1235,9 @@ function AdvancementPlanner({ character, skills, talents, xpAvailable, onBack, f
           </button>
         </div>
         <p className="text-[12px] leading-relaxed mb-5 pb-5 border-b" style={{ color: "#5a5f62", borderColor: "#2a2e31" }}>
-          Nothing here touches your real sheet. Click skills and talent tiers to try out a build and watch the XP tally update
-          live, then copy the summary or send it straight to the GM inbox — the same one the "Note to GM" box below the sheet
-          uses. The GM still applies anything approved into the ledger by hand.
+          Click skills and talent tiers to build a purchase and watch the XP tally update live. Nothing changes on your sheet until
+          you press <strong style={{ color: "#e7e2d2" }}>Submit for approval</strong> at the bottom and the GM approves it; then the
+          XP comes off and the new ranks and talents appear on your sheet.
         </p>
 
         <div className="grid sm:grid-cols-3 gap-4 mb-6">
@@ -1340,7 +1358,7 @@ function AdvancementPlanner({ character, skills, talents, xpAvailable, onBack, f
 
         <div>
           <div className="flex items-center justify-between mb-2">
-            <div className="text-[11px] tracking-[0.2em] uppercase" style={{ color: "#8a8f93" }}>Message to GM</div>
+            <div className="text-[11px] tracking-[0.2em] uppercase" style={{ color: "#8a8f93" }}>Summary and note for the GM</div>
             {hasChanges && (
               <button onClick={reset} className="text-[10px] tracking-[0.15em] uppercase" style={{ color: "#5a5f62" }}>
                 Reset plan
@@ -1348,9 +1366,8 @@ function AdvancementPlanner({ character, skills, talents, xpAvailable, onBack, f
             )}
           </div>
           <p className="text-[11px] leading-relaxed mb-2" style={{ color: "#5a5f62" }}>
-            Pre-filled from the skills and named talents selected above. Edit it freely to add context for the GM. Clicking another skill or talent button up there
-            re-fills this box from scratch, so make sure whatever you typed made it to the GM (or is copied somewhere safe)
-            before you keep planning.
+            Pre-filled from your choices above. Anything you add is sent to the GM with the purchase. Clicking another skill or
+            talent button re-fills this box, so add your note last.
           </p>
           <textarea
             value={message}
@@ -1374,18 +1391,34 @@ function AdvancementPlanner({ character, skills, talents, xpAvailable, onBack, f
               {copyStatus ? "Copied ✔" : "Copy message"}
             </button>
             <button
-              onClick={handleSendToGM}
-              disabled={!message.trim() || !talentSelectionsComplete || sendStatus.state === "sending"}
+              onClick={handleSubmitPurchase}
+              disabled={!hasChanges || overBudget || !legal || !talentSelectionsComplete || !!myPending || submitStatus.state === "sending"}
               className="text-[11px] tracking-wide uppercase px-3 py-1.5 disabled:opacity-40"
-              style={{ background: "#e0763a", color: "#101315", fontFamily: "'Rajdhani', sans-serif", fontWeight: 700 }}
+              style={{ background: "#ffb000", color: "#101315", fontFamily: "'Rajdhani', sans-serif", fontWeight: 700 }}
+              title={overBudget ? "That costs more XP than you have" : myPending ? "You already have a purchase waiting for the GM" : undefined}
             >
-              {sendStatus.state === "sending" ? "Sending…" : "Send to GM"}
+              {submitStatus.state === "sending" ? "Submitting…" : "Submit for approval"}
             </button>
-            {sendStatus.state === "sent" && <span className="text-[12px]" style={{ color: "#6fae60" }}>Sent to GM inbox ✔</span>}
-            {sendStatus.state === "error" && (
-              <span className="text-[12px]" style={{ color: "#c23b3b" }}>Failed to send: {sendStatus.msg}</span>
-            )}
+            {submitStatus.state === "sent" && <span className="text-[12px]" style={{ color: "#6fae60" }}>Sent to the GM for approval ✔</span>}
+            {submitStatus.state === "error" && <span className="text-[12px]" style={{ color: "#c23b3b" }}>{submitStatus.msg}</span>}
+            {overBudget && hasChanges && <span className="text-[12px]" style={{ color: "#c23b3b" }}>That's {-remaining} XP more than you have.</span>}
           </div>
+          {myRequests.length > 0 && (
+            <div className="mt-5 pt-4 border-t" style={{ borderColor: "#2a2e31" }}>
+              <div className="text-[11px] tracking-[0.2em] uppercase mb-2" style={{ color: "#8a8f93" }}>Your purchases</div>
+              <div className="space-y-1.5">
+                {myRequests.map((r) => (
+                  <div key={r.id} className="text-[12px]" style={{ color: "#c7c2b2" }}>
+                    <span className="uppercase text-[10px] tracking-[0.12em] mr-2" style={{ color: r.status === "pending" ? "#ffb000" : r.status === "approved" ? "#6fae60" : "#c23b3b" }}>
+                      {r.status === "pending" ? "Waiting for GM" : r.status}
+                    </span>
+                    {r.cost} XP — {r.lines.join("; ")}
+                    {r.gmNote && <span style={{ color: "#8a8f93" }}> · GM: “{r.gmNote}”</span>}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>
@@ -3850,78 +3883,6 @@ function DiceRollerPanel({ playerName, setPlayerName, preset, partyDestiny, dest
   );
 }
 
-// NPC Summary — player-facing, one-line-per-NPC readout sourced entirely
-// from ledger.json's "npcs" array (itself pulled from the GM master ledger's
-// NPC & Ally section). Deliberately excludes GM-only secrets, clock values,
-// and anything not already written into the ledger — no field here is
-// invented client-side. Grouped into NPCs currently on-site vs. off-screen
-// contacts, per each entry's "status" string.
-function NPCSummaryPanel({ npcs }) {
-  const present = npcs.filter((n) => /^present/i.test(n.status || ""));
-  const offScreen = npcs.filter((n) => !/^present/i.test(n.status || ""));
-
-  const Card = ({ npc }) => (
-    <div className="border p-3 mb-3" style={{ borderColor: "#2a2e31", background: "#101315" }}>
-      <div className="flex items-start justify-between flex-wrap gap-1 mb-1">
-        <span className="text-[15px]" style={{ color: "#e7e2d2", fontFamily: "'Rajdhani', sans-serif", fontWeight: 700 }}>
-          {npc.name}
-        </span>
-        <span className="text-[10px] tracking-[0.15em] uppercase" style={{ color: "#6fae60" }}>
-          {npc.role}
-        </span>
-      </div>
-      <div className="flex flex-wrap gap-x-4 gap-y-0.5 mb-2 text-[11px]" style={{ color: "#5a5f62" }}>
-        <span>Species: <span style={{ color: "#8a8f93" }}>{npc.species || "Not specified in ledger"}</span></span>
-        <span>Gender: <span style={{ color: "#8a8f93" }}>{npc.gender || "Not specified in ledger"}</span></span>
-        <span>{npc.status}</span>
-      </div>
-      {npc.summary && (
-        <p className="text-[13px] italic mb-1.5" style={{ color: "#e7e2d2" }}>{npc.summary}</p>
-      )}
-      {npc.whatPartyKnows && (
-        <p className="text-[12px] leading-relaxed" style={{ color: "#8a8f93" }}>
-          <span className="uppercase tracking-[0.1em]" style={{ color: "#5a5f62" }}>What the party knows — </span>
-          {npc.whatPartyKnows}
-        </p>
-      )}
-    </div>
-  );
-
-  return (
-    <div className="relative overflow-hidden border" style={{ borderColor: "#3a3f42", background: "#16191b", boxShadow: "0 0 30px rgba(111,174,96,0.06)" }}>
-      <div className="p-5 sm:p-7">
-        <div className="text-[11px] tracking-[0.25em] uppercase mb-1" style={{ color: "#6fae60" }}>SHARED SESSION TOOL</div>
-        <h1 className="text-2xl sm:text-3xl uppercase tracking-wide mb-2" style={{ color: "#e7e2d2", fontFamily: "'Rajdhani', sans-serif", fontWeight: 700 }}>
-          NPC Summary
-        </h1>
-        <p className="text-[11px] leading-relaxed mb-5" style={{ color: "#5a5f62" }}>
-          Player-facing summaries only — pulled directly from the GM's ledger, no GM-only secrets included. Anything not
-          recorded in the ledger is shown as "Not specified" rather than guessed.
-        </p>
-
-        {npcs.length === 0 ? (
-          <span className="text-[13px]" style={{ color: "#5a5f62" }}>No NPC data in the loaded ledger yet.</span>
-        ) : (
-          <>
-            {present.length > 0 && (
-              <div className="mb-5">
-                <div className="text-[10px] tracking-[0.2em] uppercase mb-2" style={{ color: "#8a8f93" }}>On-site / Active</div>
-                {present.map((npc, i) => <Card key={i} npc={npc} />)}
-              </div>
-            )}
-            {offScreen.length > 0 && (
-              <div>
-                <div className="text-[10px] tracking-[0.2em] uppercase mb-2" style={{ color: "#8a8f93" }}>Off-screen Contacts</div>
-                {offScreen.map((npc, i) => <Card key={i} npc={npc} />)}
-              </div>
-            )}
-          </>
-        )}
-      </div>
-    </div>
-  );
-}
-
 // GM-facing inbox for the shared /notes log (see GMNoteBox above and
 // NotesLog in worker/index.js). Polls like the dice roller's log, but on a
 // slower cadence since notes are low-frequency and not time-critical.
@@ -4144,63 +4105,6 @@ function WikiPanel({ url }) {
   );
 }
 
-// Player-facing "where are we right now" reference — planets, settlements,
-// ships. Deliberately simple: no GM secrets, no threat assessments, just a
-// quick reminder of the party's current and past locations. Mirrors
-// NPCSummaryPanel's structure/styling (split into two groups, plain cards).
-function LocationSummaryPanel({ locations }) {
-  const current = locations.filter((l) => l.current);
-  const past = locations.filter((l) => !l.current);
-
-  const Card = ({ loc }) => (
-    <div className="border p-3 mb-3" style={{ borderColor: "#2a2e31", background: "#101315" }}>
-      <div className="flex items-start justify-between flex-wrap gap-1 mb-1">
-        <span className="text-[15px]" style={{ color: "#e7e2d2", fontFamily: "'Rajdhani', sans-serif", fontWeight: 700 }}>
-          {loc.name}
-        </span>
-        <span className="text-[10px] tracking-[0.15em] uppercase" style={{ color: "#c9a15a" }}>
-          {loc.type}
-        </span>
-      </div>
-      {loc.summary && (
-        <p className="text-[12px] leading-relaxed" style={{ color: "#8a8f93" }}>{loc.summary}</p>
-      )}
-    </div>
-  );
-
-  return (
-    <div className="relative overflow-hidden border" style={{ borderColor: "#3a3f42", background: "#16191b", boxShadow: "0 0 30px rgba(201,161,90,0.06)" }}>
-      <div className="p-5 sm:p-7">
-        <div className="text-[11px] tracking-[0.25em] uppercase mb-1" style={{ color: "#c9a15a" }}>SHARED SESSION TOOL</div>
-        <h1 className="text-2xl sm:text-3xl uppercase tracking-wide mb-2" style={{ color: "#e7e2d2", fontFamily: "'Rajdhani', sans-serif", fontWeight: 700 }}>
-          Locations
-        </h1>
-        <p className="text-[11px] leading-relaxed mb-5" style={{ color: "#5a5f62" }}>
-          Where the party is, and where they've been — pulled directly from the GM's ledger.
-        </p>
-
-        {locations.length === 0 ? (
-          <span className="text-[13px]" style={{ color: "#5a5f62" }}>No location data in the loaded ledger yet.</span>
-        ) : (
-          <>
-            {current.length > 0 && (
-              <div className="mb-5">
-                <div className="text-[10px] tracking-[0.2em] uppercase mb-2" style={{ color: "#8a8f93" }}>Current</div>
-                {current.map((loc, i) => <Card key={i} loc={loc} />)}
-              </div>
-            )}
-            {past.length > 0 && (
-              <div>
-                <div className="text-[10px] tracking-[0.2em] uppercase mb-2" style={{ color: "#8a8f93" }}>Past</div>
-                {past.map((loc, i) => <Card key={i} loc={loc} />)}
-              </div>
-            )}
-          </>
-        )}
-      </div>
-    </div>
-  );
-}
 
 // ---------------------------------------------------------------------------
 // Vehicle tab — the ship's static profile (Silhouette/Speed/Handling/Defense/
@@ -5786,6 +5690,144 @@ const ENEMY_TYPES = [
 // the same /notes log the inbox reads, so the nav tab can pulse from any
 // other tab. Only runs for the signed-in GM; players never see the pulse.
 const INBOX_POLL_MS = 5000;
+// XP purchase requests (see CampaignLog.handleXp in worker/index.js). Players
+// submit them from the Advancement Planner; the GM approves or rejects them
+// on the GM page.
+const ADVANCE_POLL_MS = 8000;
+function useAdvanceRequests(enabled = true) {
+  const [requests, setRequests] = useState([]);
+  const refresh = useCallback(async () => {
+    try {
+      const res = await fetch(`/campaign/advance?_=${Date.now()}`, { cache: "no-store" });
+      if (!res.ok) return;
+      const data = await res.json();
+      setRequests(Array.isArray(data.requests) ? data.requests : []);
+    } catch { /* keep the last list */ }
+  }, []);
+  useEffect(() => {
+    if (!enabled) return undefined;
+    refresh();
+    const t = setInterval(refresh, ADVANCE_POLL_MS);
+    return () => clearInterval(t);
+  }, [enabled, refresh]);
+  return { requests, refresh };
+}
+
+// Things waiting for the signed-in GM on the GM page: XP purchases and
+// finished character creations. Drives the pulse on the ★ GM tab.
+function useGmPendingCount(gmKey) {
+  const [count, setCount] = useState(0);
+  useEffect(() => {
+    if (!gmKey) { setCount(0); return undefined; }
+    let cancelled = false;
+    async function check() {
+      try {
+        const [a, c] = await Promise.all([
+          fetch(`/campaign/advance?_=${Date.now()}`, { cache: "no-store" }).then((r) => (r.ok ? r.json() : {})),
+          fetch(`/gm/creation?_=${Date.now()}`, { cache: "no-store", headers: { "x-gm-key": gmKey } }).then((r) => (r.ok ? r.json() : {})),
+        ]);
+        const n = (a.requests || []).filter((r) => r.status === "pending").length + (c.drafts || []).filter((d) => d.status === "submitted").length;
+        if (!cancelled) setCount(n);
+      } catch { /* leave the last count */ }
+    }
+    check();
+    const t = setInterval(check, 10000);
+    return () => { cancelled = true; clearInterval(t); };
+  }, [gmKey]);
+  return count;
+}
+
+// GM page: award XP, and approve or reject what players want to buy.
+function GmExperienceSection({ gmKey, party, onChanged }) {
+  const { requests, refresh } = useAdvanceRequests(true);
+  const [who, setWho] = useState({});
+  const [amount, setAmount] = useState("");
+  const [reason, setReason] = useState("");
+  const [status, setStatus] = useState({ state: "idle", msg: "" });
+  const pending = requests.filter((r) => r.status === "pending");
+  const recent = requests.filter((r) => r.status !== "pending").slice(0, 6);
+  const cid = (c) => c.liveId || c.name;
+  const chosen = party.filter((c) => who[cid(c)]);
+
+  async function call(path, body) {
+    const res = await fetch(path, { method: "POST", headers: { "content-type": "application/json", "x-gm-key": gmKey || "" }, body: JSON.stringify(body) });
+    const out = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(out.error || `The Worker said ${res.status}`);
+    return out;
+  }
+  async function run(fn, done) {
+    setStatus({ state: "busy", msg: "" });
+    try { const r = await fn(); setStatus({ state: "ok", msg: done(r) }); await refresh(); onChanged?.(); } catch (err) { setStatus({ state: "error", msg: err.message }); }
+  }
+
+  const btn = "text-[11px] tracking-[0.15em] uppercase px-3 py-1.5 disabled:opacity-40";
+  return (
+    <div className="border p-4 mb-5" style={{ borderColor: "#ffb00066", background: "#101315" }}>
+      <div className="text-[11px] tracking-[0.2em] uppercase mb-1" style={{ color: "#ffb000" }}>Experience</div>
+      <p className="text-[11px] leading-relaxed mb-3" style={{ color: "#8a8f93" }}>
+        Award XP here; it's added to each character's available and total XP straight away. Players spend it from their
+        sheet's Advancement Planner with "Submit for approval", and their purchases wait below until you approve them. A purchase
+        that costs more XP than the character has can't be submitted, and is checked again when you approve.
+      </p>
+
+      <div className="flex flex-wrap items-center gap-2 mb-2">
+        <button type="button" onClick={() => setWho(Object.fromEntries(party.map((c) => [cid(c), true])))} className="text-[10px] uppercase tracking-[0.12em] px-2 py-1 border" style={{ borderColor: "#3a3f42", color: "#8a8f93" }}>Whole party</button>
+        {party.map((c) => (
+          <label key={cid(c)} className="text-[12px] flex items-center gap-1.5 px-2 py-1 border" style={{ borderColor: who[cid(c)] ? "#ffb000" : "#3a3f42", color: "#e7e2d2" }}>
+            <input type="checkbox" checked={!!who[cid(c)]} onChange={(e) => setWho((w) => ({ ...w, [cid(c)]: e.target.checked }))} />
+            {c.name} <span className="mono-num" style={{ color: "#8a8f93" }}>{c.xp?.available ?? 0} XP</span>
+          </label>
+        ))}
+      </div>
+      <div className="flex flex-wrap items-center gap-2 mb-3">
+        <input type="number" value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="XP" className="w-20 bg-transparent border px-2 py-1.5 text-[12px] mono-num" style={{ borderColor: "#3a3f42", color: "#e7e2d2" }} />
+        <input value={reason} onChange={(e) => setReason(e.target.value)} maxLength={200} placeholder="Reason (e.g. Session 3)" className="flex-1 min-w-[180px] bg-transparent border px-2 py-1.5 text-[12px]" style={{ borderColor: "#3a3f42", color: "#e7e2d2" }} />
+        <button
+          type="button"
+          disabled={!chosen.length || !Number(amount) || status.state === "busy"}
+          onClick={() => run(() => call("/gm/campaign/xp", { characterIds: chosen.map(cid), amount: Number(amount), reason }), (r) => { setAmount(""); setReason(""); return `${r.amount > 0 ? "+" : ""}${r.amount} XP to ${r.names.join(", ")}.`; })}
+          className={btn}
+          style={{ background: "#ffb000", color: "#101315", fontFamily: "'Rajdhani', sans-serif", fontWeight: 700 }}
+        >
+          Award XP
+        </button>
+      </div>
+
+      <div className="text-[11px] tracking-[0.2em] uppercase mb-1.5" style={{ color: "#8a8f93" }}>Waiting for approval ({pending.length})</div>
+      {pending.length === 0 ? <div className="text-[12px] mb-3" style={{ color: "#5a5f62" }}>Nothing waiting.</div> : (
+        <div className="space-y-2 mb-3">
+          {pending.map((r) => {
+            const c = party.find((p) => cid(p) === r.characterId);
+            return (
+              <div key={r.id} className="border p-3" style={{ borderColor: "#ffb00066", background: "#16191b" }}>
+                <div className="text-[12px] mb-1" style={{ color: "#e7e2d2" }}>
+                  <strong>{r.characterName}</strong> wants to spend <strong style={{ color: "#ffb000" }}>{r.cost} XP</strong>
+                  <span style={{ color: "#8a8f93" }}> · has {c?.xp?.available ?? "?"} XP · {new Date(r.createdAt).toLocaleString()}</span>
+                </div>
+                <ul className="text-[12px] list-disc pl-5" style={{ color: "#c7c2b2" }}>{r.lines.map((l, i) => <li key={i}>{l}</li>)}</ul>
+                {r.note && <div className="text-[12px] mt-1 italic" style={{ color: "#8a8f93" }}>“{r.note}”</div>}
+                <div className="flex gap-2 mt-2">
+                  <button type="button" disabled={status.state === "busy"} onClick={() => run(() => call(`/gm/campaign/advance/${r.id}/approve`, {}), (o) => `Approved: ${r.characterName} now has ${o.xpLeft} XP left.`)} className={btn} style={{ background: "#6fae60", color: "#101315", fontFamily: "'Rajdhani', sans-serif", fontWeight: 700 }}>Approve</button>
+                  <button type="button" disabled={status.state === "busy"} onClick={() => { const note = window.prompt(`Why are you rejecting ${r.characterName}'s purchase? (shown to the player)`); if (note !== null) run(() => call(`/gm/campaign/advance/${r.id}/reject`, { note }), () => "Rejected."); }} className={`${btn} border`} style={{ borderColor: "#c23b3b66", color: "#c23b3b", fontFamily: "'Rajdhani', sans-serif" }}>Reject</button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+      {recent.length > 0 && (
+        <>
+          <div className="text-[11px] tracking-[0.2em] uppercase mb-1.5" style={{ color: "#8a8f93" }}>Recently decided</div>
+          <div className="text-[11px] space-y-0.5" style={{ color: "#8a8f93" }}>
+            {recent.map((r) => <div key={r.id}><span style={{ color: r.status === "approved" ? "#6fae60" : "#c23b3b" }}>{r.status}</span> · {r.characterName} · {r.cost} XP{r.gmNote ? ` · “${r.gmNote}”` : ""}</div>)}
+          </div>
+        </>
+      )}
+      {status.msg && <p className="mt-2 text-[12px]" style={{ color: status.state === "error" ? "#c23b3b" : "#6fae60" }}>{status.msg}</p>}
+    </div>
+  );
+}
+
 function useUnactionedNoteCount(enabled) {
   const [count, setCount] = useState(0);
   useEffect(() => {
@@ -6122,8 +6164,6 @@ function describeCampaign(c) {
   const parts = [
     `${c.characters} character${c.characters === 1 ? "" : "s"}${c.hiddenCharacters ? ` (${c.hiddenCharacters} hidden)` : ""}`,
     c.vehicle ? "a vehicle" : null,
-    `${c.npcs} NPC${c.npcs === 1 ? "" : "s"}`,
-    `${c.locations} location${c.locations === 1 ? "" : "s"}`,
   ].filter(Boolean);
   return `${c.title ? `"${c.title}": ` : ""}${parts.join(", ")}`;
 }
@@ -6178,7 +6218,7 @@ function GmCampaignDataSection({ store }) {
     <div className="border p-4 mb-5" style={{ borderColor: "#5ec8d866", background: "#101315" }}>
       <div className="text-[11px] tracking-[0.2em] uppercase mb-1" style={{ color: "#5ec8d8" }}>Campaign data</div>
       <p className="text-[11px] leading-relaxed mb-3" style={{ color: "#8a8f93" }}>
-        The characters, vehicle, NPCs and locations everyone sees. <strong style={{ color: "#e7e2d2" }}>Import</strong> loads
+        The characters and vehicle everyone sees. <strong style={{ color: "#e7e2d2" }}>Import</strong> loads
         a campaign file (an existing <code>ledger.json</code> works) and replaces what's here; the campaign it replaces is kept so
         you can undo. <strong style={{ color: "#e7e2d2" }}>Export</strong> downloads everything as one file: your backup, and
         for now the way to make edits (export, edit, import). Players never receive hidden characters or gear.
@@ -9600,8 +9640,6 @@ function hideableTabs(party, vehicle) {
     ...party.map((c, i) => ({ key: characterTabKey(c), label: c.name || `Character ${i + 1}`, category: "Character", view: null })),
     ...(party.length > 1 ? [{ key: "tab:party", label: "Party View", category: "Tab", view: "party" }] : []),
     { key: "tab:dice", label: "Dice Roller", category: "Tab", view: "dice" },
-    { key: "tab:npc", label: "NPC Summary", category: "Tab", view: "npc" },
-    { key: "tab:locations", label: "Locations", category: "Tab", view: "locations" },
     { key: "tab:wiki", label: "Wiki", category: "Tab", view: "wiki" },
     ...(vehicle && !vehicle.hidden ? [{ key: "tab:vehicle", label: "Vehicle", category: "Tab", view: "vehicle" }] : []),
     { key: "tab:map", label: "Battle Map", category: "Tab", view: "map" },
@@ -9764,6 +9802,7 @@ function GmPanel({ auth, campaignStore, party, overrides, onOverride, onResetOve
           <>
             <GmCampaignDataSection store={campaignStore} />
             <GmCharacterCreationSection gmKey={auth.key} onAdded={() => campaignStore.refresh()} />
+            <GmExperienceSection gmKey={auth.key} party={party} onChanged={() => campaignStore.refresh()} />
             <GmManualModeSection manual={manual} party={party} vehicle={vehicle} />
             <GmNameGenerator gmKey={auth.key} />
 
@@ -9927,6 +9966,7 @@ function CampaignDashboard() {
   const campaignStore = useCampaignStore(gmAuth.state === "in" ? gmAuth.key : null);
   const ledger = campaignStore.campaign || EMPTY_CAMPAIGN;
   const unactionedNotes = useUnactionedNoteCount(gmAuth.state === "in");
+  const gmPending = useGmPendingCount(gmAuth.state === "in" ? gmAuth.key : null);
   const { overrides: visibilityOverrides, refresh: refreshVisibility } = useVisibilityOverrides();
   // If the GM hides the tab someone happens to be sitting on, move them to
   // the first tab that's still visible (a character sheet if any are left)
@@ -10359,34 +10399,6 @@ function CampaignDashboard() {
                 🎲 Dice Roller
               </button>
             )}
-            {!visibilityOverrides["tab:npc"] && (
-              <button
-                onClick={() => setViewMode("npc")}
-                className="text-[12px] tracking-wide px-3 py-1.5 border transition-colors"
-                style={{
-                  color: viewMode === "npc" ? "#101315" : "#e7e2d2",
-                  background: viewMode === "npc" ? "#6fae60" : "transparent",
-                  borderColor: viewMode === "npc" ? "#6fae60" : "#3a3f42",
-                  fontFamily: "'Rajdhani', sans-serif", fontWeight: 700,
-                }}
-              >
-                🗒 NPC Summary
-              </button>
-            )}
-            {!visibilityOverrides["tab:locations"] && (
-              <button
-                onClick={() => setViewMode("locations")}
-                className="text-[12px] tracking-wide px-3 py-1.5 border transition-colors"
-                style={{
-                  color: viewMode === "locations" ? "#101315" : "#e7e2d2",
-                  background: viewMode === "locations" ? "#c9a15a" : "transparent",
-                  borderColor: viewMode === "locations" ? "#c9a15a" : "#3a3f42",
-                  fontFamily: "'Rajdhani', sans-serif", fontWeight: 700,
-                }}
-              >
-                🗺 Locations
-              </button>
-            )}
             {!visibilityOverrides["tab:wiki"] && (
               <button
                 onClick={() => setViewMode("wiki")}
@@ -10454,11 +10466,14 @@ function CampaignDashboard() {
                 style={{
                   color: viewMode === "gm" ? "#101315" : "#e7e2d2",
                   background: viewMode === "gm" ? "#ffb000" : "transparent",
-                  borderColor: viewMode === "gm" ? "#ffb000" : "#3a3f42",
+                  borderColor: viewMode === "gm" || gmPending > 0 ? "#ffb000" : "#3a3f42",
                   fontFamily: "'Rajdhani', sans-serif", fontWeight: 700,
+                  // Pulses while XP purchases or finished characters wait for approval.
+                  animation: gmPending > 0 && viewMode !== "gm" ? "inboxPulse 1.6s ease-in-out infinite" : "none",
                 }}
+                title={gmPending > 0 ? `${gmPending} waiting for your approval` : undefined}
               >
-                ★ GM
+                ★ GM{gmPending > 0 ? ` (${gmPending})` : ""}
               </button>
             )}
           </div>
@@ -10486,10 +10501,6 @@ function CampaignDashboard() {
             manual={manual}
             gmKey={gmAuth.state === "in" ? gmAuth.key : null}
           />
-        ) : viewMode === "npc" ? (
-          <NPCSummaryPanel npcs={ledger.npcs || []} />
-        ) : viewMode === "locations" ? (
-          <LocationSummaryPanel locations={ledger.locations || []} />
         ) : viewMode === "wiki" ? (
           <WikiPanel url={ledger.wikiUrl} />
         ) : viewMode === "vehicle" ? (

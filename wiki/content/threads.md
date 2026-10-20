@@ -7,7 +7,7 @@ order: 3
 dek: "Unfinished business."
 ---
 
-### Example thread
-`open` Status line
+### The first job
+`open` Not started
 
-What's unresolved and who it involves. Use `hot` for urgent threads and `closed` for finished ones.
+Every crew needs a first job. Replace this with the first unresolved hook once play begins, and link who it involves (for example [[the-crew]] or [[galactic-empire]]). Use `hot` for urgent threads and `closed` for finished ones.

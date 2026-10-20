@@ -36,10 +36,10 @@ ICON_DIR = REPO / "dashboard" / "public" / "images"
 # ---------------------------------------------------------------- campaign
 # Everything campaign-specific lives here; template.html carries no names.
 CAMPAIGN = {
-    "name": "[Campaign Name]",  # TEMPLATE: rename per campaign
+    "name": "SWRPG Beta",  # TEMPLATE: rename per campaign
     # Sidebar subtitle. The current session number is appended automatically
     # from the highest `session:` value in the vault.
-    "tagline": "[Ship or crew name]",  # TEMPLATE
+    "tagline": "Campaign wiki",  # TEMPLATE: ship or crew name
     "description": ("Campaign archive — "
                     "crew, ship, session recaps and a cross-linked cast."),
     # Footer on every page (HTML allowed): where this material comes from.

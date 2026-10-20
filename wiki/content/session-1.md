@@ -4,7 +4,7 @@ group: "Sessions"
 type: doc
 session: 1
 order: -1
-dek: "One line for the session."
+dek: "The crew comes together."
 ---
 
 A paragraph summarising the session.

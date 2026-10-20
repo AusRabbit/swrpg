@@ -1,6 +1,6 @@
-# Salvage Rights — Live Dashboard
+# SWRPG Beta — Live Dashboard
 
-The player- and GM-facing dashboard for *Salvage Rights*, a Star Wars FFG
+The player- and GM-facing dashboard for a Star Wars FFG
 (Edge of the Empire / Age of Rebellion / Force and Destiny) group campaign.
 It's a full campaign companion, not just a stat board: character sheets, a
 shared dice roller with real FFG dice mechanics, a live combat tracker,
@@ -9,8 +9,8 @@ browser during a session.
 
 ## Session state, the Enemy board, and the Battle Map
 
-Three shared, Durable-Object-backed stores sit on top of the static
-ledger described below:
+Three shared, Durable-Object-backed stores sit alongside the campaign
+store described below:
 
 - **Session state** — Wounds, Strain, Destiny, Critical Injuries,
   Initiative, and the Vehicle's Hull Trauma/System Strain/Critical Hits
@@ -45,36 +45,27 @@ ledger described below:
   token; only the GM can move an enemy token or reshape the zones — both
   enforced server-side, not just hidden in the UI.
 
-This app lives in this `dashboard/` subdirectory so it can be built and
-deployed independently of the GM-only `ledgers/` directory at the repo
-root — see the [repo root README](../README.md) for how the two are kept
-separate, and why they share one private repo.
+This app lives in this `dashboard/` subdirectory so Cloudflare builds only
+this folder. The `wiki/` folder at the repo root is built separately by
+GitHub Actions and is never part of the Cloudflare build.
 
-## What this app reads — and what it never touches
+## Where the data lives
 
-- `public/data/ledger.json` — the full player-facing character sheets
-  (bundled into the build; served as a static asset). This is a
-  **curated export**, written for players: full PC sheets, and NPC
-  entries limited to a `whatPartyKnows` summary. It must never contain
-  GM-only material (hidden motives, unrevealed clocks,
-  "[Unverified]"/GM-scratchpad notes, anything the party hasn't learned
-  in play).
-- The shared `/manual` store — the small set of values that change
-  *during* play (see Data model below), a Durable Object read and written
-  at runtime by every browser. Nothing else lives there.
-- `ledgers/Ledger.md` and `ledgers/updates/` at the repo root are the
-  GM's master ledger — full campaign state, GM-only notes, and
-  unrevealed plot material. **Nothing in `dashboard/` reads from
-  `ledgers/`, at build time or runtime.** When the GM updates the
-  party's public-facing state, they hand-copy only the safe, current
-  values across into `dashboard/public/data/ledger.json` — the same way a GM would only tell
-  players what their characters actually know.
+- **The campaign store** (`/campaign`, `CampaignLog` Durable Object) —
+  character sheets, vehicle, campaign title, wiki link, XP history,
+  character-creation drafts and XP purchase requests. The GM edits it from
+  the GM page; players change it only through specific actions (credits,
+  creation drafts, XP purchase requests). Players get a copy with GM-only
+  fields and hidden entries removed.
+- **The `/manual` store** — the values that change during play (see Data
+  model below).
+- `public/data/ledger.json` — a sample of the campaign file format. Import it
+  from GM page → Campaign data to start a new deployment; Import also
+  replaces the campaign, and Export downloads it in the same format.
 
-Whatever ends up in `dashboard/public/data/ledger.json` or the `/manual`
-store is visible to **anyone with the deployed dashboard URL** — the repo
-being private does not make either private once it's built/served. Treat
-"would I say this out loud at the table" as the bar before putting
-anything in either.
+Whatever players can see is visible to **anyone with the deployed
+dashboard URL**. Treat "would I say this out loud at the table" as the bar
+for anything outside GM-only fields.
 
 ## What it does
 
@@ -98,13 +89,20 @@ anything in either.
   log** everyone at the table sees within a couple of seconds, tagged with
   any weapon Special text if the roll was loaded from a weapon. Click a
   log entry to copy it to your clipboard.
-- **NPC Summary** and **Locations** tabs — quick player-facing reference
-  lists, no secrets.
-- **Wiki tab** — the campaign wiki, from `ledger.json`'s top-level
+- **Wiki tab** — the campaign wiki, from the campaign's top-level
   `wikiUrl`. Shown inline when the wiki's host allows embedding, with an
   "Open in new tab" link either way.
 - **GM Notes** tab — a private inbox of notes players have sent from
-  their character tab (e.g. "I'd like to spend XP on X").
+  their character tab.
+- **Experience** — the GM awards XP from GM page → Experience. Players
+  spend it in the Advancement Planner and **Submit for approval**; the GM
+  approves or rejects it in the same section, and the ★ GM tab pulses
+  while anything is waiting. The worker prices every request with the same
+  rules as the planner (`src/chargen.js`) and re-checks it on approval, so
+  a purchase can't exceed available XP.
+- **Character creation** — GM page → Character creation starts a draft and
+  gives a private link for the player; the GM approves the finished
+  character into the campaign.
 - **Live initiative tracker** — a row of PC (blue) / NPC (red) boxes
   showing turn order; spent seats darken to a tinted version of their own
   color rather than going flat grey, and the current seat pulses gently.
@@ -116,22 +114,22 @@ anything in either.
   browser via the `/crew` route (see Architecture below) — and a button per
   likely action (e.g. "Fire Forward Light Laser Cannon") that loads the
   assigned character's actual skill dice pool into the Dice Roller, greyed
-  out until someone's assigned. Only shown when `ledger.json` has a
+  out until someone's assigned. Only shown when the campaign has a
   `vehicle` object.
 
 ## Data model
 
 Two sources, two different update rhythms:
 
-- **`public/data/ledger.json`** — the static, GM-authored source of truth
+- **The campaign store** (`CampaignLog`) — the GM-managed source of truth
   for character sheets: names, characteristics, skills, talents, weapons,
-  armor, inventory, NPCs, locations. Only changes when the GM edits it
-  directly (typically once per session, at consolidation). Critical
+  armor, inventory. Changes when the GM imports a campaign, approves a new
+  character or approves an XP purchase. Critical
   Injuries are **not** kept here — they live only in the shared `/manual` store,
   so there is exactly one place to read or clear them. Any weapon or
   inventory entry may carry `"isNew": true`, which shows a NEW badge
   beside it on the Character tab — set it when the party picks something
-  up, remove it at the next consolidation. A character may also carry `"forceSensitive": true` — a GM-only flag that is never shown on the sheet. Its only effect is that the Advancement Planner offers Force talents (`talents.json` entries with `"force": "Yes"`) to that character and hides them from everyone else. The GM page's Force Sensitivity section can override it live (stored in the GM-write `/visibility` store), and "Reset overrides" falls back to the ledger value. The planner's talent search reads `public/data/talents.json` (a copy of `reference/talents.json`) and renders its rules-text glyphs with the same die and symbol artwork as the Dice Roller. An optional top-level
+  up and clear it later. A character may also carry `"forceSensitive": true` — a GM-only flag that is never shown on the sheet. Its only effect is that the Advancement Planner offers Force talents (`talents.json` entries with `"force": "Yes"`) to that character and hides them from everyone else. The GM page's Force Sensitivity section can override it live (stored in the GM-write `/visibility` store), and "Reset overrides" falls back to the character record. The planner's talent search reads `public/data/talents.json` (a copy of `reference/talents.json`) and renders its rules-text glyphs with the same die and symbol artwork as the Dice Roller. An optional top-level
   `vehicle` object (silhouette/speed/handling/defense/armor, `hullTrauma`/
   `systemStrain` thresholds, a `weapons` array, and a `crewPositions`
   array of `{ id, name, description, actions: [{ name, skill }], weaponIndex? }`)
@@ -157,16 +155,16 @@ Two sources, two different update rhythms:
   ```
 
   - `wounds` / `strain` — current values, keyed by each character's
-    `liveId` (set on that character in ledger.json). Thresholds stay in
-    ledger.json.
+    `liveId` (set on that character record). Thresholds stay on the
+    character record.
   - `destiny` — the shared party Destiny Pool.
-  - `vehicle` — current Hull Trauma / System Strain (thresholds stay in
-    `ledger.json`) plus any Vehicle Critical Hits.
+  - `vehicle` — current Hull Trauma / System Strain (thresholds stay on the
+    campaign's `vehicle`) plus any Vehicle Critical Hits.
   - `criticalInjuries` — Table 6-10 result numbers only (e.g. `[30, 66]`),
     one array per character, assigned from the GM page. The dashboard
     resolves each number to its name via a built-in lookup table. This is
-    the only place Critical Injuries are recorded — ledger.json does not
-    carry them at all.
+    the only place Critical Injuries are recorded — the character record
+    does not carry them at all.
   - `initiative` — combat order: `order` is the fixed PC/NPC seat
     sequence for the encounter (empty when there's no active fight),
     `taken` is how many seats from the front have acted this round. The
@@ -188,7 +186,7 @@ for everything else:
 - **`GET/POST/DELETE /rolls`** — the shared dice-roll log, backed by a
   **Durable Object** (`RollLog`) rather than KV, so writes from multiple
   players posting at once are serialized (no lost rolls) and reads are
-  strongly consistent (no propagation lag). Never touches `ledger.json`.
+  strongly consistent (no propagation lag). 
 - **`GET/POST /notes`** — the GM notes inbox, same pattern, backed by a
   second Durable Object (`NotesLog`).
 - **`GET/POST /bio`** — the Character tab's shared Description field
@@ -197,15 +195,20 @@ for everything else:
   it's an upsert-by-`characterId` store, so `GET` returns the current
   `{ characterId: text }` map for every character and `POST` overwrites
   just the one character's entry. Players edit and save this themselves
-  from their own Character tab; it's never touched by `ledger.json`.
+  from their own Character tab; it's separate from the character record.
 - **`GET/POST /crew`** — the Vehicle tab's shared crew assignments (who's
   in which seat on the ship), backed by a fourth Durable Object
   (`CrewLog`). Same upsert-by-key pattern as `BioLog`, but keyed by crew
-  position id (`pilot`, `gunner`, etc. — from `ledger.json`'s
+  position id (`pilot`, `gunner`, etc. — from the campaign's
   `vehicle.crewPositions`) rather than character id: `GET` returns
   `{ positionId: characterKey }` for every filled seat, `POST` sets or
   clears one seat. Any player can claim a seat from the Vehicle tab's
   dropdown without the GM editing anything.
+- **`GET /campaign`, `/gm/campaign/*`** — the campaign store
+  (`CampaignLog`): import/export/undo, character-creation drafts,
+  `/campaign/advance` (player XP purchase requests),
+  `/gm/campaign/advance/<id>/approve|reject` and `/gm/campaign/xp`
+  (GM XP awards).
 - **`GET/POST /manual`** — the shared session state described under Data
   model above (`ManualLog` Durable Object).
 - **`/enemies`, `/gear`, `/map`, `/visibility`** (plus their `/gm/*`
@@ -239,7 +242,7 @@ is needed (an old `GITHUB_TOKEN` secret on the Worker can be deleted).
    Cloudflare GitHub App with access scoped to this one repo, not all
    repos).
 2. Framework preset: **Vite**. **Root directory: `dashboard`** (this is
-   what keeps the build scoped to this subfolder — `ledgers/` is never
+   what keeps the build scoped to this subfolder — `wiki/` is never
    part of the build input path). Build command `npm run build`. Output
    directory `dist`.
 3. Settings → Variables and Secrets → add `GM_PASSWORD` as a **secret**
@@ -250,18 +253,16 @@ Or, from a local checkout: `npm run build && npx wrangler deploy` (set
 `GM_PASSWORD` once via `npx wrangler secret put GM_PASSWORD` or the
 dashboard).
 
-Redeploys are needed when the app's code or `public/data/ledger.json`
-changes (the ledger is bundled into the build). Live session state lives
-in the `/manual` Durable Object and never needs one.
+Redeploys are needed only when the app's code changes. Campaign data and
+live session state live in Durable Objects and never need one.
 
 ## Repo/site access — who can see what
 
 - The GitHub repo is private: only invited collaborators can browse its
-  source, including `ledgers/`.
+  source.
 - The deployed Cloudflare site is a public URL by default (that's how
   players load it without a GitHub account). It serves only the built
-  `dashboard/dist` output — `ledgers/` is not part of that build and is
-  never copied into it.
+  `dashboard/dist` output.
 - If the campaign needs the *site itself* restricted to known players
   (not just "unlisted URL"), put it behind [Cloudflare Access](https://developers.cloudflare.com/cloudflare-one/policies/access/)
   (Zero Trust) rather than relying on the repo being private — repo

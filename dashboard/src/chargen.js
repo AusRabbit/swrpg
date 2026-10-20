@@ -288,3 +288,101 @@ export function computeBuild(draft, data, opts = {}) {
   };
   return result;
 }
+
+// ---------------------------------------------------------------------------
+// Spending XP after creation (the Advancement Planner's "Submit for
+// approval"). Same costs as the planner: a skill rank is 5 x the new rank,
+// plus 5 if it isn't a career skill, up to rank 5; a talent is tier x 5 XP
+// with the house pyramid (each tier must hold fewer talent ranks than the
+// tier below). The Worker prices a request when the player submits it, and
+// again when the GM approves it, against the character as it is then.
+// ---------------------------------------------------------------------------
+export const ADVANCE_MAX_RANK = 5;
+
+// Talent effects applied automatically when a purchase is approved. Anything
+// else (Dedication's characteristic choice, Enduring's soak) the GM adjusts
+// by hand.
+export const TALENT_EFFECTS = {
+  toughened: { wounds: 2 },
+  grit: { strain: 1 },
+};
+
+export function normalizeSkillKey(s) {
+  return String(s ?? "").toLowerCase().replace(/[^a-z]/g, "");
+}
+
+export function talentRankCounts(talents) {
+  const counts = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
+  for (const t of talents || []) {
+    const tier = Number(t?.tier);
+    if (tier >= 1 && tier <= 5) counts[tier] += Math.max(1, Number(t.rank) || 1);
+  }
+  return counts;
+}
+
+// request: { skills: { "Brawl": 2, ... } (target ranks), talents: [{ name, tier, ranked, force, activation, text_swrpg }] }
+export function priceAdvancement(character, request, opts = {}) {
+  const errors = [];
+  const lines = [];
+  let cost = 0;
+  const current = new Map((character?.skills || []).map((s) => [normalizeSkillKey(s.name), s]));
+  const skillTargets = {};
+  for (const [nameRaw, targetRaw] of Object.entries(request?.skills || {})) {
+    const name = ALL_SKILLS.find((s) => normalizeSkillKey(s) === normalizeSkillKey(nameRaw));
+    if (!name) { errors.push(`Unknown skill: ${nameRaw}.`); continue; }
+    const have = current.get(normalizeSkillKey(name));
+    const from = Math.max(0, Number(have?.rank) || 0);
+    const to = Math.round(Number(targetRaw) || 0);
+    if (to <= from) continue;
+    if (to > ADVANCE_MAX_RANK) { errors.push(`${name} can't go above rank ${ADVANCE_MAX_RANK}.`); continue; }
+    const career = !!have?.career;
+    let c = 0;
+    for (let r = from + 1; r <= to; r++) c += skillRankCost(r, career);
+    cost += c;
+    skillTargets[name] = to;
+    lines.push(`${name} ${from}→${to} (${career ? "career" : "non-career"}, ${c} XP)`);
+  }
+  const talents = (request?.talents || []).filter((t) => t && t.name);
+  const counts = talentRankCounts(character?.talents);
+  for (const t of talents) {
+    const tier = Math.round(Number(t.tier) || 0);
+    if (tier < 1 || tier > 5) { errors.push(`${t.name} needs a tier from 1 to 5.`); continue; }
+    if (t.force === "Yes" && !opts.forceSensitive) errors.push(`${t.name} is a Force talent; only a Force-sensitive character can take it.`);
+    const owned = (character?.talents || []).some((x) => String(x.name).toLowerCase() === String(t.name).toLowerCase());
+    if (owned && !/^yes$/i.test(String(t.ranked || ""))) errors.push(`${t.name} isn't a ranked talent and is already on the sheet.`);
+    counts[tier] += 1;
+    cost += talentCost(tier);
+    lines.push(`Tier ${tier} talent — ${t.name} (${talentCost(tier)} XP)`);
+  }
+  if (talents.length && !pyramidLegal(counts)) errors.push("That breaks the talent pyramid: each tier needs fewer talents than the tier below it.");
+  if (!lines.length) errors.push("Nothing to buy.");
+  const available = Math.max(0, Number(character?.xp?.available) || 0);
+  if (cost > available) errors.push(`That costs ${cost} XP but only ${available} XP is available.`);
+  return { ok: errors.length === 0, errors, cost, lines, skillTargets, talents };
+}
+
+// The character after an approved purchase.
+export function applyAdvancement(character, priced, note = "") {
+  const next = JSON.parse(JSON.stringify(character || {}));
+  next.skills = Array.isArray(next.skills) ? next.skills : [];
+  for (const [name, to] of Object.entries(priced.skillTargets)) {
+    const s = next.skills.find((x) => normalizeSkillKey(x.name) === normalizeSkillKey(name));
+    if (s) s.rank = to;
+    else next.skills.push({ name, rank: to, career: false });
+  }
+  next.talents = Array.isArray(next.talents) ? next.talents : [];
+  next.vitals = next.vitals || {};
+  for (const t of priced.talents) {
+    const tier = Math.round(Number(t.tier));
+    const same = next.talents.find((x) => String(x.name).toLowerCase() === String(t.name).toLowerCase() && Number(x.tier) === tier);
+    if (same) same.rank = (Number(same.rank) || 1) + 1;
+    else next.talents.push({ name: t.name, tier, rank: 1, ranked: /^yes$/i.test(String(t.ranked || "")), activation: t.activation || "", description: t.text_swrpg || t.description || "" });
+    const fx = TALENT_EFFECTS[String(t.name).toLowerCase()];
+    if (fx?.wounds) next.vitals.wounds = { ...(next.vitals.wounds || {}), threshold: (Number(next.vitals.wounds?.threshold) || 0) + fx.wounds };
+    if (fx?.strain) next.vitals.strain = { ...(next.vitals.strain || {}), threshold: (Number(next.vitals.strain?.threshold) || 0) + fx.strain };
+  }
+  next.xp = { ...(next.xp || {}), available: Math.max(0, (Number(next.xp?.available) || 0) - priced.cost) };
+  next.xpLog = [...(Array.isArray(next.xpLog) ? next.xpLog : []), { at: new Date().toISOString(), amount: -priced.cost, note: [priced.lines.join("; "), note].filter(Boolean).join(" — ").slice(0, 600) }].slice(-200);
+  next.updated = new Date().toISOString();
+  return next;
+}

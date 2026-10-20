@@ -1,7 +1,7 @@
 // Character creation rules and data, shared with the website (see
 // src/chargen.js). The Worker re-runs the rules before a new character is
 // added, so a player's browser can't hand it an impossible build.
-import { computeBuild } from "../src/chargen.js";
+import { computeBuild, priceAdvancement, applyAdvancement } from "../src/chargen.js";
 import CHARGEN_DATA from "../public/data/chargen.json";
 
 // This project deploys as a Cloudflare Worker with static assets (not a
@@ -36,7 +36,7 @@ import CHARGEN_DATA from "../public/data/chargen.json";
 // client-facing API is unchanged, only the storage underneath it.
 //
 // This never reads or writes ledger.json or the /manual store — Wounds/
-// Strain/Destiny live in ManualLog below, XP in the ledger repo.
+// Strain/Destiny live in ManualLog below, XP on the character in CampaignLog.
 //
 // Setup: the RollLog class below is declared in the `migrations` block of
 // wrangler.jsonc using `new_sqlite_classes`, which provisions it on Durable
@@ -1628,8 +1628,10 @@ export class CampaignLog {
     this.updatedAt = 0;
     this.snapshot = null;
     this.drafts = {};
+    this.advance = {};
     this.ctx.blockConcurrencyWhile(async () => {
       this.drafts = (await this.ctx.storage.get("drafts")) || {};
+      this.advance = (await this.ctx.storage.get("advance")) || {};
       this.campaign = (await this.ctx.storage.get("campaign")) || null;
       this.revision = (await this.ctx.storage.get("revision")) || 0;
       this.updatedAt = (await this.ctx.storage.get("updatedAt")) || 0;
@@ -1758,6 +1760,104 @@ export class CampaignLog {
     return this.json({ error: "Not found" }, 404);
   }
 
+  // XP. The GM awards it; a player submits a purchase from the Advancement
+  // Planner; the GM approves (which prices it again against the character as
+  // it is now, then applies it) or rejects it with a note. Every award and
+  // spend is also written to the character's xpLog.
+  //   GET  /advance                 list of purchase requests (newest first)
+  //   POST /advance                 { characterId, skills, talents, note, forceSensitive }
+  //   POST /advance/<id>/approve    { forceSensitive }
+  //   POST /advance/<id>/reject     { note }
+  //   POST /xp                      { characterIds: [...] | "all", amount, reason }
+  async handleXp(request, url) {
+    const parts = url.pathname.split("/").filter(Boolean);
+    let body = {};
+    if (request.method === "POST") { try { body = await request.json(); } catch { body = {}; } }
+    const chars = () => (this.campaign?.characters || []);
+    const cidOf = (c) => c.liveId || c.name;
+
+    if (parts[0] === "xp" && request.method === "POST") {
+      if (!this.campaign) return this.json({ error: "There's no campaign loaded." }, 409);
+      const amount = Math.round(Number(body.amount));
+      if (!Number.isFinite(amount) || amount === 0 || Math.abs(amount) > 1000) return this.json({ error: "Enter an amount of XP between -1000 and 1000 (not 0)." }, 400);
+      const ids = body.characterIds === "all" ? chars().filter((c) => !c.hidden).map(cidOf) : (Array.isArray(body.characterIds) ? body.characterIds.map(String) : []);
+      if (!ids.length) return this.json({ error: "Choose at least one character." }, 400);
+      const reason = sText(body.reason, 200);
+      const at = new Date().toISOString();
+      const names = [];
+      const characters = chars().map((c) => {
+        if (!ids.includes(cidOf(c))) return c;
+        names.push(c.name);
+        const xp = c.xp || {};
+        const available = Math.max(0, (Number(xp.available) || 0) + amount);
+        const total = Math.max(0, (Number(xp.total) || 0) + amount);
+        const xpLog = [...(Array.isArray(c.xpLog) ? c.xpLog : []), { at, amount, note: reason || (amount > 0 ? "XP awarded" : "XP removed") }].slice(-200);
+        return { ...c, xp: { ...xp, available, total }, xpLog, updated: at };
+      });
+      if (!names.length) return this.json({ error: "None of those characters are in the campaign." }, 404);
+      await this.save({ ...this.campaign, characters }, this.snapshot);
+      return this.json({ ok: true, names, amount });
+    }
+
+    if (parts[0] !== "advance") return this.json({ error: "Not found" }, 404);
+    const id = parts[1] || "";
+    const action = parts[2] || "";
+    const saveAdvance = () => this.ctx.storage.put("advance", this.advance);
+    const listView = () => Object.values(this.advance).sort((a, b) => b.createdAt - a.createdAt);
+
+    if (!id && request.method === "GET") return this.json({ requests: listView() });
+    if (!id && request.method === "POST") {
+      const character = chars().find((c) => cidOf(c) === String(body.characterId || "") && !c.hidden);
+      if (!character) return this.json({ error: "That character isn't in the campaign." }, 404);
+      const pending = listView().filter((r) => r.status === "pending");
+      if (pending.length >= 50) return this.json({ error: "There are too many requests waiting for the GM." }, 409);
+      if (pending.some((r) => r.characterId === cidOf(character))) return this.json({ error: `${character.name} already has a purchase waiting for the GM. Wait for it to be approved or rejected first.` }, 409);
+      const req = { skills: cleanCampaignValue(body.skills || {}, 0), talents: cleanCampaignValue(Array.isArray(body.talents) ? body.talents.slice(0, 20) : [], 0) };
+      const priced = priceAdvancement(character, req, { forceSensitive: !!body.forceSensitive || !!character.forceSensitive });
+      if (!priced.ok) return this.json({ error: priced.errors.join(" "), errors: priced.errors }, 400);
+      const rid = crypto.randomUUID();
+      this.advance[rid] = {
+        id: rid, characterId: cidOf(character), characterName: character.name, createdAt: Date.now(), status: "pending",
+        request: req, cost: priced.cost, lines: priced.lines, note: sText(body.note, 500), gmNote: "",
+      };
+      // Keep the store small: drop decided requests beyond the newest 100.
+      const decided = listView().filter((r) => r.status !== "pending").slice(100);
+      decided.forEach((r) => { delete this.advance[r.id]; });
+      await saveAdvance();
+      return this.json({ ok: true, request: this.advance[rid] });
+    }
+
+    const entry = this.advance[id];
+    if (!entry) return this.json({ error: "That request no longer exists." }, 404);
+    if (entry.status !== "pending") return this.json({ error: `That request was already ${entry.status}.` }, 409);
+    if (action === "reject" && request.method === "POST") {
+      entry.status = "rejected";
+      entry.gmNote = sText(body.note, 500);
+      entry.decidedAt = Date.now();
+      await saveAdvance();
+      return this.json({ ok: true, request: entry });
+    }
+    if (action === "approve" && request.method === "POST") {
+      const idx = chars().findIndex((c) => cidOf(c) === entry.characterId);
+      if (idx === -1) return this.json({ error: "That character isn't in the campaign any more." }, 404);
+      const character = chars()[idx];
+      const priced = priceAdvancement(character, entry.request, { forceSensitive: !!body.forceSensitive || !!character.forceSensitive });
+      if (!priced.ok) return this.json({ error: `Can't approve: ${priced.errors.join(" ")}`, errors: priced.errors }, 400);
+      const updated = applyAdvancement(character, priced, entry.note);
+      const characters = [...chars()];
+      characters[idx] = updated;
+      await this.save({ ...this.campaign, characters }, this.snapshot);
+      entry.status = "approved";
+      entry.cost = priced.cost;
+      entry.lines = priced.lines;
+      entry.gmNote = sText(body.note, 500);
+      entry.decidedAt = Date.now();
+      await saveAdvance();
+      return this.json({ ok: true, request: entry, xpLeft: updated.xp.available });
+    }
+    return this.json({ error: "Not found" }, 404);
+  }
+
   // Internal API, only ever reached through the Worker's own routes below
   // (which do the GM-key check and the player redaction):
   //   GET    /           -> { campaign, revision, updatedAt, hasSnapshot, snapshotSummary }
@@ -1766,6 +1866,7 @@ export class CampaignLog {
   async fetch(request) {
     const url = new URL(request.url);
     if (url.pathname.startsWith("/creation")) return this.handleCreation(request, url);
+    if (url.pathname.startsWith("/advance") || url.pathname === "/xp") return this.handleXp(request, url);
     if (request.method === "GET") {
       return this.json({
         campaign: this.campaign,
@@ -2096,6 +2197,48 @@ export default {
         }));
       }
       return new Response(JSON.stringify(data), { status: res.status, headers: jsonHeaders });
+    }
+    // XP (see CampaignLog.handleXp).
+    //   GET  /campaign/advance                    anyone: purchase requests and their status
+    //   POST /campaign/advance                    player: submit a purchase
+    //   POST /gm/campaign/advance/<id>/approve    GM
+    //   POST /gm/campaign/advance/<id>/reject     GM
+    //   POST /gm/campaign/xp                      GM: award (or remove) XP
+    if (url.pathname === "/campaign/advance" || url.pathname.startsWith("/gm/campaign/advance/") || url.pathname === "/gm/campaign/xp") {
+      if (request.method === "OPTIONS") return new Response(null, { status: 204, headers: CORS_HEADERS });
+      const jsonHeaders = { "content-type": "application/json", "cache-control": "no-store", ...CORS_HEADERS };
+      if (!env.CAMPAIGN_LOG) return new Response(JSON.stringify({ error: "CAMPAIGN_LOG Durable Object not bound on this Worker yet — add it to wrangler.jsonc" }), { status: 503, headers: jsonHeaders });
+      const isGm = url.pathname.startsWith("/gm/");
+      if (isGm && !gmAuthorised(request, env)) return gmDenied(env);
+      if (isGm && request.method !== "POST") return new Response(JSON.stringify({ error: "Method not allowed" }), { status: 405, headers: jsonHeaders });
+      if (!isGm && !["GET", "POST"].includes(request.method)) return new Response(JSON.stringify({ error: "Method not allowed" }), { status: 405, headers: jsonHeaders });
+      const internal = isGm ? url.pathname.slice("/gm/campaign".length) : "/advance";
+      if (isGm && internal.startsWith("/advance/") && !/^\/advance\/[0-9a-f-]{36}\/(approve|reject)$/.test(internal)) return new Response(JSON.stringify({ error: "Not found" }), { status: 404, headers: jsonHeaders });
+      let bodyText = request.method === "POST" ? await request.text() : undefined;
+      if (bodyText && bodyText.length > 50_000) return new Response(JSON.stringify({ error: "That request is too large." }), { status: 413, headers: jsonHeaders });
+      // Force sensitivity can also be switched on live from the GM page (a
+      // VisibilityLog override); pass the effective value through.
+      if (request.method === "POST" && env.VISIBILITY_LOG && (internal === "/advance" || internal.endsWith("/approve"))) {
+        let parsed = {};
+        try { parsed = JSON.parse(bodyText || "{}"); } catch { parsed = {}; }
+        let charId = parsed.characterId;
+        if (!charId && internal.endsWith("/approve")) {
+          const listRes = await env.CAMPAIGN_LOG.get(env.CAMPAIGN_LOG.idFromName("shared-campaign")).fetch(new Request("https://campaign.internal/advance", { method: "GET" }));
+          const rid = internal.split("/")[2];
+          charId = ((await listRes.json()).requests || []).find((r) => r.id === rid)?.characterId;
+        }
+        if (charId) {
+          const vRes = await env.VISIBILITY_LOG.get(env.VISIBILITY_LOG.idFromName("shared-visibility-log")).fetch(new Request("https://visibility.internal/", { method: "GET" }));
+          const ov = (await vRes.json()).overrides || {};
+          const key = `${charId}::force::sensitive`;
+          delete parsed.forceSensitive;
+          if (Object.prototype.hasOwnProperty.call(ov, key)) parsed.forceSensitive = !!ov[key];
+          bodyText = JSON.stringify(parsed);
+        }
+      }
+      const stub = env.CAMPAIGN_LOG.get(env.CAMPAIGN_LOG.idFromName("shared-campaign"));
+      const res = await stub.fetch(new Request(`https://campaign.internal${internal}`, { method: request.method, body: bodyText }));
+      return new Response(await res.text(), { status: res.status, headers: jsonHeaders });
     }
     // Campaign data: the replacement for ledger.json (see CampaignLog).
     //   GET  /campaign            players: redacted, read only

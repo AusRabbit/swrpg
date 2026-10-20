@@ -1,73 +1,68 @@
-# [campaign-repo-name]
+# swrpg-beta
 
-[Campaign Name] — SWRPG campaign ledger and player dashboard, combined into
-one **private** repo.
+A SWRPG campaign run entirely from its website. The GM signs in on the
+dashboard's GM page and manages everything there. There is no ledger file
+to edit, no `live.json`, and no Quick Save or consolidation step.
 
-> **This is a template.** Copy the whole folder, rename it for the new
-> campaign, then work through the checklist below before the first session.
-
-## New campaign checklist
-
-1. **Rename** the copied folder / repo (e.g. `my-new-campaign`) and replace
-   `[campaign-repo-name]` / `[Campaign Name]` at the top of this README.
-2. **Ledger** — fill in `ledgers/Ledger.md`: campaign header table, Section 1
-   (one row per PC, ship), and Section 5 (copy the 5a sheet once per PC as
-   5b, 5c, …). `ledgers/updates/` should hold only `_TEMPLATE.md` to start.
-3. **Dashboard data** —
-   - `dashboard/public/data/ledger.json`: set `campaign`, replace the
-     placeholder `[PC 1 Name]` character with one entry per PC (each with a
-     unique `liveId`, e.g. `pc1`, `pc2`…), and fill in the `vehicle` object
-     (or delete it if the party has no ship). The crew positions and their
-     actions are generic vehicle rules and can stay as they are.
-   - `dashboard/data/live.json`: add one key per PC `liveId` under
-     `wounds`, `strain`, and `criticalInjuries`.
-   - Portraits: drop images into `dashboard/public/images/portraits/` and set
-     each character's `"portrait": "/images/portraits/<file>.png"` (optional
-     — the sheet renders without one).
-4. **Browser tab title** — `dashboard/index.html` and the `document.title`
-   line in `dashboard/src/App.jsx` (search for `TEMPLATE:`).
-5. **Worker config** —
-   - `dashboard/worker/index.js`: set `OWNER` and `REPO` to the new GitHub
-     repo (these tell `/live` where to read `live.json` from).
-   - `dashboard/wrangler.jsonc`: set `"name"` to the new Worker's name.
-6. **GitHub + Cloudflare** — create the new private repo, push, then follow
-   the deploy steps in [`dashboard/README.md`](dashboard/README.md)
-   (`GITHUB_TOKEN` and `GM_PASSWORD` secrets).
-
-## Structure
+## What's in the repo
 
 ```
-ledgers/      GM-only master ledger. Full campaign state, secrets, unrevealed
-              plot material. Never read by the dashboard build or runtime.
-dashboard/    The player-facing Cloudflare Worker app (character sheets, live
-              vitals, dice roller, GM notes inbox). See dashboard/README.md
-              for the app itself and Cloudflare deploy steps.
+dashboard/    The Cloudflare Worker app: character sheets, dice roller, shared
+              session state, GM page. See dashboard/README.md.
+wiki/         The player-facing campaign wiki, built by GitHub Actions and
+              published on GitHub Pages. Cloudflare never builds or serves it.
+              See wiki/README.md.
+reference/    Rules data (talents, weapons, armour, adversaries) shared by the
+              dashboard and the wiki.
+.github/      wiki.yml: builds wiki/ and deploys it to GitHub Pages.
 ```
 
-## Why these two live in one private repo
+## Where campaign data lives
 
-The ledger (`ledgers/`) is the GM's working notes — it contains spoilers,
-NPC secrets, and provisional material the players haven't learned in play.
-The dashboard (`dashboard/`) is what players actually look at during a
-session. Keeping both in one **private** repo means:
+Everything the GM used to keep in a ledger now lives in the Worker's Durable
+Objects:
 
-- The GM edits the ledger and the dashboard's player-facing data files
-  side by side, in the same place, without juggling two repos.
-- Nobody outside invited collaborators can browse the source — including
-  `ledgers/` — because the repo is private.
+- **Campaign** (`CampaignLog`): character sheets, vehicle, wiki link, XP
+  history, character-creation drafts and XP purchase requests.
+- **Session state** (`ManualLog`): wounds, strain, Destiny, Critical
+  Injuries, initiative.
+- The roll log, notes inbox, enemy board, battle map, crew seats and gear
+  each have their own store.
 
-That said, repo privacy only protects the *source*. The dashboard is
-deployed as a public site so players can load it without a GitHub account,
-and it serves only the built `dashboard/dist` output — never `ledgers/`,
-which isn't part of that build. The dashboard's own data files
-(`dashboard/public/data/ledger.json`, `dashboard/data/live.json`) are
-**hand-curated exports**, written for players — see
-[`dashboard/README.md`](dashboard/README.md) for exactly what belongs in
-them and what never does. If a session needs the deployed site itself
-restricted (not just the repo), that's a separate Cloudflare Access
-configuration, also covered there.
+Back up from the GM page: **Campaign data → Export** downloads the whole
+campaign as one JSON file, and **Import** restores it (with Undo).
+`dashboard/public/data/ledger.json` is a sample of that format: Import it to start a
+new deployment. The site never reads it directly.
 
-## Ledger maintenance
+## Running a campaign
 
-See the Ledger Protocol in [`ledgers/Ledger.md`](ledgers/Ledger.md) (Section
-0) for save conventions and Quick Save updates in `ledgers/updates/`.
+- **New characters:** GM page → Character creation → start a draft and send
+  the player the link. Approve it when they submit.
+- **Awarding XP:** GM page → Experience → Award XP. Tick characters (or
+  "Whole party"), enter the amount and a reason.
+- **Spending XP:** players open their sheet's XP box (Advancement Planner),
+  choose skills and talents, and press **Submit for approval**. The
+  ★ GM tab pulses with a count while anything is waiting. Approve or reject
+  it under GM page → Experience → Waiting for approval. Approving re-checks
+  the cost against the character's current XP before applying it.
+
+## Setup checklist
+
+1. Set `"name"` in `dashboard/wrangler.jsonc` to the Worker name you want.
+2. Set the browser tab title in `dashboard/index.html` and the
+   `document.title` line in `dashboard/src/App.jsx` (search `TEMPLATE:`).
+3. Deploy the dashboard to Cloudflare (steps in
+   [`dashboard/README.md`](dashboard/README.md)) and add `GM_PASSWORD` as a
+   secret there.
+4. Wiki: in GitHub, Settings → Pages → Source: **GitHub Actions**. Push, and
+   the wiki appears at `https://<user>.github.io/<repo>/`. Put that URL in
+   the campaign's `wikiUrl` (Export, edit, Import) to show it on the
+   dashboard's Wiki tab.
+
+## Privacy
+
+The deployed dashboard is a public URL. Anyone with it can read whatever
+players can see, so keep secrets in GM-only fields. GM writes need
+`GM_PASSWORD`. To restrict the site itself, put it behind Cloudflare Access.
+The GitHub Pages wiki is public too, so only put player-known material in
+`wiki/content/`.

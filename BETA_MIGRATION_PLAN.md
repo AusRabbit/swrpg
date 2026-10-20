@@ -393,3 +393,17 @@ Drafts live in `CampaignLog` (max 20).
 → approve flow against a local Worker; the wizard rendered and clicked
 through every step in a simulated browser (jsdom) with no errors, ending in
 "Everything checks out". Not yet tried in a real browser.
+
+### 21 Oct 2026: XP flow, cleanup, working wiki
+
+- NPC Summary and Locations tabs removed from the dashboard.
+- `ledgers/` deleted. Root and dashboard READMEs rewritten for the Beta.
+- XP: GM awards XP from GM page → Experience. Players submit purchases from
+  the Advancement Planner; the worker prices them (`priceAdvancement` in
+  `src/chargen.js`), allows one pending request per character, and re-prices
+  on approval before applying (`applyAdvancement`). Over-budget purchases
+  can't be submitted. The ★ GM tab pulses while anything is waiting.
+- Wiki: the old `.github/workflows/pages` (no extension, uploaded raw
+  `wiki/`) replaced by `wiki.yml`, which runs `wiki/build.py` and deploys
+  `wiki/docs`. Outline pages added (how we play, character creation, crew,
+  ship, factions, Outer Rim).
