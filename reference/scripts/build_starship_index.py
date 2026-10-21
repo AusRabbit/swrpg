@@ -59,12 +59,17 @@ def split_weapons(text):
             low = part.lower()
             if low.startswith("fire arc"):
                 w["fireArc"] = part[8:].strip()
+                w["fireArc"] = w["fireArc"][:1].upper() + w["fireArc"][1:]
             elif low.startswith("damage"):
                 w["damage"] = to_int(part)
             elif low.startswith("critical") or low.startswith("crit"):
                 w["crit"] = to_int(part)
             elif low.startswith("range"):
-                w["range"] = part[5:].strip().strip("[]")
+                rest = part[5:].strip()
+                m2 = re.match(r"^\[?([A-Za-z]+)\]?\s*:?\s*(.*)$", rest)
+                w["range"] = (m2.group(1) if m2 else rest).capitalize()
+                if m2 and m2.group(2):
+                    quals.append(m2.group(2))
             else:
                 quals.append(part)
         w["qualities"] = ", ".join(quals)

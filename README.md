@@ -29,8 +29,11 @@ Objects:
 - The roll log, notes inbox, enemy board, battle map, crew seats and gear
   each have their own store.
 
-Back up from the GM page: **Campaign data → Export** downloads the whole
-campaign as one JSON file, and **Import** restores it (with Undo).
+Back up from the GM page: **Campaign data → Export all** downloads the whole
+campaign as one JSON file, and **Import all** restores it (with Undo).
+**One character** exports a single sheet, and imports one back: it replaces
+the character with the same name (undoable from Edit a character) or adds
+them as new.
 `dashboard/public/data/ledger.json` is a sample of that format: Import it to start a
 new deployment. The site never reads it directly.
 
@@ -41,7 +44,7 @@ new deployment. The site never reads it directly.
 - **Awarding XP:** GM page → Experience → Award XP. Tick characters (or
   "Whole party"), enter the amount and a reason.
 - **Fixing a sheet:** on a character's sheet press **✎ Edit sheet (GM)**
-  (or GM page → Edit a character). Change skill ranks, career skills,
+  (or GM page → Edit a character, at the bottom). Change skill ranks, career skills,
   talents, characteristics, thresholds, XP and credits; anything else
   (weapons, armour, gear) through the "full sheet as JSON" box. Edits don't
   charge or refund XP. **Undo last edit** puts back the previous version.
@@ -62,9 +65,10 @@ new deployment. The site never reads it directly.
 4. Wiki: in GitHub, Settings → Pages → Source: **GitHub Actions**. Push, and
    the wiki appears at `https://<user>.github.io/<repo>/`. Paste that URL
    into GM page → Campaign settings → Wiki link.
-5. Ship: GM page → Vehicle. Pick a stock ship (or start blank), rename it,
-   adjust the numbers and crew seats, then Add vehicle. The Vehicle tab
-   appears for everyone.
+5. Ships: GM page → Vehicles (bottom of the page, click to expand) →
+   + Add vehicle. Pick a stock ship (or start blank), rename it, adjust the
+   numbers and crew seats, then Add vehicle. Each vehicle gets its own
+   dashboard tab named after it; add as many as you need.
 
 ## Privacy
 

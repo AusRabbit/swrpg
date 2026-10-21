@@ -839,6 +839,29 @@ function sManualCritMap(raw) {
   return out;
 }
 
+const MANUAL_VEHICLES_MAX = 20;
+function sVehicleLive(v, prev) {
+  const p = prev || { hull: 0, systemStrain: 0, criticalHits: [] };
+  return {
+    hull: v?.hull != null ? sInt(v.hull, 0, MANUAL_WOUND_MAX, p.hull) : p.hull,
+    systemStrain: v?.systemStrain != null ? sInt(v.systemStrain, 0, MANUAL_WOUND_MAX, p.systemStrain) : p.systemStrain,
+    criticalHits: Array.isArray(v?.criticalHits) ? v.criticalHits.map((n) => sInt(n, 1, 150, 1)).slice(0, MANUAL_CRIT_MAX) : p.criticalHits,
+  };
+}
+function sManualVehicles(raw, prev = {}) {
+  const out = { ...prev };
+  if (raw && typeof raw === "object") {
+    for (const [k, v] of Object.entries(raw)) {
+      const id = String(k).slice(0, MANUAL_ID_MAX);
+      if (!id) continue;
+      if (v === null) { delete out[id]; continue; }
+      if (!(id in out) && Object.keys(out).length >= MANUAL_VEHICLES_MAX) continue;
+      out[id] = sVehicleLive(v, out[id]);
+    }
+  }
+  return out;
+}
+
 function sObligationStrain(raw) {
   const value = raw && typeof raw === "object" ? raw : {};
   return {
@@ -859,6 +882,10 @@ function emptyManualState() {
     destiny: { light: 0, dark: 0 },
     criticalInjuries: {},
     vehicle: { hull: 0, systemStrain: 0, criticalHits: [] },
+    // One entry per campaign vehicle id (see CampaignLog's `vehicles`).
+    // `vehicle` above is the old single-ship slot, kept only so an old
+    // stored document still parses.
+    vehicles: {},
     initiative: { order: [], taken: 0 },
     obligationStrain: sObligationStrain(null),
     // Live carried-quantity counters for weapons/armor/equipment — see
@@ -906,6 +933,7 @@ function sanitizeManualState(raw) {
         ? raw.vehicle.criticalHits.map((n) => sInt(n, 1, 150, 1)).slice(0, MANUAL_CRIT_MAX)
         : [],
     },
+    vehicles: sManualVehicles(raw.vehicles),
     initiative: sanitizeInitiative(raw.initiative),
     obligationStrain: sObligationStrain(raw.obligationStrain),
     itemQty: sManualQtyMap(raw.itemQty),
@@ -944,6 +972,9 @@ function mergeManualState(prev, patch) {
         ? patch.vehicle.criticalHits.map((n) => sInt(n, 1, 150, 1)).slice(0, MANUAL_CRIT_MAX)
         : prev.vehicle.criticalHits,
     };
+  }
+  if (patch.vehicles && typeof patch.vehicles === "object") {
+    next.vehicles = sManualVehicles(patch.vehicles, prev.vehicles || {});
   }
   if (patch.initiative && typeof patch.initiative === "object") {
     const hasOrder = Array.isArray(patch.initiative.order);
@@ -1552,6 +1583,7 @@ function sanitizeCampaignImport(raw) {
   campaign.campaign = typeof campaign.campaign === "string" ? campaign.campaign : "";
   campaign.npcs = Array.isArray(campaign.npcs) ? campaign.npcs : [];
   campaign.locations = Array.isArray(campaign.locations) ? campaign.locations : [];
+  normalizeCampaignVehicles(campaign);
   return { campaign };
 }
 
@@ -1631,7 +1663,27 @@ function sanitizeVehicle(raw) {
   v.crewPositions = (Array.isArray(v.crewPositions) ? v.crewPositions : []).filter((c) => c && typeof c === "object" && c.id && c.name);
   v.specialFeatures = (Array.isArray(v.specialFeatures) ? v.specialFeatures : []).map((x) => String(x || "").trim()).filter(Boolean);
   v.hidden = !!v.hidden;
+  v.id = String(v.id || "").toLowerCase().replace(/[^a-z0-9-]/g, "").slice(0, 40);
   return { vehicle: v };
+}
+
+// The campaign keeps a list of vehicles, each with a stable id (live hull
+// and crew seats are keyed on it). An older file with a single top-level
+// `vehicle` is moved into the list.
+const CAMPAIGN_VEHICLES_MAX = 20;
+function normalizeCampaignVehicles(campaign) {
+  if (!campaign || typeof campaign !== "object") return campaign;
+  let list = Array.isArray(campaign.vehicles) ? campaign.vehicles.filter((v) => v && typeof v === "object") : [];
+  if (!list.length && campaign.vehicle && typeof campaign.vehicle === "object") list = [campaign.vehicle];
+  const taken = [];
+  campaign.vehicles = list.slice(0, CAMPAIGN_VEHICLES_MAX).map((v) => {
+    const wanted = String(v.id || "").toLowerCase().replace(/[^a-z0-9-]/g, "").slice(0, 40);
+    const id = wanted && !taken.includes(wanted) ? wanted : creationSlug(v.name || "ship", taken);
+    taken.push(id);
+    return { ...v, id };
+  });
+  delete campaign.vehicle;
+  return campaign;
 }
 
 function campaignSummary(campaign) {
@@ -1640,7 +1692,8 @@ function campaignSummary(campaign) {
     title: campaign.campaign || "",
     characters: (campaign.characters || []).length,
     hiddenCharacters: (campaign.characters || []).filter((c) => c?.hidden).length,
-    vehicle: !!campaign.vehicle,
+    vehicle: (campaign.vehicles || []).length > 0 || !!campaign.vehicle,
+    vehicles: (campaign.vehicles || []).length || (campaign.vehicle ? 1 : 0),
     npcs: (campaign.npcs || []).length,
     locations: (campaign.locations || []).length,
   };
@@ -1669,7 +1722,8 @@ function publicCampaignView(campaign, overrides = {}) {
       return out;
     });
   const out = { ...campaign, characters };
-  if (campaign.vehicle && campaign.vehicle.hidden) delete out.vehicle;
+  out.vehicles = (campaign.vehicles || []).filter((v) => v && !v.hidden);
+  delete out.vehicle;
   return out;
 }
 
@@ -1714,7 +1768,7 @@ export class CampaignLog {
       this.charUndo = (await this.ctx.storage.get("charUndo")) || {};
       this.drafts = (await this.ctx.storage.get("drafts")) || {};
       this.advance = (await this.ctx.storage.get("advance")) || {};
-      this.campaign = (await this.ctx.storage.get("campaign")) || null;
+      this.campaign = normalizeCampaignVehicles((await this.ctx.storage.get("campaign")) || null);
       this.revision = (await this.ctx.storage.get("revision")) || 0;
       this.updatedAt = (await this.ctx.storage.get("updatedAt")) || 0;
       this.snapshot = (await this.ctx.storage.get("snapshot")) || null;
@@ -1959,6 +2013,37 @@ export class CampaignLog {
         editUndo: Object.fromEntries(Object.entries(this.charUndo).map(([id, u]) => [id, { savedAt: u.savedAt, note: u.note || "" }])),
       });
     }
+    // One character from a file: replaces the character with the same liveId
+    // (or name), otherwise joins the campaign. A replaced character can be
+    // put back with /character/undo, like a GM edit.
+    if (request.method === "POST" && url.pathname === "/character/import") {
+      let raw;
+      try { raw = await request.json(); } catch { return this.json({ error: "That file isn't valid JSON." }, 400); }
+      const incoming = raw?.character && typeof raw.character === "object" ? raw.character : raw;
+      if (!incoming || typeof incoming !== "object" || Array.isArray(incoming) || Array.isArray(incoming.characters)) {
+        return this.json({ error: "That file isn't a single character. Use Import all for a whole campaign." }, 400);
+      }
+      const campaign = this.campaign ? { ...this.campaign } : { campaign: "", characters: [], npcs: [], locations: [], vehicles: [] };
+      const characters = Array.isArray(campaign.characters) ? [...campaign.characters] : [];
+      const name = String(incoming.name || "").trim();
+      let idx = characters.findIndex((c) => (incoming.liveId && c.liveId === incoming.liveId));
+      if (idx === -1) idx = characters.findIndex((c) => c.name === name);
+      const before = idx === -1 ? { liveId: "" } : characters[idx];
+      if (idx === -1 && characters.length >= CAMPAIGN_CHARACTERS_MAX) return this.json({ error: `The campaign already has ${CAMPAIGN_CHARACTERS_MAX} characters.` }, 409);
+      const { character, error } = sanitizeCharacterEdit(incoming, before, characters, idx);
+      if (error) return this.json({ error }, 400);
+      if (idx === -1) {
+        character.liveId = creationSlug(incoming.liveId || character.name, characters.flatMap((c) => [c.liveId, c.name]).filter(Boolean));
+        characters.push(character);
+      } else {
+        this.charUndo[before.liveId || before.name] = { character: before, savedAt: Date.now(), note: "Before import" };
+        await this.ctx.storage.put("charUndo", this.charUndo);
+        characters[idx] = character;
+      }
+      campaign.characters = characters;
+      await this.save(campaign, this.snapshot);
+      return this.json({ ok: true, revision: this.revision, replaced: idx !== -1, name: character.name, liveId: character.liveId || character.name });
+    }
     if (request.method === "POST" && (url.pathname === "/character" || url.pathname === "/character/undo")) {
       let raw;
       try { raw = await request.json(); } catch { return this.json({ error: "That request isn't valid JSON." }, 400); }
@@ -1998,10 +2083,27 @@ export class CampaignLog {
         if (error) return this.json({ error }, 400);
         Object.assign(campaign, patch);
       } else {
-        const { vehicle, error } = sanitizeVehicle(raw?.vehicle === undefined ? undefined : raw.vehicle);
-        if (error) return this.json({ error }, 400);
-        if (vehicle) campaign.vehicle = vehicle;
-        else delete campaign.vehicle;
+        normalizeCampaignVehicles(campaign);
+        const vehicles = [...campaign.vehicles];
+        if (raw?.removeId) {
+          const before = vehicles.length;
+          campaign.vehicles = vehicles.filter((v) => v.id !== String(raw.removeId));
+          if (campaign.vehicles.length === before) return this.json({ error: "That vehicle isn't in the campaign." }, 404);
+        } else {
+          const { vehicle, error } = sanitizeVehicle(raw?.vehicle === undefined || raw?.vehicle === null ? undefined : raw.vehicle);
+          if (error) return this.json({ error }, 400);
+          const idx = vehicle.id ? vehicles.findIndex((v) => v.id === vehicle.id) : -1;
+          if (idx === -1) {
+            if (vehicles.length >= CAMPAIGN_VEHICLES_MAX) return this.json({ error: `The campaign already has ${CAMPAIGN_VEHICLES_MAX} vehicles.` }, 409);
+            vehicle.id = creationSlug(vehicle.name, vehicles.map((v) => v.id));
+            vehicles.push(vehicle);
+          } else {
+            vehicles[idx] = vehicle;
+          }
+          campaign.vehicles = vehicles;
+          await this.save(campaign, this.snapshot);
+          return this.json({ ok: true, revision: this.revision, id: vehicle.id });
+        }
       }
       await this.save(campaign, this.snapshot);
       return this.json({ ok: true, revision: this.revision });
@@ -2380,6 +2482,7 @@ export default {
     //   POST /gm/campaign/vehicle  GM: add, edit or remove the vehicle
     //   POST /gm/campaign/character       GM: fix a character sheet { characterId, character, note }
     //   POST /gm/campaign/character/undo  GM: put back the version before the last fix
+    //   POST /gm/campaign/character/import GM: add or replace one character from a file
     // Both GETs accept ?since=<revision> and answer { unchanged: true } when
     // nothing has moved, so the 5-second poll costs almost nothing.
     if (url.pathname === "/campaign" || url.pathname.startsWith("/gm/campaign")) {
@@ -2407,7 +2510,7 @@ export default {
 
       // POST /gm/campaign/settings  { title?, wikiUrl? }
       // POST /gm/campaign/vehicle   { vehicle: {...} | null }
-      if (isGm && request.method === "POST" && (sub === "/settings" || sub === "/vehicle" || sub === "/character" || sub === "/character/undo")) {
+      if (isGm && request.method === "POST" && (sub === "/settings" || sub === "/vehicle" || sub === "/character" || sub === "/character/undo" || sub === "/character/import")) {
         const declared = Number(request.headers.get("content-length") || 0);
         const body = declared > CAMPAIGN_EDIT_MAX ? "" : await request.text();
         if (declared > CAMPAIGN_EDIT_MAX || body.length > CAMPAIGN_EDIT_MAX) {

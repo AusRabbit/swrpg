@@ -4164,6 +4164,137 @@ function useCrewAssignments() {
   return { crew, assign };
 }
 
+// Vehicle-scale range bands (Genesys vehicle rules add Strategic; "Close"
+// in some printed stat blocks is the same band as Short).
+const VEHICLE_RANGE_BANDS = ["Engaged", "Short", "Medium", "Long", "Extreme", "Strategic"];
+function vehicleRangeIndex(range) {
+  const r = String(range || "").trim().toLowerCase();
+  return VEHICLE_RANGE_BANDS.findIndex((b) => b.toLowerCase() === (r === "close" ? "short" : r));
+}
+
+// Which of the four firing arcs a weapon covers, from text like "Forward",
+// "All", "Port and Starboard" or "Forward/Aft".
+function fireArcSet(text) {
+  const t = String(text || "").toLowerCase();
+  if (!t) return null;
+  if (/\ball\b|turret|any/.test(t)) return { fore: true, aft: true, port: true, starboard: true };
+  return { fore: /fore|forward|front/.test(t), aft: /aft|rear|back/.test(t), port: /port|left/.test(t), starboard: /starboard|right/.test(t) };
+}
+
+// A small top-down ship outline with the covered arcs lit.
+function FireArcIcon({ arc, size = 30 }) {
+  const on = "#5ec8d8";
+  const off = "#2a2e31";
+  const c = size / 2;
+  const r = size / 2 - 1;
+  // Quadrants of a circle, each 90 degrees, centred on fore/starboard/aft/port.
+  const wedge = (startDeg) => {
+    const a0 = ((startDeg - 45 - 90) * Math.PI) / 180;
+    const a1 = ((startDeg + 45 - 90) * Math.PI) / 180;
+    return `M ${c} ${c} L ${c + r * Math.cos(a0)} ${c + r * Math.sin(a0)} A ${r} ${r} 0 0 1 ${c + r * Math.cos(a1)} ${c + r * Math.sin(a1)} Z`;
+  };
+  const a = arc || {};
+  return (
+    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} aria-hidden="true">
+      <path d={wedge(0)} fill={a.fore ? on : off} fillOpacity={a.fore ? 0.55 : 1} stroke="#101315" strokeWidth="1" />
+      <path d={wedge(90)} fill={a.starboard ? on : off} fillOpacity={a.starboard ? 0.55 : 1} stroke="#101315" strokeWidth="1" />
+      <path d={wedge(180)} fill={a.aft ? on : off} fillOpacity={a.aft ? 0.55 : 1} stroke="#101315" strokeWidth="1" />
+      <path d={wedge(270)} fill={a.port ? on : off} fillOpacity={a.port ? 0.55 : 1} stroke="#101315" strokeWidth="1" />
+      <path d={`M ${c} ${c - size * 0.24} L ${c + size * 0.1} ${c + size * 0.2} L ${c} ${c + size * 0.13} L ${c - size * 0.1} ${c + size * 0.2} Z`} fill="#e7e2d2" />
+    </svg>
+  );
+}
+
+// One vehicle weapon, laid out like the Character tab's WeaponCard: big
+// damage figure, crit, fire arc, range bands and a chip per quality (with
+// the same rules tooltips). When `onRoll` is given the whole card is a
+// button that loads the gunner's pool with this weapon's damage, so the roll
+// log shows "Total damage: x" exactly as personal weapons do.
+function VehicleWeaponCard({ weapon, skill, onRoll, rollTitle, compact = false }) {
+  const adjustments = weaponRollAdjustments(weapon.qualities || "");
+  const totalDamage = Math.max(0, (Number(weapon.damage) || 0) + adjustments.damage);
+  const arc = fireArcSet(weapon.fireArc);
+  const bandIdx = vehicleRangeIndex(weapon.range);
+  const specials = splitSpecial(weapon.qualities || "");
+  const clickable = !!onRoll;
+  return (
+    <div
+      onClick={clickable ? () => onRoll(totalDamage, adjustments) : undefined}
+      title={clickable ? rollTitle : undefined}
+      className={`grid transition-colors ${clickable ? "cursor-pointer" : ""}`}
+      style={{ gridTemplateColumns: "4px 1fr auto", border: "1px solid #2a2e31", background: "#131719" }}
+      onMouseEnter={(e) => {
+        if (!clickable) return;
+        e.currentTarget.style.borderColor = "#5ec8d8";
+        e.currentTarget.style.boxShadow = "0 0 18px rgba(94,200,216,0.14)";
+        e.currentTarget.style.background = "#151a1d";
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.borderColor = "#2a2e31";
+        e.currentTarget.style.boxShadow = "none";
+        e.currentTarget.style.background = "#131719";
+      }}
+    >
+      <div style={{ background: clickable ? "#5ec8d8" : "#3a3f42" }} />
+      <div className={`${compact ? "px-3 py-2.5" : "px-4 py-3"} flex flex-col gap-2`}>
+        <div className="flex items-baseline gap-2.5 flex-wrap">
+          <span className={`${compact ? "text-[15px]" : "text-[18px]"} uppercase`} style={{ color: "#e7e2d2", fontFamily: "'Rajdhani', sans-serif", fontWeight: 700, letterSpacing: "0.03em" }}>
+            {weapon.name}
+          </span>
+          <span className="text-[10px] tracking-[0.12em] uppercase" style={{ color: "#8a8f93" }}>Gunnery</span>
+        </div>
+        <div className="flex items-center gap-5 flex-wrap">
+          <div className="flex items-baseline gap-1.5">
+            <TipLabel text="Dmg" title={STAT_TIPS.dmg[0]} body={STAT_TIPS.dmg[1]} />
+            <span className={`${compact ? "text-[22px]" : "text-[26px]"} leading-none mono-num`} style={{ color: "#ffb000" }}>{totalDamage}</span>
+            {adjustments.damage !== 0 && <span className="text-[9px] uppercase tracking-wide" style={{ color: adjustments.damage > 0 ? "#6fae60" : "#c23b3b" }}>{adjustments.damage > 0 ? "+1 Superior" : "−1 Inferior"}</span>}
+          </div>
+          <div className="flex items-baseline gap-1.5">
+            <TipLabel text="Crit" title={STAT_TIPS.crit[0]} body={STAT_TIPS.crit[1]} />
+            <span className="text-[16px] leading-none mono-num" style={{ color: "#e7e2d2" }}>{weapon.crit ?? "—"}</span>
+          </div>
+          {arc && (
+            <div className="flex items-center gap-1.5" title={`Fire arc: ${weapon.fireArc}`}>
+              <span className="text-[10px] tracking-[0.15em] uppercase" style={{ color: "#8a8f93" }}>Arc</span>
+              <FireArcIcon arc={arc} size={compact ? 24 : 28} />
+              <span className="text-[11px]" style={{ color: "#e7e2d2" }}>{weapon.fireArc}</span>
+            </div>
+          )}
+          {weapon.range && (
+            <div className="flex items-center gap-1.5">
+              <TipLabel text="Range" title={STAT_TIPS.range[0]} body={STAT_TIPS.range[1]} />
+              <span className="flex items-center gap-[3px]">
+                {VEHICLE_RANGE_BANDS.map((band, i) => (
+                  <span key={band} title={band} style={{ width: 13, height: 6, background: bandIdx >= 0 && i <= bandIdx ? "#5ec8d8" : "transparent", border: `1px solid ${bandIdx >= 0 && i <= bandIdx ? "#5ec8d8" : "#3a3f42"}` }} />
+                ))}
+                <span className="text-[11px] ml-1" style={{ color: "#e7e2d2" }}>{weapon.range}</span>
+              </span>
+            </div>
+          )}
+          {skill && (
+            <div className="flex items-center gap-2">
+              <TipLabel text="Pool" title={STAT_TIPS.pool[0]} body={STAT_TIPS.pool[1]} width={290} />
+              <SkillPips rank={skill.rank} characteristic={skill.characteristic} boost={(skill.boost || 0) + adjustments.boost} setback={adjustments.setback} />
+            </div>
+          )}
+        </div>
+        {specials.length > 0 && (
+          <div className="flex flex-wrap gap-1.5">
+            {specials.map((sp, i) => <SpecialChip key={i} text={sp} />)}
+          </div>
+        )}
+      </div>
+      <div className="flex items-center pl-2 pr-3">
+        {clickable && (
+          <span className="text-[12px] tracking-[0.18em] uppercase px-3 py-1.5 whitespace-nowrap" style={{ border: "1px solid #5ec8d8", color: "#5ec8d8", fontFamily: "'Rajdhani', sans-serif", fontWeight: 700 }}>
+            Fire ▶
+          </span>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function VehicleTab({ vehicle, party, partySkillSets, live, loadSkillIntoRoller, manual }) {
   const { crew, assign } = useCrewAssignments();
 
@@ -4180,9 +4311,9 @@ function VehicleTab({ vehicle, party, partySkillSets, live, loadSkillIntoRoller,
   // Hull Trauma / System Strain come from the shared /manual store, mirrored
   // into live.vehicle by the sync effect in CampaignDashboard.
   const hasData = live?.status === "ok";
-  const liveVehicle = hasData ? live.vehicle : null;
-  const hull = { current: liveVehicle?.hull ?? null, threshold: vehicle.hullTrauma?.threshold ?? 0 };
-  const systemStrain = { current: liveVehicle?.systemStrain ?? null, threshold: vehicle.systemStrain?.threshold ?? 0 };
+  const liveVehicle = hasData ? vehicleLiveOf(manual, vehicle.id) : null;
+  const hull = { current: hasData ? (liveVehicle?.hull ?? 0) : null, threshold: vehicle.hullTrauma?.threshold ?? 0 };
+  const systemStrain = { current: hasData ? (liveVehicle?.systemStrain ?? 0) : null, threshold: vehicle.systemStrain?.threshold ?? 0 };
 
   // A party member is keyed by liveId (falling back to name) in the crew
   // map, matching the same liveId convention used for wounds/strain overlay.
@@ -4214,8 +4345,8 @@ function VehicleTab({ vehicle, party, partySkillSets, live, loadSkillIntoRoller,
               current={hull.current}
               threshold={hull.threshold}
               colorClass="#c23b3b"
-              onSet={manual?.setVehicleHull}
-              onAdjust={manual?.adjustVehicleHull}
+              onSet={manual ? (n) => manual.setVehicleHull(vehicle.id, n) : undefined}
+              onAdjust={manual ? (d) => manual.adjustVehicleHull(vehicle.id, d) : undefined}
             />
           </Stat>
           <Stat label="System Strain">
@@ -4223,15 +4354,15 @@ function VehicleTab({ vehicle, party, partySkillSets, live, loadSkillIntoRoller,
               current={systemStrain.current}
               threshold={systemStrain.threshold}
               colorClass="#ffb000"
-              onSet={manual?.setVehicleSystemStrain}
-              onAdjust={manual?.adjustVehicleSystemStrain}
+              onSet={manual ? (n) => manual.setVehicleSystemStrain(vehicle.id, n) : undefined}
+              onAdjust={manual ? (d) => manual.adjustVehicleSystemStrain(vehicle.id, d) : undefined}
             />
           </Stat>
-          {(manual?.vehicle?.criticalHits || []).length > 0 && (
+          {(liveVehicle?.criticalHits || []).length > 0 && (
             <div className="mt-3">
               <div className="text-[10px] tracking-[0.15em] uppercase mb-1.5" style={{ color: "#8a8f93" }}>Critical Hits</div>
               <div className="space-y-1">
-                {manual.vehicle.criticalHits.map((n, i) => {
+                {liveVehicle.criticalHits.map((n, i) => {
                   const hit = lookupCriticalHitByRoll(n);
                   return (
                     <div key={i} className="text-[12px] leading-relaxed" style={{ color: "#c23b3b" }}>
@@ -4247,23 +4378,9 @@ function VehicleTab({ vehicle, party, partySkillSets, live, loadSkillIntoRoller,
         {vehicle.weapons?.length > 0 && (
           <div className="mb-5 pb-5 border-b" style={{ borderColor: "#2a2e31" }}>
             <div className="text-[11px] tracking-[0.2em] uppercase mb-2" style={{ color: "#8a8f93" }}>Weapons</div>
-            <div className="space-y-3">
+            <div className="space-y-2">
               {vehicle.weapons.map((w, i) => (
-                <div key={i} className="text-[13px]">
-                  <div className="flex items-center justify-between gap-2 flex-wrap">
-                    <span style={{ color: "#e7e2d2", fontWeight: 600 }}>{w.name}</span>
-                    <span className="text-[11px] mono-num" style={{ color: "#8a8f93" }}>
-                      {w.fireArc && `${w.fireArc} arc · `}{w.range} · Dam {w.damage} · Crit {w.crit}
-                    </span>
-                  </div>
-                  {w.qualities && (
-                    <div className="flex flex-wrap gap-1.5 mt-1">
-                      {w.qualities.split(",").map((q) => q.trim()).filter(Boolean).map((q, qi) => (
-                        <span key={qi} className="text-[10px] px-1.5 py-0.5" style={{ background: "#2a2e31", color: "#8fd3f4" }}>{q}</span>
-                      ))}
-                    </div>
-                  )}
-                </div>
+                <VehicleWeaponCard key={i} weapon={w} />
               ))}
             </div>
           </div>
@@ -4286,7 +4403,8 @@ function VehicleTab({ vehicle, party, partySkillSets, live, loadSkillIntoRoller,
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
             {(vehicle.crewPositions || []).map((pos) => {
-              const assignedKey = crew[pos.id] || "";
+              const seatKey = `${vehicle.id}:${pos.id}`;
+              const assignedKey = crew[seatKey] || "";
               const assignedIdx = party.findIndex((c) => (c.liveId || c.name) === assignedKey);
               const weapon = pos.weaponIndex != null ? vehicle.weapons?.[pos.weaponIndex] : null;
 
@@ -4304,7 +4422,7 @@ function VehicleTab({ vehicle, party, partySkillSets, live, loadSkillIntoRoller,
 
                   <select
                     value={assignedKey}
-                    onChange={(e) => assign(pos.id, e.target.value)}
+                    onChange={(e) => assign(seatKey, e.target.value)}
                     className="w-full bg-transparent border px-2 py-1.5 text-[13px] mb-3"
                     style={{ borderColor: "#3a3f42", color: assignedKey ? "#e7e2d2" : "#5a5f62" }}
                   >
@@ -4316,15 +4434,20 @@ function VehicleTab({ vehicle, party, partySkillSets, live, loadSkillIntoRoller,
                     ))}
                   </select>
 
-                  {weapon && (
-                    <div className="flex items-center gap-4 flex-wrap mb-2.5 text-[11px]" style={{ color: "#8a8f93" }}>
-                      <span>{weapon.fireArc} arc</span>
-                      <span>Range {weapon.range}</span>
-                      <span>Dmg <span className="mono-num" style={{ color: "#ffb000" }}>{weapon.damage}</span></span>
-                      <span>Crit <span className="mono-num" style={{ color: "#e7e2d2" }}>{weapon.crit}</span></span>
-                      {weapon.qualities && <SpecialChip text={weapon.qualities} />}
-                    </div>
-                  )}
+                  {weapon && (() => {
+                    const gunnery = assignedIdx > -1 ? partySkillSets[assignedIdx].find((s) => s.name === "Gunnery") : null;
+                    return (
+                      <div className="mb-3">
+                        <VehicleWeaponCard
+                          weapon={weapon}
+                          skill={gunnery}
+                          compact
+                          onRoll={gunnery ? (dmg) => loadSkillIntoRoller(gunnery, characterLabel(assignedKey), weapon.qualities || null, dmg) : undefined}
+                          rollTitle={`Load ${characterLabel(assignedKey)}'s Gunnery pool for ${weapon.name} into the Dice Roller`}
+                        />
+                      </div>
+                    );
+                  })()}
 
                   {pos.manoeuvres?.length > 0 && (
                     <div className="mb-3 pb-3 border-b" style={{ borderColor: "#2a2e3166" }}>
@@ -4354,6 +4477,14 @@ function VehicleTab({ vehicle, party, partySkillSets, live, loadSkillIntoRoller,
                     {pos.actions.map((action, ai) => {
                       const skill = assignedIdx > -1 ? partySkillSets[assignedIdx].find((s) => s.name === action.skill) : null;
                       const clickable = !!skill;
+                      // "Fire …" Gunnery actions roll this seat's weapon (or, for the
+                      // pilot's slaved fire, the first forward-firing one), so the
+                      // roll log shows Total damage like a personal weapon does.
+                      const firesWeapon = /^fire\b/i.test(action.name) && /gunnery/i.test(action.skill || "");
+                      const actionWeapon = firesWeapon
+                        ? weapon || (vehicle.weapons || []).find((w) => fireArcSet(w.fireArc)?.fore) || null
+                        : null;
+                      const actionDamage = actionWeapon ? Math.max(0, (Number(actionWeapon.damage) || 0) + weaponRollAdjustments(actionWeapon.qualities || "").damage) : null;
                       const tooltip = [action.description, action.requirement ? `Requirement: ${action.requirement}` : null]
                         .filter(Boolean)
                         .join("\n\n");
@@ -4363,7 +4494,7 @@ function VehicleTab({ vehicle, party, partySkillSets, live, loadSkillIntoRoller,
                           disabled={!clickable}
                           onClick={
                             clickable
-                              ? () => loadSkillIntoRoller(skill, characterLabel(assignedKey), weapon ? weapon.qualities : null)
+                              ? () => loadSkillIntoRoller(skill, characterLabel(assignedKey), actionWeapon ? actionWeapon.qualities || null : weapon ? weapon.qualities : null, actionDamage)
                               : undefined
                           }
                           title={clickable ? `${tooltip}\n\nClick to load ${action.skill} into the Dice Roller.` : `${tooltip}\n\nAssign a crew member to preview this action's pool.`}
@@ -4411,14 +4542,14 @@ function VehicleTab({ vehicle, party, partySkillSets, live, loadSkillIntoRoller,
 // everything after it, same as clicking pip 1 while at 1 empties the bar).
 function PipRow({ current, threshold, colorClass, size = "normal", onSet, onAdjust, scale = 1, overLabel }) {
   // Hooks must run unconditionally, so this is declared before the
-  // early-return below (current == null renders a "No live data" message
+  // early-return below (current == null renders a "Connecting…" message
   // instead of pips at all).
   const [hoverIndex, setHoverIndex] = useState(null);
   // current is null when there's no live overlay AND nothing static to fall
   // back on — show that plainly rather than rendering an all-empty row that
   // reads as "no wounds/strain" when it really means "unknown."
   if (current == null) {
-    return <span className="text-[11px] italic" style={{ color: "#5a5f62" }}>No live data</span>;
+    return <span className="text-[11px] italic" style={{ color: "#5a5f62" }}>Connecting…</span>;
   }
   const editable = !!onSet;
   // The pip row always tops out at exactly `threshold` boxes — it's the
@@ -5210,12 +5341,11 @@ function applyLiveOverlay(character, live) {
   const vitals = character.vitals || {};
   const staticWounds = vitals.wounds || {};
   const staticStrain = vitals.strain || {};
-  // Legacy fallback: if an older ledger.json still has a static "current" or
-  // a per-character "destiny", honor it rather than discarding real data.
-  const staticDestiny = character.destiny || null;
-
-  const woundsCurrent = w != null ? w : (staticWounds.current ?? null);
-  const strainCurrent = s != null ? s : (staticStrain.current ?? null);
+  // Everything live comes from the shared /manual store. Once it has loaded,
+  // a character with no entry yet (e.g. just created) is simply unhurt: 0.
+  // Only while the store hasn't answered is the value unknown (null).
+  const woundsCurrent = w != null ? w : hasLive ? 0 : null;
+  const strainCurrent = s != null ? s : hasLive ? 0 : null;
   const baseStrainThreshold = staticStrain.threshold ?? 0;
   const obligationPenalty = hasLive && liveId ? (live.obligationStrain?.penalties?.[liveId] || 0) : 0;
   const effectiveStrainThreshold = Math.max(1, baseStrainThreshold - obligationPenalty);
@@ -5223,7 +5353,7 @@ function applyLiveOverlay(character, live) {
   return {
     wounds: { current: woundsCurrent, threshold: staticWounds.threshold ?? 0 },
     strain: { current: strainCurrent, threshold: effectiveStrainThreshold, baseThreshold: baseStrainThreshold, obligationPenalty },
-    destiny: d || staticDestiny, // may be null — store not loaded and nothing static to fall back to
+    destiny: d || (hasLive ? { light: 0, dark: 0 } : null), // null only until the store has loaded
     criticalInjuriesLive: liveCritNums.map((n) => criticalInjuryTextFromNumber(n)),
   };
 }
@@ -5399,6 +5529,9 @@ function emptyManualShape() {
     destiny: { light: 0, dark: 0 },
     criticalInjuries: {},
     vehicle: { hull: 0, systemStrain: 0, criticalHits: [] },
+    // Live Hull Trauma / System Strain / Critical Hits per campaign vehicle,
+    // keyed by the vehicle's id.
+    vehicles: {},
     initiative: { order: [], taken: 0 },
     obligationStrain: { active: false, triggeredId: "", triggeredName: "", multiplier: 1, roll: 0, penalties: {} },
     // Live, open-write item counts — how many of a given weapon/armor/
@@ -5428,6 +5561,18 @@ function emptyManualShape() {
 // since a character rarely carries two identically-named baseline items.
 function itemQtyKey(characterId, item, kind) {
   return item?.id ? `gear:${item.id}` : `${kind}:${characterId}:${item?.name || ""}`;
+}
+
+// Live state for one vehicle, defaulting to undamaged.
+function vehicleLiveOf(manualState, id) {
+  return manualState?.vehicles?.[id] || { hull: 0, systemStrain: 0, criticalHits: [] };
+}
+
+// The campaign's vehicles as a list. Older files carry one top-level
+// `vehicle`; that reads as a single-entry list with the id "ship".
+function campaignVehicles(campaign) {
+  if (Array.isArray(campaign?.vehicles)) return campaign.vehicles.filter((v) => v && typeof v === "object" && v.id);
+  return campaign?.vehicle ? [{ id: "ship", ...campaign.vehicle }] : [];
 }
 
 function useManualStore() {
@@ -5470,6 +5615,10 @@ function useManualStore() {
       if (partial.destiny) next.destiny = { ...prev.destiny, ...partial.destiny };
       if (partial.criticalInjuries) next.criticalInjuries = { ...prev.criticalInjuries, ...partial.criticalInjuries };
       if (partial.vehicle) next.vehicle = { ...prev.vehicle, ...partial.vehicle };
+      if (partial.vehicles) {
+        next.vehicles = { ...prev.vehicles };
+        for (const [id, v] of Object.entries(partial.vehicles)) next.vehicles[id] = { ...vehicleLiveOf(prev, id), ...v };
+      }
       if (partial.initiative) next.initiative = { ...prev.initiative, ...partial.initiative };
       if (partial.obligationStrain) next.obligationStrain = { ...prev.obligationStrain, ...partial.obligationStrain };
       if (partial.itemQty) next.itemQty = { ...prev.itemQty, ...partial.itemQty };
@@ -5530,32 +5679,22 @@ function useManualStore() {
       return prev;
     });
   }, [patch]);
-  const setVehicleHull = useCallback((n) => patch({ vehicle: { hull: Math.max(0, n) } }), [patch]);
-  const adjustVehicleHull = useCallback((delta) => {
-    setState((prev) => {
-      patch({ vehicle: { hull: Math.max(0, (prev.vehicle.hull || 0) + delta) } });
-      return prev;
-    });
-  }, [patch]);
-  const setVehicleSystemStrain = useCallback((n) => patch({ vehicle: { systemStrain: Math.max(0, n) } }), [patch]);
-  const adjustVehicleSystemStrain = useCallback((delta) => {
-    setState((prev) => {
-      patch({ vehicle: { systemStrain: Math.max(0, (prev.vehicle.systemStrain || 0) + delta) } });
-      return prev;
-    });
-  }, [patch]);
-  const addVehicleCritHit = useCallback((num) => {
-    setState((prev) => {
-      patch({ vehicle: { criticalHits: [...(prev.vehicle.criticalHits || []), num] } });
-      return prev;
-    });
-  }, [patch]);
-  const removeVehicleCritHit = useCallback((index) => {
-    setState((prev) => {
-      patch({ vehicle: { criticalHits: (prev.vehicle.criticalHits || []).filter((_, i) => i !== index) } });
-      return prev;
-    });
-  }, [patch]);
+  // Every vehicle call takes the campaign vehicle's id first.
+  const patchVehicle = useCallback((id, fields) => patch({ vehicles: { [id]: fields } }), [patch]);
+  const setVehicleHull = useCallback((id, n) => patchVehicle(id, { hull: Math.max(0, n) }), [patchVehicle]);
+  const adjustVehicleHull = useCallback((id, delta) => {
+    patchVehicle(id, { hull: Math.max(0, (vehicleLiveOf(stateRef.current, id).hull || 0) + delta) });
+  }, [patchVehicle]);
+  const setVehicleSystemStrain = useCallback((id, n) => patchVehicle(id, { systemStrain: Math.max(0, n) }), [patchVehicle]);
+  const adjustVehicleSystemStrain = useCallback((id, delta) => {
+    patchVehicle(id, { systemStrain: Math.max(0, (vehicleLiveOf(stateRef.current, id).systemStrain || 0) + delta) });
+  }, [patchVehicle]);
+  const addVehicleCritHit = useCallback((id, num) => {
+    patchVehicle(id, { criticalHits: [...(vehicleLiveOf(stateRef.current, id).criticalHits || []), num] });
+  }, [patchVehicle]);
+  const removeVehicleCritHit = useCallback((id, index) => {
+    patchVehicle(id, { criticalHits: (vehicleLiveOf(stateRef.current, id).criticalHits || []).filter((_, i) => i !== index) });
+  }, [patchVehicle]);
   const setInitiative = useCallback((initiative) => patch({ initiative }), [patch]);
   const setObligationStrain = useCallback((obligationStrain) => patch({ obligationStrain }), [patch]);
   // Item quantity: defaults to 1 when a key hasn't been touched yet (an item
@@ -6143,6 +6282,8 @@ function useCampaignStore(gmKey) {
     restorePrevious: () => gmPost("/gm/campaign/restore", ""),
     saveSettings: (settings) => gmPost("/gm/campaign/settings", JSON.stringify(settings)),
     saveVehicle: (vehicle) => gmPost("/gm/campaign/vehicle", JSON.stringify({ vehicle })),
+    removeVehicle: (id) => gmPost("/gm/campaign/vehicle", JSON.stringify({ removeId: id })),
+    importCharacter: (text) => gmPost("/gm/campaign/character/import", text),
     saveCharacter: (characterId, character, note) => gmPost("/gm/campaign/character", JSON.stringify({ characterId, character, note })),
     undoCharacter: (characterId) => gmPost("/gm/campaign/character/undo", JSON.stringify({ characterId })),
     async exportCampaign() {
@@ -6168,7 +6309,7 @@ function describeCampaign(c) {
   if (!c) return "nothing loaded";
   const parts = [
     `${c.characters} character${c.characters === 1 ? "" : "s"}${c.hiddenCharacters ? ` (${c.hiddenCharacters} hidden)` : ""}`,
-    c.vehicle ? "a vehicle" : null,
+    c.vehicles > 1 ? `${c.vehicles} vehicles` : c.vehicle || c.vehicles === 1 ? "a vehicle" : null,
   ].filter(Boolean);
   return `${c.title ? `"${c.title}": ` : ""}${parts.join(", ")}`;
 }
@@ -6179,7 +6320,8 @@ function summariseCampaignFile(data) {
     title: typeof data?.campaign === "string" ? data.campaign : "",
     characters: characters.length,
     hiddenCharacters: characters.filter((c) => c?.hidden).length,
-    vehicle: !!data?.vehicle,
+    vehicle: !!data?.vehicle || (Array.isArray(data?.vehicles) && data.vehicles.length > 0),
+    vehicles: Array.isArray(data?.vehicles) ? data.vehicles.length : data?.vehicle ? 1 : 0,
     npcs: Array.isArray(data?.npcs) ? data.npcs.length : 0,
     locations: Array.isArray(data?.locations) ? data.locations.length : 0,
   };
@@ -6188,8 +6330,47 @@ function summariseCampaignFile(data) {
 // GM page: load a campaign in, take a copy out, or undo the last import.
 function GmCampaignDataSection({ store }) {
   const [pending, setPending] = useState(null); // { name, text, summary }
+  const [pendingChar, setPendingChar] = useState(null); // { name, text, character, replaces }
+  const [exportId, setExportId] = useState("");
   const [status, setStatus] = useState({ state: "idle", msg: "" });
   const fileRef = useRef(null);
+  const charFileRef = useRef(null);
+  const allCharacters = store.campaign?.characters || [];
+
+  function exportCharacter() {
+    const c = allCharacters.find((x) => (x.liveId || x.name) === exportId);
+    if (!c) return;
+    const day = new Date().toISOString().slice(0, 10);
+    const slug = String(c.name || "character").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "character";
+    const blob = new Blob([JSON.stringify({ format: "swrpg-character", exportedAt: new Date().toISOString(), character: c }, null, 2)], { type: "application/json" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = `${slug}-${day}.json`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+    setStatus({ state: "ok", msg: `Downloaded ${c.name}.` });
+  }
+
+  async function chooseCharacterFile(e) {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    setStatus({ state: "idle", msg: "" });
+    try {
+      const text = await file.text();
+      const data = JSON.parse(text);
+      if (Array.isArray(data?.characters)) throw new Error("it's a whole campaign; use Import all for that");
+      const character = data?.character && typeof data.character === "object" ? data.character : data;
+      if (!character || typeof character !== "object" || !String(character.name || "").trim()) throw new Error("it has no character name");
+      const replaces = allCharacters.find((c) => (character.liveId && c.liveId === character.liveId)) || allCharacters.find((c) => c.name === character.name) || null;
+      setPendingChar({ name: file.name, text, character, replaces });
+    } catch (err) {
+      setPendingChar(null);
+      setStatus({ state: "error", msg: `Can't use ${file.name}: ${err.message}` });
+    }
+  }
   const current = store.campaign ? summariseCampaignFile(store.campaign) : null;
 
   async function chooseFile(e) {
@@ -6200,7 +6381,7 @@ function GmCampaignDataSection({ store }) {
     try {
       const text = await file.text();
       const data = JSON.parse(text);
-      if (!Array.isArray(data?.characters)) throw new Error("it has no \"characters\" list, so it doesn't look like a ledger.json");
+      if (!Array.isArray(data?.characters)) throw new Error(data?.character || data?.name ? "it's a single character; use Import character for that" : "it has no \"characters\" list, so it isn't a campaign file");
       setPending({ name: file.name, text, summary: summariseCampaignFile(data) });
     } catch (err) {
       setPending(null);
@@ -6223,10 +6404,10 @@ function GmCampaignDataSection({ store }) {
     <div className="border p-4 mb-5" style={{ borderColor: "#5ec8d866", background: "#101315" }}>
       <div className="text-[11px] tracking-[0.2em] uppercase mb-1" style={{ color: "#5ec8d8" }}>Campaign data</div>
       <p className="text-[11px] leading-relaxed mb-3" style={{ color: "#8a8f93" }}>
-        The characters and vehicle everyone sees. <strong style={{ color: "#e7e2d2" }}>Import</strong> loads
-        a campaign file (an existing <code>ledger.json</code> works) and replaces what's here; the campaign it replaces is kept so
-        you can undo. <strong style={{ color: "#e7e2d2" }}>Export</strong> downloads everything as one file: your backup, and
-        the way to make bulk edits (export, edit, import). Players never receive hidden characters or gear.
+        The characters and vehicles everyone sees. <strong style={{ color: "#e7e2d2" }}>Import all</strong> replaces the whole
+        campaign from a file (the one it replaces is kept so you can undo); <strong style={{ color: "#e7e2d2" }}>Export all</strong> downloads
+        everything as one file, your backup. <strong style={{ color: "#e7e2d2" }}>One character</strong> moves a single sheet in or out:
+        importing replaces the character with the same name (undoable) or adds them if they're new. Players never receive hidden characters or gear.
       </p>
       <div className="text-[12px] mb-3" style={{ color: "#e7e2d2" }}>
         Loaded now: {store.status === "loading" ? "checking…" : describeCampaign(current)}
@@ -6235,8 +6416,9 @@ function GmCampaignDataSection({ store }) {
 
       <div className="flex flex-wrap items-center gap-2">
         <input ref={fileRef} type="file" accept=".json,application/json" onChange={chooseFile} className="hidden" />
+        <span className="text-[10px] tracking-[0.15em] uppercase w-24" style={{ color: "#8a8f93" }}>Whole campaign</span>
         <button type="button" onClick={() => fileRef.current?.click()} className={btn} style={{ color: "#101315", background: "#5ec8d8", borderColor: "#5ec8d8", fontFamily: "'Rajdhani', sans-serif", fontWeight: 700 }}>
-          Import…
+          Import all…
         </button>
         <button
           type="button"
@@ -6245,7 +6427,7 @@ function GmCampaignDataSection({ store }) {
           className={btn}
           style={{ color: "#e7e2d2", borderColor: "#3a3f42", fontFamily: "'Rajdhani', sans-serif" }}
         >
-          Export
+          Export all
         </button>
         {store.hasSnapshot && (
           <button
@@ -6263,6 +6445,49 @@ function GmCampaignDataSection({ store }) {
           </button>
         )}
       </div>
+
+      <div className="flex flex-wrap items-center gap-2 mt-2">
+        <span className="text-[10px] tracking-[0.15em] uppercase w-24" style={{ color: "#8a8f93" }}>One character</span>
+        <input ref={charFileRef} type="file" accept=".json,application/json" onChange={chooseCharacterFile} className="hidden" />
+        <button type="button" onClick={() => charFileRef.current?.click()} disabled={status.state === "busy"} className={btn} style={{ color: "#5ec8d8", borderColor: "#5ec8d8", fontFamily: "'Rajdhani', sans-serif", fontWeight: 700 }}>
+          Import character…
+        </button>
+        <select value={exportId} onChange={(e) => setExportId(e.target.value)} className="bg-[#0b0d0e] border px-2 py-1 text-[12px]" style={{ borderColor: "#3a3f42", color: "#e7e2d2" }}>
+          <option value="">Choose a character…</option>
+          {allCharacters.map((c) => <option key={c.liveId || c.name} value={c.liveId || c.name}>{c.name}{c.hidden ? " (hidden)" : ""}</option>)}
+        </select>
+        <button type="button" onClick={exportCharacter} disabled={!exportId} className={btn} style={{ color: "#e7e2d2", borderColor: "#3a3f42", fontFamily: "'Rajdhani', sans-serif" }}>
+          Export character
+        </button>
+      </div>
+
+      {pendingChar && (
+        <div className="mt-3 p-3 border" style={{ borderColor: "#ffb00066", background: "#ffb0000d" }}>
+          <div className="text-[12px] mb-2" style={{ color: "#e7e2d2" }}>
+            {pendingChar.replaces
+              ? <>Replace <strong>{pendingChar.replaces.name}</strong> with the copy in {pendingChar.name}? Their current sheet is kept, so <em>Undo last edit</em> under Edit a character puts it back.</>
+              : <>Add <strong>{pendingChar.character.name}</strong> from {pendingChar.name} as a new character?</>}
+          </div>
+          <div className="flex gap-2">
+            <button
+              type="button"
+              disabled={status.state === "busy"}
+              onClick={() => {
+                const { text, character, replaces } = pendingChar;
+                setPendingChar(null);
+                run("Importing", async () => { await store.importCharacter(text); return replaces ? `Replaced ${replaces.name}.` : `Added ${character.name}.`; });
+              }}
+              className={btn}
+              style={{ color: "#101315", background: "#ffb000", borderColor: "#ffb000", fontFamily: "'Rajdhani', sans-serif", fontWeight: 700 }}
+            >
+              {pendingChar.replaces ? "Replace character" : "Add character"}
+            </button>
+            <button type="button" onClick={() => setPendingChar(null)} className={btn} style={{ color: "#8a8f93", borderColor: "#3a3f42", fontFamily: "'Rajdhani', sans-serif" }}>
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
 
       {pending && (
         <div className="mt-3 p-3 border" style={{ borderColor: "#ffb00066", background: "#ffb0000d" }}>
@@ -6396,9 +6621,63 @@ function vehicleFromShip(ship, positions) {
   };
 }
 
-// GM page: add, edit or remove the party's vehicle (drives the Vehicle tab).
+// GM page: the campaign's vehicles. Collapsed to a one-line summary by
+// default; each vehicle gets its own tab on the dashboard, named after it.
 function GmVehicleSection({ store }) {
-  const saved = store.campaign?.vehicle || null;
+  const vehicles = campaignVehicles(store.campaign);
+  const [open, setOpen] = useState(false);
+  const [editing, setEditing] = useState(null); // vehicle id, or "new"
+  const btn = "text-[11px] tracking-[0.15em] uppercase px-3 py-1.5 border transition-colors disabled:opacity-40";
+  return (
+    <div className="border mb-5" style={{ borderColor: "#3a3f42", background: "#101315" }}>
+      <button type="button" onClick={() => setOpen((o) => !o)} className="w-full flex items-center justify-between gap-3 px-4 py-3 text-left">
+        <span className="text-[11px] tracking-[0.2em] uppercase" style={{ color: "#5ec8d8" }}>
+          Vehicles <span style={{ color: "#8a8f93" }}>({vehicles.length})</span>
+        </span>
+        <span className="text-[11px] truncate" style={{ color: "#8a8f93" }}>
+          {vehicles.length ? vehicles.map((v) => v.name).join(" · ") : "None yet"} <span className="ml-2" style={{ color: "#5ec8d8" }}>{open ? "▲" : "▼"}</span>
+        </span>
+      </button>
+      {open && (
+        <div className="px-4 pb-4">
+          <p className="text-[11px] leading-relaxed mb-3" style={{ color: "#8a8f93" }}>
+            Each vehicle gets its own tab on the dashboard, named after it. Hull Trauma, System Strain and Critical Hits are
+            tracked live on that tab and in the Session Tracker.
+          </p>
+          <div className="space-y-2 mb-3">
+            {vehicles.map((v) => (
+              <div key={v.id}>
+                <div className="flex items-center justify-between gap-2 border px-3 py-2" style={{ borderColor: editing === v.id ? "#5ec8d8" : "#2a2e31", background: "#131719" }}>
+                  <div className="min-w-0">
+                    <div className="text-[14px] truncate" style={{ color: "#e7e2d2", fontFamily: "'Rajdhani', sans-serif", fontWeight: 700 }}>
+                      {v.name}{v.hidden && <span className="text-[10px] ml-2 uppercase tracking-[0.1em]" style={{ color: "#c9a15a" }}>hidden</span>}
+                    </div>
+                    <div className="text-[11px] truncate" style={{ color: "#8a8f93" }}>
+                      {[v.class, `Sil ${v.silhouette ?? "—"}`, `HT ${v.hullTrauma?.threshold ?? "—"}`, `SS ${v.systemStrain?.threshold ?? "—"}`, `${(v.weapons || []).length} weapon${(v.weapons || []).length === 1 ? "" : "s"}`].filter(Boolean).join(" · ")}
+                    </div>
+                  </div>
+                  <button type="button" onClick={() => setEditing(editing === v.id ? null : v.id)} className={btn} style={{ color: "#e7e2d2", borderColor: "#3a3f42", fontFamily: "'Rajdhani', sans-serif" }}>
+                    {editing === v.id ? "Close" : "Edit"}
+                  </button>
+                </div>
+                {editing === v.id && <GmVehicleEditor store={store} saved={v} onClose={() => setEditing(null)} />}
+              </div>
+            ))}
+          </div>
+          {editing === "new" ? (
+            <GmVehicleEditor store={store} saved={null} onClose={() => setEditing(null)} />
+          ) : (
+            <button type="button" onClick={() => setEditing("new")} className={btn} style={{ color: "#101315", background: "#5ec8d8", borderColor: "#5ec8d8", fontFamily: "'Rajdhani', sans-serif", fontWeight: 700 }}>
+              + Add vehicle
+            </button>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function GmVehicleEditor({ store, saved, onClose }) {
   const ref = useVehicleReference();
   const [draft, setDraft] = useState(saved);
   const [dirty, setDirty] = useState(false);
@@ -6439,9 +6718,10 @@ function GmVehicleSection({ store }) {
   async function save() {
     setStatus({ state: "busy", msg: "Saving…" });
     try {
-      await store.saveVehicle(draft);
+      await store.saveVehicle(saved ? { ...draft, id: saved.id } : draft);
       setDirty(false);
-      setStatus({ state: "ok", msg: "Saved. The Vehicle tab shows it now." });
+      if (!saved) { onClose?.(); return; }
+      setStatus({ state: "ok", msg: "Saved. Its dashboard tab shows the change now." });
     } catch (err) {
       setStatus({ state: "error", msg: err.message });
     }
@@ -6451,16 +6731,16 @@ function GmVehicleSection({ store }) {
     if (!window.confirm(`Remove ${saved?.name || "the vehicle"} from the campaign? Export first if you might want it back.`)) return;
     setStatus({ state: "busy", msg: "Removing…" });
     try {
-      await store.saveVehicle(null);
+      await store.removeVehicle(saved.id);
       setDirty(false);
-      setDraft(null);
-      setStatus({ state: "ok", msg: "Vehicle removed." });
+      onClose?.();
     } catch (err) {
       setStatus({ state: "error", msg: err.message });
     }
   }
 
   function cancel() {
+    if (!saved) { onClose?.(); return; }
     setDraft(saved);
     setDirty(false);
     setStatus({ state: "idle", msg: "" });
@@ -6493,17 +6773,20 @@ function GmVehicleSection({ store }) {
   );
 
   return (
-    <div className="border p-4 mb-5" style={{ borderColor: "#3a3f42", background: "#101315" }}>
-      <div className="text-[11px] tracking-[0.2em] uppercase mb-1" style={{ color: "#5ec8d8" }}>Vehicle</div>
-      <p className="text-[11px] leading-relaxed mb-3" style={{ color: "#8a8f93" }}>
-        The party's ship, shown on the Vehicle tab. Start from a stock ship (Genesys-converted stats) or a blank one, then
-        adjust it. Hull Trauma, System Strain and Critical Hits are tracked live on the Vehicle tab and the Session Tracker.
-      </p>
+    <div className="border p-3 mt-1 mb-2" style={{ borderColor: "#5ec8d866", background: "#0e1113" }}>
+      {!saved && (
+        <p className="text-[11px] leading-relaxed mb-3" style={{ color: "#8a8f93" }}>
+          Start from a stock ship (Genesys-converted stats) or a blank one, then adjust it.
+        </p>
+      )}
 
       {!draft && (
         <>
           {picker}
-          <button type="button" onClick={() => startFrom(null)} className={btn} style={ghost}>Start a blank vehicle</button>
+          <div className="flex gap-2">
+            <button type="button" onClick={() => startFrom(null)} className={btn} style={ghost}>Start a blank vehicle</button>
+            <button type="button" onClick={() => onClose?.()} className={btn} style={{ color: "#8a8f93", borderColor: "#3a3f42", fontFamily: "'Rajdhani', sans-serif" }}>Cancel</button>
+          </div>
         </>
       )}
 
@@ -6659,10 +6942,11 @@ function GmVehicleSection({ store }) {
 // GM page: fix a character sheet by hand (a wrong skill rank, a missing or
 // extra talent, thresholds, XP). Saves the whole sheet; the worker keeps the
 // previous version so the last fix can be undone.
-function GmCharacterEditorSection({ store, initialId = "" }) {
+function GmCharacterEditorSection({ store, initialId = "", onConsumed }) {
   const characters = store.campaign?.characters || [];
   const idOf = (c) => c.liveId || c.name;
   const [selectedId, setSelectedId] = useState(initialId);
+  const [open, setOpen] = useState(!!initialId);
   const saved = characters.find((c) => idOf(c) === selectedId) || null;
   const savedJson = JSON.stringify(saved);
   const [draft, setDraft] = useState(null);
@@ -6682,7 +6966,11 @@ function GmCharacterEditorSection({ store, initialId = "" }) {
   useEffect(() => {
     if (!initialId) return;
     setSelectedId(initialId);
-    try { boxRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }); } catch { /* old browsers */ }
+    setOpen(true);
+    // Used once: the next visit to the GM page starts on "Choose a character…".
+    onConsumed?.();
+    setTimeout(() => { try { boxRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }); } catch { /* old browsers */ } }, 50);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialId]);
   useEffect(() => {
     if (!dirty) {
@@ -6796,8 +7084,14 @@ function GmCharacterEditorSection({ store, initialId = "" }) {
   const tierCounts = draft ? talentRankCounts(draft.talents || []) : {};
 
   return (
-    <div ref={boxRef} className="border p-4 mb-5" style={{ borderColor: "#3a3f42", background: "#101315" }}>
-      <div className="text-[11px] tracking-[0.2em] uppercase mb-1" style={{ color: "#5ec8d8" }}>Edit a character</div>
+    <div ref={boxRef} className="border mb-5" style={{ borderColor: "#3a3f42", background: "#101315" }}>
+      <button type="button" onClick={() => setOpen((o) => !o)} className="w-full flex items-center justify-between gap-3 px-4 py-3 text-left">
+        <span className="text-[11px] tracking-[0.2em] uppercase" style={{ color: "#5ec8d8" }}>Edit a character</span>
+        <span className="text-[11px]" style={{ color: "#8a8f93" }}>
+          {saved && open ? saved.name : "Fix skills, talents, thresholds, XP"} <span className="ml-2" style={{ color: "#5ec8d8" }}>{open ? "▲" : "▼"}</span>
+        </span>
+      </button>
+      {open && <div className="px-4 pb-4">
       <p className="text-[11px] leading-relaxed mb-3" style={{ color: "#8a8f93" }}>
         Fix a sheet by hand: skill ranks, career skills, talents, characteristics, thresholds, XP and credits. Nothing here
         costs or refunds XP, so adjust XP yourself if the fix should. The previous version is kept, so you can undo the last edit.
@@ -6923,6 +7217,7 @@ function GmCharacterEditorSection({ store, initialId = "" }) {
         </>
       )}
       {status.msg && <p className="mt-2 text-[12px]" style={{ color: status.state === "error" ? "#c23b3b" : status.state === "busy" ? "#8a8f93" : "#6fae60" }}>{status.msg}</p>}
+      </div>}
     </div>
   );
 }
@@ -10097,13 +10392,13 @@ function GmCriticalInjuryEditor({ party, manual }) {
 function GmVehicleCritHitEditor({ vehicles, manual }) {
   const [selectedIdx, setSelectedIdx] = useState(0);
   const [draft, setDraft] = useState("");
-  const vehicle = vehicles[selectedIdx];
-  const hits = manual.vehicle.criticalHits || [];
+  const vehicle = vehicles[Math.min(selectedIdx, vehicles.length - 1)];
+  const hits = vehicle ? vehicleLiveOf(manual, vehicle.id).criticalHits || [] : [];
 
   function assign() {
     const n = Math.max(1, Math.min(150, Math.round(Number(draft))));
     if (!Number.isFinite(n)) return;
-    manual.addVehicleCritHit(n);
+    manual.addVehicleCritHit(vehicle.id, n);
     setDraft("");
   }
 
@@ -10161,7 +10456,7 @@ function GmVehicleCritHitEditor({ vehicles, manual }) {
                 <span>{n} — {match?.name || "Unknown result"}</span>
                 <button
                   type="button"
-                  onClick={() => manual.removeVehicleCritHit(i)}
+                  onClick={() => manual.removeVehicleCritHit(vehicle.id, i)}
                   className="text-[11px] px-2 py-0.5 border"
                   style={{ borderColor: "#c23b3b66", color: "#c23b3b" }}
                 >
@@ -10181,7 +10476,7 @@ function GmVehicleCritHitEditor({ vehicles, manual }) {
 // the shared /manual store — one place to move numbers without hunting
 // through each Character tab. The Character/Vehicle tabs' own pip rows (see
 // PipRow) stay the primary, per-player way to do the same thing.
-function GmManualModeSection({ manual, party, vehicle }) {
+function GmManualModeSection({ manual, party, vehicles = [] }) {
   return (
     <>
       <div className="border p-4 mb-5" style={{ borderColor: "#3a3f42", background: "#101315" }}>
@@ -10227,7 +10522,7 @@ function GmManualModeSection({ manual, party, vehicle }) {
           </table>
         </div>
 
-        {vehicle && (
+        {vehicles.length > 0 && (
           <div className="overflow-x-auto mt-4">
             <table className="w-full min-w-[620px] border-collapse text-left">
               <thead>
@@ -10238,11 +10533,16 @@ function GmManualModeSection({ manual, party, vehicle }) {
                 </tr>
               </thead>
               <tbody>
-                <tr>
-                  <th className="py-2.5 pr-4 text-[13px] whitespace-nowrap" style={{ color: "#e7e2d2", fontFamily: "'Rajdhani', sans-serif", fontWeight: 700 }}>{vehicle.name}</th>
-                  <td className="py-2.5 px-3 align-top"><PipRow current={manual.vehicle?.hull || 0} threshold={vehicle.hullTrauma?.threshold ?? 0} colorClass="#c23b3b" size="small" onSet={manual.setVehicleHull} onAdjust={manual.adjustVehicleHull} /></td>
-                  <td className="py-2.5 pl-3 align-top"><PipRow current={manual.vehicle?.systemStrain || 0} threshold={vehicle.systemStrain?.threshold ?? 0} colorClass="#ffb000" size="small" onSet={manual.setVehicleSystemStrain} onAdjust={manual.adjustVehicleSystemStrain} /></td>
-                </tr>
+                {vehicles.map((vehicle) => {
+                  const lv = vehicleLiveOf(manual, vehicle.id);
+                  return (
+                    <tr key={vehicle.id} style={{ borderBottom: "1px solid #2a2e31" }}>
+                      <th className="py-2.5 pr-4 text-[13px] whitespace-nowrap" style={{ color: "#e7e2d2", fontFamily: "'Rajdhani', sans-serif", fontWeight: 700 }}>{vehicle.name}{vehicle.hidden ? <span className="text-[10px] ml-1" style={{ color: "#5a5f62" }}>(hidden)</span> : null}</th>
+                      <td className="py-2.5 px-3 align-top"><PipRow current={lv.hull || 0} threshold={vehicle.hullTrauma?.threshold ?? 0} colorClass="#c23b3b" size="small" onSet={(n) => manual.setVehicleHull(vehicle.id, n)} onAdjust={(d) => manual.adjustVehicleHull(vehicle.id, d)} /></td>
+                      <td className="py-2.5 pl-3 align-top"><PipRow current={lv.systemStrain || 0} threshold={vehicle.systemStrain?.threshold ?? 0} colorClass="#ffb000" size="small" onSet={(n) => manual.setVehicleSystemStrain(vehicle.id, n)} onAdjust={(d) => manual.adjustVehicleSystemStrain(vehicle.id, d)} /></td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
@@ -10269,13 +10569,13 @@ function GmManualModeSection({ manual, party, vehicle }) {
 function characterTabKey(character) {
   return `tab:char:${character?.liveId || character?.name || ""}`;
 }
-function hideableTabs(party, vehicle) {
+function hideableTabs(party, vehicles = []) {
   return [
     ...party.map((c, i) => ({ key: characterTabKey(c), label: c.name || `Character ${i + 1}`, category: "Character", view: null })),
     ...(party.length > 1 ? [{ key: "tab:party", label: "Party View", category: "Tab", view: "party" }] : []),
     { key: "tab:dice", label: "Dice Roller", category: "Tab", view: "dice" },
     { key: "tab:wiki", label: "Wiki", category: "Tab", view: "wiki" },
-    ...(vehicle && !vehicle.hidden ? [{ key: "tab:vehicle", label: "Vehicle", category: "Tab", view: "vehicle" }] : []),
+    ...vehicles.filter((v) => !v.hidden).map((v) => ({ key: `tab:vehicle:${v.id}`, label: v.name || "Vehicle", category: "Tab", view: `vehicle:${v.id}` })),
     { key: "tab:map", label: "Battle Map", category: "Tab", view: "map" },
     { key: "tab:notes", label: "GM Inbox", category: "Tab", view: "notes" },
   ];
@@ -10380,7 +10680,7 @@ function GmNameGenerator({ gmKey }) {
   );
 }
 
-function GmPanel({ auth, campaignStore, party, overrides, onOverride, onResetOverrides, onHideTab, manual, vehicle, enemyStore, gearStore, editCharacterId = "" }) {
+function GmPanel({ auth, campaignStore, party, overrides, onOverride, onResetOverrides, onHideTab, manual, vehicles = [], enemyStore, gearStore, editCharacterId = "", onEditConsumed }) {
   const signedIn = auth.state === "in";
   const overrideCount = Object.keys(overrides || {}).length;
 
@@ -10436,11 +10736,9 @@ function GmPanel({ auth, campaignStore, party, overrides, onOverride, onResetOve
           <>
             <GmCampaignDataSection store={campaignStore} />
             <GmCampaignSettingsSection store={campaignStore} />
-            <GmVehicleSection store={campaignStore} />
             <GmCharacterCreationSection gmKey={auth.key} onAdded={() => campaignStore.refresh()} />
             <GmExperienceSection gmKey={auth.key} party={party} onChanged={() => campaignStore.refresh()} />
-            <GmCharacterEditorSection store={campaignStore} initialId={editCharacterId} />
-            <GmManualModeSection manual={manual} party={party} vehicle={vehicle} />
+            <GmManualModeSection manual={manual} party={party} vehicles={vehicles} />
             <GmNameGenerator gmKey={auth.key} />
 
             <div className="mb-5">
@@ -10455,9 +10753,9 @@ function GmPanel({ auth, campaignStore, party, overrides, onOverride, onResetOve
               <GmCriticalInjuryEditor party={party} manual={manual} />
             </div>
 
-            {vehicle && (
+            {vehicles.length > 0 && (
               <div className="mb-5">
-                <GmVehicleCritHitEditor vehicles={[vehicle]} manual={manual} />
+                <GmVehicleCritHitEditor vehicles={vehicles} manual={manual} />
               </div>
             )}
 
@@ -10557,7 +10855,7 @@ function GmPanel({ auth, campaignStore, party, overrides, onOverride, onResetOve
                 something off-dashboard, or just don't want players clicking ahead. Everything is visible until you
                 hide it here; the GM tab itself can't be hidden.
               </p>
-              {hideableTabs(party, vehicle).map((t) => (
+              {hideableTabs(party, vehicles).map((t) => (
                 <GmVisibilityRow
                   key={t.key}
                   label={t.label}
@@ -10568,6 +10866,12 @@ function GmPanel({ auth, campaignStore, party, overrides, onOverride, onResetOve
                   onToggle={(hidden) => onOverride(t.key, hidden)}
                 />
               ))}
+            </div>
+
+            {/* Used now and then, so they sit at the bottom. */}
+            <div className="mt-6">
+              <GmVehicleSection store={campaignStore} />
+              <GmCharacterEditorSection store={campaignStore} initialId={editCharacterId} onConsumed={onEditConsumed} />
             </div>
           </>
         )}
@@ -10603,9 +10907,16 @@ function CampaignDashboard() {
   const gmAuth = useGmAuth();
   const campaignStore = useCampaignStore(gmAuth.state === "in" ? gmAuth.key : null);
   const ledger = campaignStore.campaign || EMPTY_CAMPAIGN;
+  const vehicles = useMemo(() => campaignVehicles(ledger), [ledger]);
+  const viewVehicle = viewMode.startsWith("vehicle:") ? vehicles.find((v) => `vehicle:${v.id}` === viewMode) || null : null;
   const unactionedNotes = useUnactionedNoteCount(gmAuth.state === "in");
   const gmPending = useGmPendingCount(gmAuth.state === "in" ? gmAuth.key : null);
   const { overrides: visibilityOverrides, refresh: refreshVisibility } = useVisibilityOverrides();
+  const navVehicles = vehicles.filter((v) => !v.hidden && !visibilityOverrides[`tab:vehicle:${v.id}`]);
+  // A vehicle tab whose vehicle was removed (or hidden) drops back to the sheets.
+  useEffect(() => {
+    if (viewMode.startsWith("vehicle:") && campaignStore.campaign && !viewVehicle) setViewMode("character");
+  }, [viewMode, viewVehicle, campaignStore.campaign]);
   // If the GM hides the tab someone happens to be sitting on, move them to
   // the first tab that's still visible (a character sheet if any are left)
   // rather than leaving them stranded on a nav button that just vanished.
@@ -10614,7 +10925,7 @@ function CampaignDashboard() {
   useEffect(() => {
     if (viewMode === "gm") return;
     const visibleParty = (ledger.characters || []).filter((c) => !c.hidden);
-    const tabs = hideableTabs(visibleParty, ledger.vehicle);
+    const tabs = hideableTabs(visibleParty, campaignVehicles(ledger));
     const hidden = (key) => !!visibilityOverrides[key];
     let currentKey;
     if (viewMode === "character" || viewMode === "advancement") {
@@ -11051,20 +11362,25 @@ function CampaignDashboard() {
                 📖 Wiki
               </button>
             )}
-            {ledger.vehicle && !ledger.vehicle.hidden && !visibilityOverrides["tab:vehicle"] && (
-              <button
-                onClick={() => setViewMode("vehicle")}
-                className="text-[12px] tracking-wide px-3 py-1.5 border transition-colors"
-                style={{
-                  color: viewMode === "vehicle" ? "#101315" : "#e7e2d2",
-                  background: viewMode === "vehicle" ? "#5ec8d8" : "transparent",
-                  borderColor: viewMode === "vehicle" ? "#5ec8d8" : "#3a3f42",
-                  fontFamily: "'Rajdhani', sans-serif", fontWeight: 700,
-                }}
-              >
-                🚀 Vehicle
-              </button>
-            )}
+            {navVehicles.map((v) => {
+              const on = viewMode === `vehicle:${v.id}`;
+              return (
+                <button
+                  key={v.id}
+                  onClick={() => setViewMode(`vehicle:${v.id}`)}
+                  className="text-[12px] tracking-wide px-3 py-1.5 border transition-colors"
+                  style={{
+                    color: on ? "#101315" : "#e7e2d2",
+                    background: on ? "#5ec8d8" : "transparent",
+                    borderColor: on ? "#5ec8d8" : "#3a3f42",
+                    fontFamily: "'Rajdhani', sans-serif", fontWeight: 700,
+                  }}
+                  title={v.class || undefined}
+                >
+                  🚀 {v.name || "Vehicle"}
+                </button>
+              );
+            })}
             {!visibilityOverrides["tab:map"] && (
               <button
                 onClick={() => setViewMode("map")}
@@ -11141,9 +11457,10 @@ function CampaignDashboard() {
           />
         ) : viewMode === "wiki" ? (
           <WikiPanel url={ledger.wikiUrl} />
-        ) : viewMode === "vehicle" ? (
+        ) : viewMode.startsWith("vehicle:") ? (
           <VehicleTab
-            vehicle={ledger.vehicle}
+            key={viewVehicle?.id || "none"}
+            vehicle={viewVehicle}
             party={party}
             partySkillSets={partySkillSets}
             live={live}
@@ -11164,10 +11481,11 @@ function CampaignDashboard() {
             onResetOverrides={handleResetVisibility}
             onHideTab={hideGmTab}
             manual={manual}
-            vehicle={ledger.vehicle}
+            vehicles={vehicles}
             enemyStore={enemyStore}
             gearStore={gearStore}
             editCharacterId={editCharacterId}
+            onEditConsumed={() => setEditCharacterId("")}
           />
         ) : viewMode === "advancement" ? (
           <AdvancementPlanner
@@ -11197,7 +11515,7 @@ function CampaignDashboard() {
                   </DestinyRulesTip>
                 </div>
                 {partyDestinyUnknown ? (
-                  <span className="text-[11px] italic" style={{ color: "#5a5f62" }}>No live data</span>
+                  <span className="text-[11px] italic" style={{ color: "#5a5f62" }}>Connecting…</span>
                 ) : (
                   <>
                     <div className="flex items-center gap-1.5">
@@ -11485,7 +11803,7 @@ function CampaignDashboard() {
                     </DestinyRulesTip>
                   </div>
                   {destinyUnknown ? (
-                    <span className="text-[11px] italic" style={{ color: "#5a5f62" }}>No live data</span>
+                    <span className="text-[11px] italic" style={{ color: "#5a5f62" }}>Connecting…</span>
                   ) : (
                     <>
                       <div className="flex items-center gap-1.5">
