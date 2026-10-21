@@ -1574,6 +1574,41 @@ function sanitizeCampaignSettings(raw) {
   return { patch };
 }
 
+// GM page character editor. The GM sends the whole edited sheet; the
+// liveId never changes (wounds, strain, crew seats and bios are keyed on it),
+// numbers are forced to numbers, and the name must stay unique.
+// Returns { character } or { error }.
+function sanitizeCharacterEdit(raw, before, characters, idx) {
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) return { error: "That isn't a character sheet." };
+  const c = cleanCampaignValue(raw, 0) || {};
+  c.name = String(c.name || "").trim().slice(0, 80);
+  if (!c.name) return { error: "The character needs a name." };
+  const clash = characters.some((o, i) => i !== idx && (o.name === c.name || o.liveId === c.name));
+  if (clash) return { error: `Another character is already called ${c.name}.` };
+  if (before.liveId) c.liveId = before.liveId;
+  else delete c.liveId;
+  const num = (x, lo, hi, dflt = 0) => {
+    const n = Math.round(Number(x));
+    return Number.isFinite(n) ? Math.max(lo, Math.min(hi, n)) : dflt;
+  };
+  c.characteristics = c.characteristics && typeof c.characteristics === "object" ? c.characteristics : {};
+  for (const k of ["brawn", "agility", "intellect", "cunning", "willpower", "presence"]) c.characteristics[k] = num(c.characteristics[k], 1, 7, 1);
+  c.skills = (Array.isArray(c.skills) ? c.skills : [])
+    .filter((s) => s && typeof s === "object" && String(s.name || "").trim())
+    .map((s) => ({ ...s, name: String(s.name).trim(), rank: num(s.rank, 0, 5), career: !!s.career }));
+  c.talents = (Array.isArray(c.talents) ? c.talents : [])
+    .filter((t) => t && typeof t === "object" && String(t.name || "").trim())
+    .map((t) => ({ ...t, name: String(t.name).trim(), tier: num(t.tier, 1, 5, 1), rank: num(t.rank, 1, 10, 1) }));
+  c.vitals = c.vitals && typeof c.vitals === "object" ? c.vitals : {};
+  c.vitals.wounds = { ...(c.vitals.wounds || {}), threshold: num(c.vitals.wounds?.threshold, 0, 99) };
+  c.vitals.strain = { ...(c.vitals.strain || {}), threshold: num(c.vitals.strain?.threshold, 0, 99) };
+  c.vitals.soak = num(c.vitals.soak, 0, 99);
+  c.xp = { ...(c.xp || {}), available: num(c.xp?.available, 0, 100000), total: num(c.xp?.total, 0, 100000) };
+  if (c.credits !== undefined) c.credits = num(c.credits, 0, 100000000);
+  c.updated = new Date().toISOString();
+  return { character: c };
+}
+
 // GM page vehicle editor. Keeps the shape the Vehicle tab reads; numbers are
 // forced to numbers so a typo can't break the pips. Returns { vehicle } or { error }.
 const VEHICLE_NUMBER_FIELDS = ["silhouette", "speed", "handling", "defense", "armor"];
@@ -1674,7 +1709,9 @@ export class CampaignLog {
     this.snapshot = null;
     this.drafts = {};
     this.advance = {};
+    this.charUndo = {};
     this.ctx.blockConcurrencyWhile(async () => {
+      this.charUndo = (await this.ctx.storage.get("charUndo")) || {};
       this.drafts = (await this.ctx.storage.get("drafts")) || {};
       this.advance = (await this.ctx.storage.get("advance")) || {};
       this.campaign = (await this.ctx.storage.get("campaign")) || null;
@@ -1919,7 +1956,38 @@ export class CampaignLog {
         updatedAt: this.updatedAt,
         hasSnapshot: !!this.snapshot,
         snapshotSummary: campaignSummary(this.snapshot?.campaign),
+        editUndo: Object.fromEntries(Object.entries(this.charUndo).map(([id, u]) => [id, { savedAt: u.savedAt, note: u.note || "" }])),
       });
+    }
+    if (request.method === "POST" && (url.pathname === "/character" || url.pathname === "/character/undo")) {
+      let raw;
+      try { raw = await request.json(); } catch { return this.json({ error: "That request isn't valid JSON." }, 400); }
+      if (!this.campaign) return this.json({ error: "There's no campaign loaded yet." }, 409);
+      const characterId = String(raw?.characterId || "");
+      const characters = Array.isArray(this.campaign.characters) ? [...this.campaign.characters] : [];
+      const idx = characters.findIndex((c) => (c.liveId || c.name) === characterId);
+      if (idx === -1) return this.json({ error: "That character isn't in the campaign." }, 404);
+      const before = characters[idx];
+      let next;
+      let undoEntry;
+      if (url.pathname === "/character/undo") {
+        const undo = this.charUndo[characterId];
+        if (!undo) return this.json({ error: "There's no earlier version of this character to go back to." }, 409);
+        next = undo.character;
+        undoEntry = { character: before, savedAt: Date.now(), note: "Undo" };
+      } else {
+        const { character, error } = sanitizeCharacterEdit(raw?.character, before, characters, idx);
+        if (error) return this.json({ error }, 400);
+        const note = String(raw?.note || "").trim().slice(0, 300);
+        character.editLog = [...(Array.isArray(before.editLog) ? before.editLog : []), { at: new Date().toISOString(), note: note || "GM edit" }].slice(-100);
+        next = character;
+        undoEntry = { character: before, savedAt: Date.now(), note };
+      }
+      characters[idx] = next;
+      this.charUndo[characterId] = undoEntry;
+      await this.ctx.storage.put("charUndo", this.charUndo);
+      await this.save({ ...this.campaign, characters }, this.snapshot);
+      return this.json({ ok: true, revision: this.revision });
     }
     if (request.method === "POST" && (url.pathname === "/settings" || url.pathname === "/vehicle")) {
       let raw;
@@ -2310,6 +2378,8 @@ export default {
     //   GET  /gm/campaign/export  GM: download the whole campaign
     //   POST /gm/campaign/settings GM: title and wiki link
     //   POST /gm/campaign/vehicle  GM: add, edit or remove the vehicle
+    //   POST /gm/campaign/character       GM: fix a character sheet { characterId, character, note }
+    //   POST /gm/campaign/character/undo  GM: put back the version before the last fix
     // Both GETs accept ?since=<revision> and answer { unchanged: true } when
     // nothing has moved, so the 5-second poll costs almost nothing.
     if (url.pathname === "/campaign" || url.pathname.startsWith("/gm/campaign")) {
@@ -2337,7 +2407,7 @@ export default {
 
       // POST /gm/campaign/settings  { title?, wikiUrl? }
       // POST /gm/campaign/vehicle   { vehicle: {...} | null }
-      if (isGm && request.method === "POST" && (sub === "/settings" || sub === "/vehicle")) {
+      if (isGm && request.method === "POST" && (sub === "/settings" || sub === "/vehicle" || sub === "/character" || sub === "/character/undo")) {
         const declared = Number(request.headers.get("content-length") || 0);
         const body = declared > CAMPAIGN_EDIT_MAX ? "" : await request.text();
         if (declared > CAMPAIGN_EDIT_MAX || body.length > CAMPAIGN_EDIT_MAX) {

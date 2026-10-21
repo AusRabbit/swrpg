@@ -3,6 +3,7 @@ import { Swords } from "lucide-react";
 import {
   CHARACTERISTICS, CHAR_LABEL, ALL_SKILLS, CREATION_MAX_CHARACTERISTIC, CREATION_MAX_RANK, BASE_OBLIGATION,
   OBLIGATION_BONUSES, emptyDraft, computeBuild, characteristicCost, skillRankCost as creationSkillRankCost, talentCost, specializationsFor,
+  TALENT_EFFECTS, talentRankCounts,
 } from "./chargen.js";
 
 // ---------------------------------------------------------------------------
@@ -6107,6 +6108,7 @@ function useCampaignStore(gmKey) {
         updatedAt: data.updatedAt || 0,
         hasSnapshot: !!data.hasSnapshot,
         snapshotSummary: data.snapshotSummary || null,
+        editUndo: data.editUndo || {},
         error: data.error || null,
       });
     } catch (err) {
@@ -6141,6 +6143,8 @@ function useCampaignStore(gmKey) {
     restorePrevious: () => gmPost("/gm/campaign/restore", ""),
     saveSettings: (settings) => gmPost("/gm/campaign/settings", JSON.stringify(settings)),
     saveVehicle: (vehicle) => gmPost("/gm/campaign/vehicle", JSON.stringify({ vehicle })),
+    saveCharacter: (characterId, character, note) => gmPost("/gm/campaign/character", JSON.stringify({ characterId, character, note })),
+    undoCharacter: (characterId) => gmPost("/gm/campaign/character/undo", JSON.stringify({ characterId })),
     async exportCampaign() {
       const res = await fetch("/gm/campaign/export", { headers: { "x-gm-key": keyRef.current || "" }, cache: "no-store" });
       if (!res.ok) {
@@ -6644,6 +6648,277 @@ function GmVehicleSection({ store }) {
             </button>
             {dirty && <button type="button" onClick={cancel} className={btn} style={ghost}>Cancel</button>}
             {saved && !dirty && <button type="button" onClick={remove} disabled={status.state === "busy"} className={btn} style={{ color: "#c23b3b", borderColor: "#c23b3b66", fontFamily: "'Rajdhani', sans-serif" }}>Remove vehicle</button>}
+          </div>
+        </>
+      )}
+      {status.msg && <p className="mt-2 text-[12px]" style={{ color: status.state === "error" ? "#c23b3b" : status.state === "busy" ? "#8a8f93" : "#6fae60" }}>{status.msg}</p>}
+    </div>
+  );
+}
+
+// GM page: fix a character sheet by hand (a wrong skill rank, a missing or
+// extra talent, thresholds, XP). Saves the whole sheet; the worker keeps the
+// previous version so the last fix can be undone.
+function GmCharacterEditorSection({ store, initialId = "" }) {
+  const characters = store.campaign?.characters || [];
+  const idOf = (c) => c.liveId || c.name;
+  const [selectedId, setSelectedId] = useState(initialId);
+  const saved = characters.find((c) => idOf(c) === selectedId) || null;
+  const savedJson = JSON.stringify(saved);
+  const [draft, setDraft] = useState(null);
+  const [dirty, setDirty] = useState(false);
+  const [note, setNote] = useState("");
+  const [rawOpen, setRawOpen] = useState(false);
+  const [rawText, setRawText] = useState("");
+  const [rawError, setRawError] = useState("");
+  const [addTier, setAddTier] = useState(1);
+  const [addPick, setAddPick] = useState(null);
+  const [addKey, setAddKey] = useState(0);
+  const [status, setStatus] = useState({ state: "idle", msg: "" });
+  const talentLibrary = useTalentLibrary();
+  const undo = store.editUndo?.[selectedId];
+
+  const boxRef = useRef(null);
+  useEffect(() => {
+    if (!initialId) return;
+    setSelectedId(initialId);
+    try { boxRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }); } catch { /* old browsers */ }
+  }, [initialId]);
+  useEffect(() => {
+    if (!dirty) {
+      setDraft(saved ? JSON.parse(savedJson) : null);
+      setRawText(saved ? JSON.stringify(saved, null, 2) : "");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [savedJson, selectedId]);
+
+  function choose(id) {
+    if (dirty && !window.confirm("Discard your unsaved changes to this character?")) return;
+    setDirty(false);
+    setSelectedId(id);
+    setStatus({ state: "idle", msg: "" });
+    setRawOpen(false);
+    setRawError("");
+    setNote("");
+  }
+
+  function edit(fn) {
+    setDraft((d) => {
+      const next = fn(JSON.parse(JSON.stringify(d)));
+      setRawText(JSON.stringify(next, null, 2));
+      return next;
+    });
+    setDirty(true);
+    setStatus({ state: "idle", msg: "" });
+  }
+
+  function setSkill(name, patch) {
+    edit((d) => {
+      d.skills = Array.isArray(d.skills) ? d.skills : [];
+      const i = d.skills.findIndex((s) => normalizeSkillName(s.name) === normalizeSkillName(name));
+      if (i === -1) d.skills.push({ name, rank: 0, career: false, ...patch });
+      else d.skills[i] = { ...d.skills[i], ...patch };
+      return d;
+    });
+  }
+
+  function addTalent() {
+    if (!addPick) return;
+    edit((d) => {
+      d.talents = Array.isArray(d.talents) ? d.talents : [];
+      const same = d.talents.find((t) => String(t.name).toLowerCase() === addPick.name.toLowerCase() && Number(t.tier) === Number(addPick.tier));
+      if (same) same.rank = (Number(same.rank) || 1) + 1;
+      else d.talents.push({ name: addPick.name, tier: Number(addPick.tier), rank: 1, ranked: /^yes$/i.test(String(addPick.ranked || "")), activation: addPick.activation || "", description: addPick.text_swrpg || "" });
+      return d;
+    });
+    const fx = TALENT_EFFECTS[addPick.name.toLowerCase()];
+    setStatus({ state: "idle", msg: fx ? `Added ${addPick.name}. Its threshold bonus isn't applied automatically here, so adjust Wounds/Strain below if needed.` : `Added ${addPick.name}.` });
+    setAddPick(null);
+    setAddKey((k) => k + 1);
+  }
+
+  function applyRaw(text) {
+    setRawText(text);
+    try {
+      const parsed = JSON.parse(text);
+      if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) throw new Error("expected one character object");
+      setDraft(parsed);
+      setDirty(true);
+      setRawError("");
+    } catch (err) {
+      setRawError(`Not valid yet: ${err.message}`);
+    }
+  }
+
+  async function save() {
+    setStatus({ state: "busy", msg: "Saving…" });
+    try {
+      await store.saveCharacter(selectedId, draft, note);
+      setDirty(false);
+      setNote("");
+      setStatus({ state: "ok", msg: `Saved ${draft.name}. Players see the change within a few seconds.` });
+    } catch (err) {
+      setStatus({ state: "error", msg: err.message });
+    }
+  }
+
+  async function revert() {
+    if (!window.confirm(`Put ${saved?.name} back to how they were before the last GM edit?`)) return;
+    setStatus({ state: "busy", msg: "Undoing…" });
+    try {
+      await store.undoCharacter(selectedId);
+      setDirty(false);
+      setStatus({ state: "ok", msg: "Restored the earlier version." });
+    } catch (err) {
+      setStatus({ state: "error", msg: err.message });
+    }
+  }
+
+  const field = "bg-[#0b0d0e] border px-2 py-1 text-[13px] outline-none focus:border-[#5ec8d8]";
+  const fs = { borderColor: "#3a3f42", color: "#e7e2d2" };
+  const lbl = "block text-[10px] tracking-[0.15em] uppercase mb-1";
+  const btn = "text-[11px] tracking-[0.15em] uppercase px-3 py-1.5 border transition-colors disabled:opacity-40";
+  const ghost = { color: "#e7e2d2", borderColor: "#3a3f42", fontFamily: "'Rajdhani', sans-serif" };
+  const numVal = (v) => (v === "" || v == null ? "" : v);
+  const toNum = (v) => (v === "" ? "" : Number(v));
+
+  const skillRows = draft ? (() => {
+    const own = Array.isArray(draft.skills) ? draft.skills : [];
+    const canon = FULL_SKILL_LIST.map((s) => {
+      const m = own.find((x) => normalizeSkillName(x.name) === normalizeSkillName(s.name));
+      return { name: s.name, group: s.group, char: s.char, rank: m?.rank ?? 0, career: !!m?.career };
+    });
+    const extra = own.filter((x) => !FULL_SKILL_LIST.some((s) => normalizeSkillName(s.name) === normalizeSkillName(x.name)))
+      .map((x) => ({ name: x.name, group: "Other", char: "", rank: x.rank ?? 0, career: !!x.career }));
+    return [...canon, ...extra];
+  })() : [];
+  const groups = [...new Set(skillRows.map((s) => s.group))];
+  const tierCounts = draft ? talentRankCounts(draft.talents || []) : {};
+
+  return (
+    <div ref={boxRef} className="border p-4 mb-5" style={{ borderColor: "#3a3f42", background: "#101315" }}>
+      <div className="text-[11px] tracking-[0.2em] uppercase mb-1" style={{ color: "#5ec8d8" }}>Edit a character</div>
+      <p className="text-[11px] leading-relaxed mb-3" style={{ color: "#8a8f93" }}>
+        Fix a sheet by hand: skill ranks, career skills, talents, characteristics, thresholds, XP and credits. Nothing here
+        costs or refunds XP, so adjust XP yourself if the fix should. The previous version is kept, so you can undo the last edit.
+      </p>
+      <div className="flex flex-wrap items-center gap-2 mb-3">
+        <select value={selectedId} onChange={(e) => choose(e.target.value)} className={field} style={fs}>
+          <option value="">Choose a character…</option>
+          {characters.map((c) => <option key={idOf(c)} value={idOf(c)}>{c.name}{c.hidden ? " (hidden)" : ""}</option>)}
+        </select>
+        {undo && !dirty && (
+          <button type="button" onClick={revert} disabled={status.state === "busy"} className={btn} style={{ color: "#c9a15a", borderColor: "#c9a15a66", fontFamily: "'Rajdhani', sans-serif" }} title={`Last edited ${new Date(undo.savedAt).toLocaleString()}${undo.note ? `: ${undo.note}` : ""}`}>
+            Undo last edit
+          </button>
+        )}
+      </div>
+
+      {draft && (
+        <>
+          <div className="grid gap-2 sm:grid-cols-3 mb-3">
+            {[["name", "Name"], ["species", "Species"], ["career", "Career — specialisation"]].map(([k, l]) => (
+              <div key={k}>
+                <label className={lbl} style={{ color: "#8a8f93" }}>{l}</label>
+                <input value={draft[k] || ""} onChange={(e) => edit((d) => { d[k] = e.target.value; return d; })} className={`${field} w-full`} style={fs} />
+              </div>
+            ))}
+          </div>
+
+          <div className={lbl} style={{ color: "#8a8f93" }}>Characteristics</div>
+          <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 mb-3">
+            {CHARACTERISTICS.map((k) => (
+              <div key={k}>
+                <label className="block text-[10px] mb-0.5" style={{ color: "#5a5f62" }}>{CHAR_LABEL[k]}</label>
+                <input type="number" min={1} max={7} value={numVal(draft.characteristics?.[k])} onChange={(e) => edit((d) => { d.characteristics = { ...(d.characteristics || {}), [k]: toNum(e.target.value) }; return d; })} className={`${field} w-full`} style={fs} />
+              </div>
+            ))}
+          </div>
+
+          <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 mb-3">
+            {[
+              ["Wounds", draft.vitals?.wounds?.threshold, (d, v) => { d.vitals = d.vitals || {}; d.vitals.wounds = { ...(d.vitals.wounds || {}), threshold: v }; }],
+              ["Strain", draft.vitals?.strain?.threshold, (d, v) => { d.vitals = d.vitals || {}; d.vitals.strain = { ...(d.vitals.strain || {}), threshold: v }; }],
+              ["Soak", draft.vitals?.soak, (d, v) => { d.vitals = d.vitals || {}; d.vitals.soak = v; }],
+              ["XP unspent", draft.xp?.available, (d, v) => { d.xp = { ...(d.xp || {}), available: v }; }],
+              ["XP total", draft.xp?.total, (d, v) => { d.xp = { ...(d.xp || {}), total: v }; }],
+              ["Credits", draft.credits, (d, v) => { d.credits = v; }],
+            ].map(([l, v, set]) => (
+              <div key={l}>
+                <label className="block text-[10px] mb-0.5" style={{ color: "#5a5f62" }}>{l}</label>
+                <input type="number" min={0} value={numVal(v)} onChange={(e) => edit((d) => { set(d, toNum(e.target.value)); return d; })} className={`${field} w-full`} style={fs} />
+              </div>
+            ))}
+          </div>
+
+          <div className={lbl} style={{ color: "#8a8f93" }}>Skills (rank · career)</div>
+          <div className="grid gap-x-4 sm:grid-cols-2 mb-3">
+            {groups.map((g) => (
+              <div key={g} className="mb-2">
+                <div className="text-[10px] uppercase tracking-[0.15em] mb-1" style={{ color: "#5a5f62" }}>{g}</div>
+                {skillRows.filter((s) => s.group === g).map((s) => (
+                  <div key={s.name} className="flex items-center gap-2 py-0.5 text-[12px]" style={{ color: s.rank > 0 ? "#e7e2d2" : "#8a8f93" }}>
+                    <span className="flex-1 truncate">{s.name}{s.char ? <span style={{ color: "#5a5f62" }}> ({CHAR_LABEL[s.char]?.slice(0, 2).toUpperCase()})</span> : null}</span>
+                    <button type="button" onClick={() => setSkill(s.name, { rank: Math.max(0, s.rank - 1) })} disabled={s.rank <= 0} className="w-6 h-6 border disabled:opacity-30" style={fs}>−</button>
+                    <span className="w-4 text-center mono-num">{s.rank}</span>
+                    <button type="button" onClick={() => setSkill(s.name, { rank: Math.min(5, s.rank + 1) })} disabled={s.rank >= 5} className="w-6 h-6 border disabled:opacity-30" style={fs}>+</button>
+                    <label className="flex items-center gap-1 text-[10px] cursor-pointer" style={{ color: s.career ? "#6fae60" : "#5a5f62" }} title="Career skill">
+                      <input type="checkbox" checked={s.career} onChange={(e) => setSkill(s.name, { career: e.target.checked })} />C
+                    </label>
+                  </div>
+                ))}
+              </div>
+            ))}
+          </div>
+
+          <div className={lbl} style={{ color: "#8a8f93" }}>
+            Talents <span style={{ color: "#5a5f62" }}>· ranks per tier: {[1, 2, 3, 4, 5].map((t) => `T${t} ${tierCounts[t] || 0}`).join(" · ")}</span>
+          </div>
+          <div className="mb-2">
+            {(draft.talents || []).length === 0 && <div className="text-[12px]" style={{ color: "#5a5f62" }}>No talents.</div>}
+            {(draft.talents || []).map((t, i) => (
+              <div key={i} className="flex items-center gap-2 py-0.5 text-[12px]" style={{ color: "#e7e2d2" }}>
+                <span className="flex-1 truncate">{t.name}</span>
+                <label className="text-[10px]" style={{ color: "#5a5f62" }}>Tier</label>
+                <input type="number" min={1} max={5} value={numVal(t.tier)} onChange={(e) => edit((d) => { d.talents[i].tier = toNum(e.target.value); return d; })} className={`${field} w-14`} style={fs} />
+                <label className="text-[10px]" style={{ color: "#5a5f62" }}>Rank</label>
+                <input type="number" min={1} max={10} value={numVal(t.rank ?? 1)} onChange={(e) => edit((d) => { d.talents[i].rank = toNum(e.target.value); return d; })} className={`${field} w-14`} style={fs} />
+                <button type="button" onClick={() => edit((d) => { d.talents.splice(i, 1); return d; })} className="text-[12px] px-1" style={{ color: "#c23b3b" }} title="Remove talent">✕</button>
+              </div>
+            ))}
+          </div>
+          <div className="flex flex-wrap items-start gap-2 mb-3">
+            <select value={addTier} onChange={(e) => { setAddTier(Number(e.target.value)); setAddPick(null); setAddKey((k) => k + 1); }} className={field} style={fs}>
+              {[1, 2, 3, 4, 5].map((t) => <option key={t} value={t}>Tier {t}</option>)}
+            </select>
+            <div className="flex-1 min-w-[220px]">
+              <TalentTierSearch key={`${addTier}-${addKey}`} tier={addTier} value={addPick} onSelect={setAddPick} library={talentLibrary} forceSensitive />
+            </div>
+            <button type="button" onClick={addTalent} disabled={!addPick} className={btn} style={ghost}>+ Add talent</button>
+          </div>
+
+          <div className="mb-3">
+            <button type="button" onClick={() => setRawOpen((o) => !o)} className="text-[11px] underline" style={{ color: "#8fd3f4" }}>
+              {rawOpen ? "Hide" : "Show"} the full sheet as JSON (weapons, armour, gear, Motivation, anything else)
+            </button>
+            {rawOpen && (
+              <>
+                <textarea rows={14} value={rawText} onChange={(e) => applyRaw(e.target.value)} spellCheck={false} className={`${field} w-full mt-2 font-mono text-[11px]`} style={fs} />
+                {rawError && <p className="text-[11px]" style={{ color: "#c23b3b" }}>{rawError}</p>}
+              </>
+            )}
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2">
+            <input value={note} onChange={(e) => setNote(e.target.value)} maxLength={300} placeholder="Reason (optional, kept in the edit log)" className={`${field} flex-1 min-w-[200px]`} style={fs} />
+            <button type="button" onClick={save} disabled={!dirty || !!rawError || status.state === "busy"} className={btn} style={{ color: "#101315", background: "#5ec8d8", borderColor: "#5ec8d8", fontFamily: "'Rajdhani', sans-serif", fontWeight: 700 }}>
+              Save character
+            </button>
+            {dirty && (
+              <button type="button" onClick={() => { setDirty(false); setDraft(saved ? JSON.parse(savedJson) : null); setRawText(saved ? JSON.stringify(saved, null, 2) : ""); setRawError(""); setStatus({ state: "idle", msg: "" }); }} className={btn} style={ghost}>
+                Discard changes
+              </button>
+            )}
           </div>
         </>
       )}
@@ -10105,7 +10380,7 @@ function GmNameGenerator({ gmKey }) {
   );
 }
 
-function GmPanel({ auth, campaignStore, party, overrides, onOverride, onResetOverrides, onHideTab, manual, vehicle, enemyStore, gearStore }) {
+function GmPanel({ auth, campaignStore, party, overrides, onOverride, onResetOverrides, onHideTab, manual, vehicle, enemyStore, gearStore, editCharacterId = "" }) {
   const signedIn = auth.state === "in";
   const overrideCount = Object.keys(overrides || {}).length;
 
@@ -10164,6 +10439,7 @@ function GmPanel({ auth, campaignStore, party, overrides, onOverride, onResetOve
             <GmVehicleSection store={campaignStore} />
             <GmCharacterCreationSection gmKey={auth.key} onAdded={() => campaignStore.refresh()} />
             <GmExperienceSection gmKey={auth.key} party={party} onChanged={() => campaignStore.refresh()} />
+            <GmCharacterEditorSection store={campaignStore} initialId={editCharacterId} />
             <GmManualModeSection manual={manual} party={party} vehicle={vehicle} />
             <GmNameGenerator gmKey={auth.key} />
 
@@ -10310,6 +10586,7 @@ export default function App() {
 function CampaignDashboard() {
   const [activeIdx, setActiveIdx] = useState(0);
   const [viewMode, setViewMode] = useState("character");
+  const [editCharacterId, setEditCharacterId] = useState("");
   // Which characteristic (if any) is currently hovered on the Character
   // tab's Characteristics row — drives the brighten/dim effect on the
   // Skills list below it (skills governed by the hovered characteristic
@@ -10890,6 +11167,7 @@ function CampaignDashboard() {
             vehicle={ledger.vehicle}
             enemyStore={enemyStore}
             gearStore={gearStore}
+            editCharacterId={editCharacterId}
           />
         ) : viewMode === "advancement" ? (
           <AdvancementPlanner
@@ -11147,6 +11425,17 @@ function CampaignDashboard() {
                 <div className="mono-num" style={{ color: "#8a8f93" }}>
                   {active.updated ? new Date(active.updated).toLocaleString() : "—"}
                 </div>
+                {gmAuth.state === "in" && (
+                  <button
+                    type="button"
+                    onClick={() => { setEditCharacterId(active.liveId || active.name); setViewMode("gm"); }}
+                    className="mt-2 text-[10px] tracking-[0.15em] uppercase px-2 py-1 border"
+                    style={{ color: "#ffb000", borderColor: "#ffb00066", fontFamily: "'Rajdhani', sans-serif", fontWeight: 700 }}
+                    title="Fix this sheet on the GM page"
+                  >
+                    ✎ Edit sheet (GM)
+                  </button>
+                )}
               </div>
             </div>
 

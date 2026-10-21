@@ -213,7 +213,10 @@ for everything else:
   `/campaign/advance` (player XP purchase requests),
   `/gm/campaign/advance/<id>/approve|reject` and `/gm/campaign/xp`
   (GM XP awards), `/gm/campaign/settings` (title, wiki link) and
-  `/gm/campaign/vehicle` (add, edit or remove the ship).
+  `/gm/campaign/vehicle` (add, edit or remove the ship), and
+  `/gm/campaign/character` + `/gm/campaign/character/undo` (GM fixes to a
+  sheet; the liveId never changes, and the previous version of each
+  character is kept for one-step undo).
 - **`GET/POST /manual`** — the shared session state described under Data
   model above (`ManualLog` Durable Object).
 - **`/enemies`, `/gear`, `/map`, `/visibility`** (plus their `/gm/*`

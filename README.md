@@ -40,6 +40,11 @@ new deployment. The site never reads it directly.
   the player the link. Approve it when they submit.
 - **Awarding XP:** GM page → Experience → Award XP. Tick characters (or
   "Whole party"), enter the amount and a reason.
+- **Fixing a sheet:** on a character's sheet press **✎ Edit sheet (GM)**
+  (or GM page → Edit a character). Change skill ranks, career skills,
+  talents, characteristics, thresholds, XP and credits; anything else
+  (weapons, armour, gear) through the "full sheet as JSON" box. Edits don't
+  charge or refund XP. **Undo last edit** puts back the previous version.
 - **Spending XP:** players open their sheet's XP box (Advancement Planner),
   choose skills and talents, and press **Submit for approval**. The
   ★ GM tab pulses with a count while anything is waiting. Approve or reject
