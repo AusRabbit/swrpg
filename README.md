@@ -54,15 +54,36 @@ new deployment. The site never reads it directly.
   it under GM page → Experience → Waiting for approval. Approving re-checks
   the cost against the character's current XP before applying it.
 
+## Several campaigns on one site
+
+One deployment hosts any number of campaigns, each at its own address:
+`https://<site>/c/<campaign>/`. Every campaign has its own data (sheets,
+rolls, dice pool, wounds, map, notes…) and its own GM password; nothing is
+shared between them. The browser also saves each campaign's GM sign-in,
+dice pool and roll-log name separately, so you can have several open at once.
+
+- **Front page** (`/`): lists the campaigns you've marked "Show on the front
+  page". Unlisted campaigns are reachable only by their link.
+- **Manage campaigns** (small link at the bottom of the front page): sign in
+  with the site's **master password** to create a campaign (name, address,
+  GM password, optional hard-to-guess address), rename it, change its GM
+  password, list/unlist it, or remove it. Removing only takes it off the
+  site; its data stays and comes back if you create the same address again.
+- **Master password**: the `ADMIN_PASSWORD` secret on Cloudflare, or your
+  existing `GM_PASSWORD` if that's the only one set. It also signs in as GM
+  in every campaign.
+- **Moving a campaign in**: on its old site, GM page → Campaign data →
+  Export all. On the new campaign's GM page, Import all.
+
 ## Setup checklist
 
 1. Set `"name"` in `dashboard/wrangler.jsonc` to the Worker name you want.
-2. Set the browser tab title in `dashboard/index.html` and the
-   `document.title` line in `dashboard/src/App.jsx` (search `TEMPLATE:`).
-3. Deploy the dashboard to Cloudflare (steps in
-   [`dashboard/README.md`](dashboard/README.md)) and add `GM_PASSWORD` as a
-   secret there.
-4. Wiki: in GitHub, Settings → Pages → Source: **GitHub Actions**. Push, and
+2. Deploy the dashboard to Cloudflare (steps in
+   [`dashboard/README.md`](dashboard/README.md)) and add `ADMIN_PASSWORD`
+   (or keep `GM_PASSWORD`) as a secret there.
+3. Open the site, press **Manage campaigns**, sign in with that password and
+   create your first campaign. Send players its link.
+4. Wiki (per campaign): in GitHub, Settings → Pages → Source: **GitHub Actions**. Push, and
    the wiki appears at `https://<user>.github.io/<repo>/`. Paste that URL
    into GM page → Campaign settings → Wiki link.
 5. Ships: GM page → Vehicles (bottom of the page, click to expand) →
@@ -72,8 +93,9 @@ new deployment. The site never reads it directly.
 
 ## Privacy
 
-The deployed dashboard is a public URL. Anyone with it can read whatever
-players can see, so keep secrets in GM-only fields. GM writes need
-`GM_PASSWORD`. To restrict the site itself, put it behind Cloudflare Access.
+The deployed dashboard is a public URL. Anyone with a campaign's link can
+read whatever its players can see, so keep secrets in GM-only fields; a
+hard-to-guess address keeps unlisted campaigns out of sight. GM writes need
+that campaign's GM password (or the master password). To restrict the site itself, put it behind Cloudflare Access.
 The GitHub Pages wiki is public too, so only put player-known material in
 `wiki/content/`.

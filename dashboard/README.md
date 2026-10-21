@@ -180,6 +180,20 @@ Two sources, two different update rhythms:
   clicking different things at once don't clobber each other. No build or
   redeploy is ever needed for any of this.
 
+## Several campaigns
+
+The Worker serves many campaigns. A campaign's pages and API calls live
+under `/c/<slug>/`; the router at the bottom of `worker/index.js` strips
+that prefix and runs the normal routes with every Durable Object named
+`<slug>:<store>`, so campaigns share nothing. `CampaignRegistry` (one
+Durable Object) holds the campaign list, names, "listed" flags and hashed
+GM passwords; `/api/campaigns` serves the front page and `/api/admin/*`
+(master password, `x-admin-key`) manages it. In the browser, `apiFetch`
+adds the `/c/<slug>` prefix to every Worker call and `campaignStorage`
+prefixes every saved key with `<slug>:` (only the dice sound/animation
+switches are shared). Static files (`/data`, `/images`, `/sounds`,
+`/assets`) are the same for every campaign.
+
 ## Architecture
 
 This deploys as a single **Cloudflare Worker with static assets** (not

@@ -7,6 +7,53 @@ import {
 } from "./chargen.js";
 
 // ---------------------------------------------------------------------------
+// Several campaigns, one site. Each campaign lives at /c/<slug>/ and the
+// Worker keeps its data apart from every other campaign's. Two helpers make
+// the browser side match:
+//
+//  - apiFetch: every call to the Worker's own routes (/rolls, /manual,
+//    /campaign, /gm/…) is sent to /c/<slug>/… for this page's campaign.
+//    Static files (/data, /images, /sounds, /assets) and the site-wide /api
+//    routes are left alone.
+//  - campaignStorage: everything this site saves in the browser (GM sign-in,
+//    the dice pool and its cache, the dice-roller client id, the roll-log
+//    name, the GM tab reveal) is saved under "<slug>:" so two campaigns open
+//    in the same browser never read each other's. Only the dice sound and
+//    animation switches are shared, since those are personal preferences.
+// ---------------------------------------------------------------------------
+const CAMPAIGN_SLUG = (() => {
+  if (typeof window === "undefined") return "";
+  const m = /^\/c\/([a-z0-9-]{1,40})(?:\/|$)/.exec(window.location.pathname);
+  return m ? m[1] : "";
+})();
+
+// This campaign's home address, e.g. "/c/salvage-rights/" (or "/" off-campaign).
+function campaignBase() {
+  return CAMPAIGN_SLUG ? `/c/${CAMPAIGN_SLUG}/` : "/";
+}
+
+const STATIC_PREFIXES = ["/data/", "/images/", "/sounds/", "/assets/", "/api/"];
+function campaignUrl(url) {
+  if (!CAMPAIGN_SLUG || typeof url !== "string" || !url.startsWith("/") || url.startsWith("//")) return url;
+  if (STATIC_PREFIXES.some((p) => url.startsWith(p))) return url;
+  return `/c/${CAMPAIGN_SLUG}${url}`;
+}
+function apiFetch(input, init) {
+  return fetch(campaignUrl(input), init);
+}
+
+const SHARED_STORAGE_KEYS = new Set(["swrpg-dice-animations", "swrpg-dice-sound"]);
+function scopedStorageKey(key) {
+  const k = String(key);
+  return !CAMPAIGN_SLUG || SHARED_STORAGE_KEYS.has(k) ? k : `${CAMPAIGN_SLUG}:${k}`;
+}
+const campaignStorage = {
+  getItem: (key) => window.localStorage.getItem(scopedStorageKey(key)),
+  setItem: (key, value) => window.localStorage.setItem(scopedStorageKey(key), value),
+  removeItem: (key) => window.localStorage.removeItem(scopedStorageKey(key)),
+};
+
+// ---------------------------------------------------------------------------
 // Full character/party dashboard. The campaign itself (characters, vehicle,
 // NPCs, locations) comes from the CampaignLog Durable Object via
 // useCampaignStore: the GM loads it with Import on the GM page, and every
@@ -613,7 +660,7 @@ function LiveNoteField({ characterId, field, label, placeholder, helper, maxLeng
     if (value === lastSavedRef.current) return;
     setStatus({ state: "saving" });
     try {
-      const res = await fetch("/bio", {
+      const res = await apiFetch("/bio", {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ characterId, field, text: value.trim().slice(0, maxLength) }),
@@ -637,7 +684,7 @@ function LiveNoteField({ characterId, field, label, placeholder, helper, maxLeng
     setStatus({ state: "idle" });
     async function load() {
       try {
-        const res = await fetch(`/bio?_=${Date.now()}`, { cache: "no-store" });
+        const res = await apiFetch(`/bio?_=${Date.now()}`, { cache: "no-store" });
         if (!res.ok) throw new Error(`${res.status}`);
         const data = await res.json();
         if (cancelled) return;
@@ -755,7 +802,7 @@ function LiveCreditsField({ characterId, ledgerCredits }) {
 
   const load = useCallback(async () => {
     try {
-      const res = await fetch(`/bio?_=${Date.now()}`, { cache: "no-store" });
+      const res = await apiFetch(`/bio?_=${Date.now()}`, { cache: "no-store" });
       if (!res.ok) return;
       const data = await res.json();
       if (editingRef.current) return;
@@ -797,7 +844,7 @@ function LiveCreditsField({ characterId, ledgerCredits }) {
     setLive(value);
     setStatus({ state: "saving" });
     try {
-      const res = await fetch("/bio", {
+      const res = await apiFetch("/bio", {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ characterId, field: "credits", text: JSON.stringify(value) }),
@@ -901,7 +948,7 @@ function GMNoteBox({ characterName }) {
     if (!trimmed) return;
     setStatus({ state: "sending" });
     try {
-      const res = await fetch("/notes", {
+      const res = await apiFetch("/notes", {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ player: characterName || "Unknown", text: trimmed }),
@@ -994,7 +1041,7 @@ function useTalentLibrary() {
   const loadTalents = useCallback(() => {
     if (talentIndex || talentLoadState.state === "loading") return;
     setTalentLoadState({ state: "loading" });
-    fetch("/data/talents.json")
+    apiFetch("/data/talents.json")
       .then((res) => (res.ok ? res.json() : Promise.reject(new Error(String(res.status)))))
       .then((data) => {
         setTalentIndex(Array.isArray(data) ? data : Array.isArray(data?.talents) ? data.talents : []);
@@ -1193,7 +1240,7 @@ function AdvancementPlanner({ character, skills, talents, xpAvailable, onBack, f
   async function handleSubmitPurchase() {
     setSubmitStatus({ state: "sending" });
     try {
-      const res = await fetch("/campaign/advance", {
+      const res = await apiFetch("/campaign/advance", {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
@@ -2340,7 +2387,7 @@ function useRollLog() {
   const [copiedEntryId, setCopiedEntryId] = useState(null);
   const copiedTimerRef = useRef(null);
   const [animationsOn, setAnimationsOn] = useState(() => {
-    try { return localStorage.getItem("swrpg-dice-animations") !== "off"; } catch { return true; }
+    try { return campaignStorage.getItem("swrpg-dice-animations") !== "off"; } catch { return true; }
   });
   const animationsOnRef = useRef(animationsOn);
   const [burstEntry, setBurstEntry] = useState(null);
@@ -2359,19 +2406,19 @@ function useRollLog() {
   // fetchLog's setInterval closure is created once on mount and would
   // otherwise only ever see the initial value of the state variable.
   const [soundOn, setSoundOn] = useState(() => {
-    try { return localStorage.getItem("swrpg-dice-sound") !== "off"; } catch { return true; }
+    try { return campaignStorage.getItem("swrpg-dice-sound") !== "off"; } catch { return true; }
   });
   const soundOnRef = useRef(soundOn);
   useEffect(() => {
     soundOnRef.current = soundOn;
-    try { localStorage.setItem("swrpg-dice-sound", soundOn ? "on" : "off"); } catch { /* ignore */ }
+    try { campaignStorage.setItem("swrpg-dice-sound", soundOn ? "on" : "off"); } catch { /* ignore */ }
   }, [soundOn]);
   const hasFetchedRef = useRef(false);
   const prevTopIdRef = useRef(undefined);
 
   useEffect(() => {
     animationsOnRef.current = animationsOn;
-    try { localStorage.setItem("swrpg-dice-animations", animationsOn ? "on" : "off"); } catch { /* ignore */ }
+    try { campaignStorage.setItem("swrpg-dice-animations", animationsOn ? "on" : "off"); } catch { /* ignore */ }
     if (!animationsOn) {
       clearTimeout(burstTimerRef.current);
       setBurstEntry(null);
@@ -2385,7 +2432,7 @@ function useRollLog() {
 
   const fetchLog = async () => {
     try {
-      const res = await fetch(`/rolls?_=${Date.now()}`, { cache: "no-store" });
+      const res = await apiFetch(`/rolls?_=${Date.now()}`, { cache: "no-store" });
       if (!res.ok) throw new Error(`${res.status}`);
       const data = await res.json();
       const rolls = Array.isArray(data.rolls) ? data.rolls : [];
@@ -2396,19 +2443,19 @@ function useRollLog() {
       // actually seen disappears (because it was rolled, cleared, or
       // expired), clear the cache too so changing tabs cannot resurrect it.
       try {
-        const ownClientId = localStorage.getItem("swrpg-dice-pool-client");
+        const ownClientId = campaignStorage.getItem("swrpg-dice-pool-client");
         const ownDraft = pools.find((draft) => draft.id === ownClientId);
         if (ownDraft) {
           seenOwnPoolRef.current = true;
           if (ownDraft.updatedBy === "battlemap") {
-            const cached = JSON.parse(localStorage.getItem("swrpg-dice-pool-cache") || "{}");
+            const cached = JSON.parse(campaignStorage.getItem("swrpg-dice-pool-cache") || "{}");
             if ((ownDraft.updatedAt || 0) > (cached.gmUpdatedAt || 0)) {
-              localStorage.setItem("swrpg-dice-pool-cache", JSON.stringify({ pool: { ...EMPTY_POOL, ...ownDraft.pool }, gmUpdatedAt: ownDraft.updatedAt, presetNonce: cached.presetNonce ?? null }));
+              campaignStorage.setItem("swrpg-dice-pool-cache", JSON.stringify({ pool: { ...EMPTY_POOL, ...ownDraft.pool }, gmUpdatedAt: ownDraft.updatedAt, presetNonce: cached.presetNonce ?? null }));
             }
           }
         } else if (ownClientId && seenOwnPoolRef.current) {
-          const cached = JSON.parse(localStorage.getItem("swrpg-dice-pool-cache") || "{}");
-          localStorage.setItem("swrpg-dice-pool-cache", JSON.stringify({ pool: EMPTY_POOL, gmUpdatedAt: cached.gmUpdatedAt || 0, presetNonce: cached.presetNonce ?? null }));
+          const cached = JSON.parse(campaignStorage.getItem("swrpg-dice-pool-cache") || "{}");
+          campaignStorage.setItem("swrpg-dice-pool-cache", JSON.stringify({ pool: EMPTY_POOL, gmUpdatedAt: cached.gmUpdatedAt || 0, presetNonce: cached.presetNonce ?? null }));
           seenOwnPoolRef.current = false;
         }
       } catch { /* storage can be unavailable in privacy modes */ }
@@ -2464,7 +2511,7 @@ function useRollLog() {
   async function handleClearLog() {
     if (!window.confirm("Clear the shared roll log for everyone? This can't be undone.")) return;
     try {
-      const res = await fetch("/rolls", { method: "DELETE" });
+      const res = await apiFetch("/rolls", { method: "DELETE" });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
         setLogStatus({ status: "error", msg: data.error || `Could not clear log (${res.status})` });
@@ -2514,7 +2561,7 @@ function SharedDicePoolTray({ pools, logStatus, onRefresh }) {
   async function editPool(draft, dieKey, delta) {
     const nextPool = { ...EMPTY_POOL, ...draft.pool, [dieKey]: Math.max(0, Math.min(MAX_DICE_PER_TYPE, (draft.pool?.[dieKey] || 0) + delta)) };
     try {
-      const res = await fetch("/rolls", {
+      const res = await apiFetch("/rolls", {
         method: "PATCH",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ clientId: draft.id, pool: nextPool }),
@@ -2546,16 +2593,16 @@ function SharedDicePoolTray({ pools, logStatus, onRefresh }) {
       clientId: draft.id,
     };
     try {
-      const res = await fetch("/rolls", {
+      const res = await apiFetch("/rolls", {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify(entry),
       });
       if (res.ok) {
         try {
-          if (localStorage.getItem("swrpg-dice-pool-client") === draft.id) {
-            const cached = JSON.parse(localStorage.getItem("swrpg-dice-pool-cache") || "{}");
-            localStorage.setItem("swrpg-dice-pool-cache", JSON.stringify({ pool: EMPTY_POOL, gmUpdatedAt: cached.gmUpdatedAt || 0, presetNonce: cached.presetNonce ?? null }));
+          if (campaignStorage.getItem("swrpg-dice-pool-client") === draft.id) {
+            const cached = JSON.parse(campaignStorage.getItem("swrpg-dice-pool-cache") || "{}");
+            campaignStorage.setItem("swrpg-dice-pool-cache", JSON.stringify({ pool: EMPTY_POOL, gmUpdatedAt: cached.gmUpdatedAt || 0, presetNonce: cached.presetNonce ?? null }));
           }
         } catch { /* ignore */ }
         announcePoolConsumed(draft.id);
@@ -2898,10 +2945,10 @@ function announcePoolConsumed(clientId) {
 
 function getDicePoolClientId() {
   try {
-    const existing = localStorage.getItem("swrpg-dice-pool-client");
+    const existing = campaignStorage.getItem("swrpg-dice-pool-client");
     if (existing) return existing;
     const id = crypto.randomUUID();
-    localStorage.setItem("swrpg-dice-pool-client", id);
+    campaignStorage.setItem("swrpg-dice-pool-client", id);
     return id;
   } catch {
     return crypto.randomUUID();
@@ -2910,7 +2957,7 @@ function getDicePoolClientId() {
 
 function readDicePoolCache() {
   try {
-    const cached = JSON.parse(localStorage.getItem("swrpg-dice-pool-cache") || "{}");
+    const cached = JSON.parse(campaignStorage.getItem("swrpg-dice-pool-cache") || "{}");
     return {
       pool: cached?.pool ? { ...EMPTY_POOL, ...cached.pool } : null,
       gmUpdatedAt: cached?.gmUpdatedAt || 0,
@@ -2928,12 +2975,12 @@ function DiceRollerPanel({ playerName, setPlayerName, preset, partyDestiny, dest
   const isGm = !!gmKey;
   const [gmTone, setGmTone] = useState(() => {
     try {
-      const saved = localStorage.getItem(GM_TONE_STORAGE);
+      const saved = campaignStorage.getItem(GM_TONE_STORAGE);
       return GM_TONES.some((t) => t.key === saved) ? saved : "enemy";
     } catch { return "enemy"; }
   });
   useEffect(() => {
-    try { localStorage.setItem(GM_TONE_STORAGE, gmTone); } catch { /* ignore */ }
+    try { campaignStorage.setItem(GM_TONE_STORAGE, gmTone); } catch { /* ignore */ }
   }, [gmTone]);
   function rollHeaders() {
     return isGm ? { "content-type": "application/json", "x-gm-key": gmKey } : { "content-type": "application/json" };
@@ -3021,7 +3068,7 @@ function DiceRollerPanel({ playerName, setPlayerName, preset, partyDestiny, dest
   async function publishPoolDraft(draft, keepalive = false) {
     poolDraftPendingRef.current = false;
     try {
-      await fetch("/rolls", {
+      await apiFetch("/rolls", {
         method: "PUT",
         keepalive,
         headers: rollHeaders(),
@@ -3047,7 +3094,7 @@ function DiceRollerPanel({ playerName, setPlayerName, preset, partyDestiny, dest
     latestPoolDraftRef.current = draft;
     poolDraftPendingRef.current = true;
     try {
-      localStorage.setItem("swrpg-dice-pool-cache", JSON.stringify({ pool, gmUpdatedAt: lastGmPoolUpdateRef.current, presetNonce: activePresetNonceRef.current ?? null }));
+      campaignStorage.setItem("swrpg-dice-pool-cache", JSON.stringify({ pool, gmUpdatedAt: lastGmPoolUpdateRef.current, presetNonce: activePresetNonceRef.current ?? null }));
     } catch { /* ignore */ }
     clearTimeout(poolPublishTimerRef.current);
     poolPublishTimerRef.current = setTimeout(() => publishPoolDraft(draft), 500);
@@ -3083,7 +3130,7 @@ function DiceRollerPanel({ playerName, setPlayerName, preset, partyDestiny, dest
       pool: nextPool,
     };
     setPool(nextPool);
-    try { localStorage.setItem("swrpg-dice-pool-cache", JSON.stringify({ pool: nextPool, gmUpdatedAt: remote.updatedAt, presetNonce: activePresetNonceRef.current ?? null })); } catch { /* ignore */ }
+    try { campaignStorage.setItem("swrpg-dice-pool-cache", JSON.stringify({ pool: nextPool, gmUpdatedAt: remote.updatedAt, presetNonce: activePresetNonceRef.current ?? null })); } catch { /* ignore */ }
     setSelectedDifficultyPreset(null);
     setSelectedManeuver(null);
     setAbilityUpgradeStack([]);
@@ -3370,7 +3417,7 @@ function DiceRollerPanel({ playerName, setPlayerName, preset, partyDestiny, dest
   // it here, so it isn't shown twice.
   async function postUtilityRoll(label, utility) {
     try {
-      const res = await fetch("/rolls", {
+      const res = await apiFetch("/rolls", {
         method: "POST",
         headers: rollHeaders(),
         body: JSON.stringify({ player: label, utility, gmTone }),
@@ -3462,7 +3509,7 @@ function DiceRollerPanel({ playerName, setPlayerName, preset, partyDestiny, dest
     // the roll they were built for.
     if (hasManual) setManualSymbols(EMPTY_MANUAL);
     try {
-      const res = await fetch("/rolls", {
+      const res = await apiFetch("/rolls", {
         method: "POST",
         headers: rollHeaders(),
         body: JSON.stringify(entry),
@@ -3484,7 +3531,7 @@ function DiceRollerPanel({ playerName, setPlayerName, preset, partyDestiny, dest
         setAbilityUpgradeStack([]);
         setDifficultyUpgradeStack([]);
         announcePoolConsumed(poolClientIdRef.current);
-        try { localStorage.setItem("swrpg-dice-pool-cache", JSON.stringify({ pool: EMPTY_POOL, gmUpdatedAt: lastGmPoolUpdateRef.current, presetNonce: activePresetNonceRef.current ?? null })); } catch { /* ignore */ }
+        try { campaignStorage.setItem("swrpg-dice-pool-cache", JSON.stringify({ pool: EMPTY_POOL, gmUpdatedAt: lastGmPoolUpdateRef.current, presetNonce: activePresetNonceRef.current ?? null })); } catch { /* ignore */ }
         fetchLog();
       }
     } catch (err) {
@@ -3894,7 +3941,7 @@ function GMNotesPanel() {
 
   const fetchNotes = async () => {
     try {
-      const res = await fetch(`/notes?_=${Date.now()}`, { cache: "no-store" });
+      const res = await apiFetch(`/notes?_=${Date.now()}`, { cache: "no-store" });
       if (!res.ok) throw new Error(`${res.status}`);
       const data = await res.json();
       setNotes(Array.isArray(data.notes) ? data.notes : []);
@@ -3913,7 +3960,7 @@ function GMNotesPanel() {
   async function handleDismiss(id) {
     setNotes((prev) => prev.filter((n) => n.id !== id));
     try {
-      await fetch("/notes", {
+      await apiFetch("/notes", {
         method: "DELETE",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ id }),
@@ -3930,7 +3977,7 @@ function GMNotesPanel() {
   async function handleToggleActioned(id, actioned) {
     setNotes((prev) => prev.map((n) => (n.id === id ? { ...n, actioned } : n)));
     try {
-      await fetch("/notes", {
+      await apiFetch("/notes", {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ id, actioned }),
@@ -3943,7 +3990,7 @@ function GMNotesPanel() {
   async function handleClearAll() {
     setNotes([]);
     try {
-      await fetch("/notes", { method: "DELETE" });
+      await apiFetch("/notes", { method: "DELETE" });
     } catch {
       // best-effort
     }
@@ -4125,7 +4172,7 @@ function useCrewAssignments() {
 
   const fetchCrew = useCallback(async () => {
     try {
-      const res = await fetch(`/crew?_=${Date.now()}`, { cache: "no-store" });
+      const res = await apiFetch(`/crew?_=${Date.now()}`, { cache: "no-store" });
       if (!res.ok) throw new Error(`${res.status}`);
       const data = await res.json();
       setCrew(data?.crew || {});
@@ -4151,7 +4198,7 @@ function useCrewAssignments() {
       return next;
     });
     try {
-      await fetch("/crew", {
+      await apiFetch("/crew", {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ positionId, characterId: characterId || "" }),
@@ -5386,7 +5433,7 @@ const GM_REVEAL_WINDOW_MS = 2500;
 function useGmAuth() {
   const [key, setKey] = useState(() => {
     try {
-      return localStorage.getItem(GM_KEY_STORAGE) || "";
+      return campaignStorage.getItem(GM_KEY_STORAGE) || "";
     } catch {
       return "";
     }
@@ -5404,7 +5451,7 @@ function useGmAuth() {
       return undefined;
     }
     setState("checking");
-    fetch("/gm/check", { headers: { "x-gm-key": key }, cache: "no-store" })
+    apiFetch("/gm/check", { headers: { "x-gm-key": key }, cache: "no-store" })
       .then((res) => {
         if (cancelled) return;
         if (res.ok) {
@@ -5431,7 +5478,7 @@ function useGmAuth() {
     if (!trimmed) return;
     setState("checking");
     try {
-      const res = await fetch("/gm/check", { headers: { "x-gm-key": trimmed }, cache: "no-store" });
+      const res = await apiFetch("/gm/check", { headers: { "x-gm-key": trimmed }, cache: "no-store" });
       if (!res.ok) {
         const body = await res.json().catch(() => ({}));
         setState("out");
@@ -5439,7 +5486,7 @@ function useGmAuth() {
         return;
       }
       try {
-        localStorage.setItem(GM_KEY_STORAGE, trimmed);
+        campaignStorage.setItem(GM_KEY_STORAGE, trimmed);
       } catch {
         /* private mode — the key just won't survive a reload */
       }
@@ -5454,7 +5501,7 @@ function useGmAuth() {
 
   function signOut() {
     try {
-      localStorage.removeItem(GM_KEY_STORAGE);
+      campaignStorage.removeItem(GM_KEY_STORAGE);
     } catch {
       /* ignore */
     }
@@ -5495,7 +5542,7 @@ function useVisibilityOverrides() {
 
   const fetchOverrides = useCallback(async () => {
     try {
-      const res = await fetch(`/visibility?_=${Date.now()}`, { cache: "no-store" });
+      const res = await apiFetch(`/visibility?_=${Date.now()}`, { cache: "no-store" });
       if (!res.ok) throw new Error(`${res.status}`);
       const data = await res.json();
       setOverrides(data?.overrides || {});
@@ -5584,7 +5631,7 @@ function useManualStore() {
 
   const fetchState = useCallback(async () => {
     try {
-      const res = await fetch(`/manual?_=${Date.now()}`, { cache: "no-store" });
+      const res = await apiFetch(`/manual?_=${Date.now()}`, { cache: "no-store" });
       if (!res.ok) throw new Error(`${res.status}`);
       const data = await res.json();
       if (Date.now() < dirtyUntil.current) return;
@@ -5627,7 +5674,7 @@ function useManualStore() {
       return next;
     });
     dirtyUntil.current = Date.now() + MANUAL_DIRTY_MS;
-    fetch("/manual", {
+    apiFetch("/manual", {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify(partial),
@@ -5837,7 +5884,7 @@ function useAdvanceRequests(enabled = true) {
   const [requests, setRequests] = useState([]);
   const refresh = useCallback(async () => {
     try {
-      const res = await fetch(`/campaign/advance?_=${Date.now()}`, { cache: "no-store" });
+      const res = await apiFetch(`/campaign/advance?_=${Date.now()}`, { cache: "no-store" });
       if (!res.ok) return;
       const data = await res.json();
       setRequests(Array.isArray(data.requests) ? data.requests : []);
@@ -5862,8 +5909,8 @@ function useGmPendingCount(gmKey) {
     async function check() {
       try {
         const [a, c] = await Promise.all([
-          fetch(`/campaign/advance?_=${Date.now()}`, { cache: "no-store" }).then((r) => (r.ok ? r.json() : {})),
-          fetch(`/gm/creation?_=${Date.now()}`, { cache: "no-store", headers: { "x-gm-key": gmKey } }).then((r) => (r.ok ? r.json() : {})),
+          apiFetch(`/campaign/advance?_=${Date.now()}`, { cache: "no-store" }).then((r) => (r.ok ? r.json() : {})),
+          apiFetch(`/gm/creation?_=${Date.now()}`, { cache: "no-store", headers: { "x-gm-key": gmKey } }).then((r) => (r.ok ? r.json() : {})),
         ]);
         const n = (a.requests || []).filter((r) => r.status === "pending").length + (c.drafts || []).filter((d) => d.status === "submitted").length;
         if (!cancelled) setCount(n);
@@ -5889,7 +5936,7 @@ function GmExperienceSection({ gmKey, party, onChanged }) {
   const chosen = party.filter((c) => who[cid(c)]);
 
   async function call(path, body) {
-    const res = await fetch(path, { method: "POST", headers: { "content-type": "application/json", "x-gm-key": gmKey || "" }, body: JSON.stringify(body) });
+    const res = await apiFetch(path, { method: "POST", headers: { "content-type": "application/json", "x-gm-key": gmKey || "" }, body: JSON.stringify(body) });
     const out = await res.json().catch(() => ({}));
     if (!res.ok) throw new Error(out.error || `The Worker said ${res.status}`);
     return out;
@@ -5974,7 +6021,7 @@ function useUnactionedNoteCount(enabled) {
     let cancelled = false;
     async function check() {
       try {
-        const res = await fetch(`/notes?_=${Date.now()}`, { cache: "no-store" });
+        const res = await apiFetch(`/notes?_=${Date.now()}`, { cache: "no-store" });
         if (!res.ok) return;
         const data = await res.json();
         const notes = Array.isArray(data.notes) ? data.notes : [];
@@ -6151,7 +6198,7 @@ function useEnemyStore(gmKey) {
     if (!next || !keyRef.current) return;
     pendingRef.current = null;
     try {
-      await fetch("/gm/enemies", {
+      await apiFetch("/gm/enemies", {
         method: "POST",
         headers: { "content-type": "application/json", "x-gm-key": keyRef.current },
         body: JSON.stringify({ enemies: next }),
@@ -6173,7 +6220,7 @@ function useEnemyStore(gmKey) {
   const fetchEnemies = useCallback(async () => {
     const key = keyRef.current;
     try {
-      const res = await fetch(`${key ? "/gm/enemies" : "/enemies"}?_=${Date.now()}`, {
+      const res = await apiFetch(`${key ? "/gm/enemies" : "/enemies"}?_=${Date.now()}`, {
         cache: "no-store",
         headers: key ? { "x-gm-key": key } : {},
       });
@@ -6228,7 +6275,7 @@ function useCampaignStore(gmKey) {
     const key = keyRef.current;
     const since = !force && revRef.current != null ? `&since=${encodeURIComponent(revRef.current)}` : "";
     try {
-      const res = await fetch(`${key ? "/gm/campaign" : "/campaign"}?_=${Date.now()}${since}`, {
+      const res = await apiFetch(`${key ? "/gm/campaign" : "/campaign"}?_=${Date.now()}${since}`, {
         cache: "no-store",
         headers: key ? { "x-gm-key": key } : {},
       });
@@ -6264,7 +6311,7 @@ function useCampaignStore(gmKey) {
   }, [gmKey, fetchCampaign]);
 
   async function gmPost(path, body) {
-    const res = await fetch(path, {
+    const res = await apiFetch(path, {
       method: "POST",
       headers: { "content-type": "application/json", "x-gm-key": keyRef.current || "" },
       body,
@@ -6287,7 +6334,7 @@ function useCampaignStore(gmKey) {
     saveCharacter: (characterId, character, note) => gmPost("/gm/campaign/character", JSON.stringify({ characterId, character, note })),
     undoCharacter: (characterId) => gmPost("/gm/campaign/character/undo", JSON.stringify({ characterId })),
     async exportCampaign() {
-      const res = await fetch("/gm/campaign/export", { headers: { "x-gm-key": keyRef.current || "" }, cache: "no-store" });
+      const res = await apiFetch("/gm/campaign/export", { headers: { "x-gm-key": keyRef.current || "" }, cache: "no-store" });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
         throw new Error(data.error || `The Worker said ${res.status}`);
@@ -6582,9 +6629,9 @@ function useVehicleReference() {
   useEffect(() => {
     let cancelled = false;
     Promise.all([
-      fetch("/data/starship-index.json").then((r) => r.json()).catch(() => []),
-      fetch("/data/vehicle-weapons.json").then((r) => r.json()).catch(() => ({})),
-      fetch("/data/vehicle-template.json").then((r) => r.json()).catch(() => ({})),
+      apiFetch("/data/starship-index.json").then((r) => r.json()).catch(() => []),
+      apiFetch("/data/vehicle-weapons.json").then((r) => r.json()).catch(() => ({})),
+      apiFetch("/data/vehicle-template.json").then((r) => r.json()).catch(() => ({})),
     ]).then(([ships, weapons, template]) => {
       if (cancelled) return;
       setRef({
@@ -7265,7 +7312,7 @@ function useChargenData() {
   const [error, setError] = useState(null);
   useEffect(() => {
     let cancelled = false;
-    fetch("/data/chargen.json")
+    apiFetch("/data/chargen.json")
       .then((res) => (res.ok ? res.json() : Promise.reject(new Error(String(res.status)))))
       .then((d) => { if (!cancelled) setData(d); })
       .catch((e) => { if (!cancelled) setError(e.message); });
@@ -7349,7 +7396,7 @@ function CreationWizardPage({ code }) {
 
   const load = useCallback(async () => {
     try {
-      const res = await fetch(`/creation/${encodeURIComponent(code)}?_=${Date.now()}`, { cache: "no-store" });
+      const res = await apiFetch(`/creation/${encodeURIComponent(code)}?_=${Date.now()}`, { cache: "no-store" });
       const body = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(body.error || `The Worker said ${res.status}`);
       setEntry(body.entry);
@@ -7385,7 +7432,7 @@ function CreationWizardPage({ code }) {
   async function persist(next) {
     setSave({ state: "saving" });
     try {
-      const res = await fetch(`/creation/${encodeURIComponent(code)}`, {
+      const res = await apiFetch(`/creation/${encodeURIComponent(code)}`, {
         method: "PUT",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ draft: next }),
@@ -7405,7 +7452,7 @@ function CreationWizardPage({ code }) {
     clearTimeout(saveTimer.current);
     setSubmitState({ state: "busy" });
     try {
-      const res = await fetch(`/creation/${encodeURIComponent(code)}/submit`, {
+      const res = await apiFetch(`/creation/${encodeURIComponent(code)}/submit`, {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ draft }),
@@ -7439,7 +7486,7 @@ function CreationWizardPage({ code }) {
       <div className="border p-6" style={wz.card}>
         <div className="text-[11px] tracking-[0.25em] uppercase mb-1" style={{ color: "#c23b3b" }}>CHARACTER CREATION</div>
         <p className="text-[13px]" style={{ color: "#e7e2d2" }}>{loadError}</p>
-        <a href="/" className="inline-block mt-3 text-[12px] underline" style={{ color: "#5ec8d8" }}>Go to the dashboard</a>
+        <a href={campaignBase()} className="inline-block mt-3 text-[12px] underline" style={{ color: "#5ec8d8" }}>Go to the dashboard</a>
       </div>
     );
   }
@@ -7453,7 +7500,7 @@ function CreationWizardPage({ code }) {
         <div className="text-[11px] tracking-[0.25em] uppercase mb-1" style={{ color: "#6fae60" }}>CHARACTER CREATION</div>
         <h1 className="text-3xl uppercase mb-2" style={wz.h}>{entry.characterName || draft.name} is ready</h1>
         <p className="text-[13px] mb-4" style={wz.muted}>The GM has added your character to the campaign.</p>
-        <a href="/" className="inline-block px-4 py-2 text-[12px] uppercase tracking-[0.15em]" style={{ background: "#5ec8d8", color: "#101315", fontFamily: "'Rajdhani', sans-serif", fontWeight: 700 }}>Open the dashboard</a>
+        <a href={campaignBase()} className="inline-block px-4 py-2 text-[12px] uppercase tracking-[0.15em]" style={{ background: "#5ec8d8", color: "#101315", fontFamily: "'Rajdhani', sans-serif", fontWeight: 700 }}>Open the dashboard</a>
       </div>
     );
   }
@@ -7888,7 +7935,7 @@ function GmCharacterCreationSection({ gmKey, onAdded }) {
   const [copied, setCopied] = useState(null);
 
   const call = useCallback(async (path, method = "GET", body) => {
-    const res = await fetch(path, {
+    const res = await apiFetch(path, {
       method,
       headers: { "content-type": "application/json", "x-gm-key": gmKey || "" },
       body: body ? JSON.stringify(body) : undefined,
@@ -7908,7 +7955,7 @@ function GmCharacterCreationSection({ gmKey, onAdded }) {
     return () => clearInterval(t);
   }, [refresh]);
 
-  const linkFor = (code) => `${window.location.origin}/?create=${code}`;
+  const linkFor = (code) => `${window.location.origin}${campaignBase()}?create=${code}`;
   async function copyLink(code) {
     try { await navigator.clipboard.writeText(linkFor(code)); setCopied(code); setTimeout(() => setCopied(null), 1500); } catch { /* the link is shown anyway */ }
   }
@@ -8021,7 +8068,7 @@ function useGearStore(gmKey) {
     if (!next || !keyRef.current) return;
     pendingRef.current = null;
     try {
-      await fetch("/gm/gear", {
+      await apiFetch("/gm/gear", {
         method: "POST",
         headers: { "content-type": "application/json", "x-gm-key": keyRef.current },
         body: JSON.stringify({ gear: next }),
@@ -8043,7 +8090,7 @@ function useGearStore(gmKey) {
   const fetchGear = useCallback(async () => {
     const key = keyRef.current;
     try {
-      const res = await fetch(`${key ? "/gm/gear" : "/gear"}?_=${Date.now()}`, {
+      const res = await apiFetch(`${key ? "/gm/gear" : "/gear"}?_=${Date.now()}`, {
         cache: "no-store",
         headers: key ? { "x-gm-key": key } : {},
       });
@@ -8572,7 +8619,7 @@ function useAdversaryIndex() {
   const load = useCallback(() => {
     if (index || loadState.state === "loading") return;
     setLoadState({ state: "loading" });
-    fetch("/data/adversary-index.json")
+    apiFetch("/data/adversary-index.json")
       .then((res) => (res.ok ? res.json() : Promise.reject(new Error(`${res.status}`))))
       .then((data) => {
         setIndex(Array.isArray(data) ? data : []);
@@ -8613,7 +8660,7 @@ function useReferenceIndex(url) {
   const load = useCallback(() => {
     if (index || loadState.state === "loading") return;
     setLoadState({ state: "loading" });
-    fetch(url)
+    apiFetch(url)
       .then((res) => (res.ok ? res.json() : Promise.reject(new Error(`${res.status}`))))
       .then((data) => {
         setIndex(Array.isArray(data) ? data : []);
@@ -9305,7 +9352,7 @@ function useZoneMapStore(gmKey) {
   const fetchMap = useCallback(async () => {
     const key = keyRef.current;
     try {
-      const res = await fetch(`${key ? "/gm/map" : "/map"}?_=${Date.now()}`, { cache: "no-store", headers: key ? { "x-gm-key": key } : {} });
+      const res = await apiFetch(`${key ? "/gm/map" : "/map"}?_=${Date.now()}`, { cache: "no-store", headers: key ? { "x-gm-key": key } : {} });
       if (!res.ok) throw new Error(`${res.status}`);
       const data = await res.json();
       if (Date.now() < dirtyUntil.current) return;
@@ -9327,7 +9374,7 @@ function useZoneMapStore(gmKey) {
     const key = keyRef.current;
     dirtyUntil.current = Date.now() + MAP_DIRTY_MS;
     try {
-      const res = await fetch(key ? "/gm/map" : "/map", {
+      const res = await apiFetch(key ? "/gm/map" : "/map", {
         method: "POST",
         headers: { "content-type": "application/json", ...(key ? { "x-gm-key": key } : {}) },
         body: JSON.stringify(body),
@@ -10614,7 +10661,7 @@ function GmNameGenerator({ gmKey }) {
     setStatus({ state: "loading", message: "" });
     setCopied("");
     try {
-      const response = await fetch(`/gm/names?type=${encodeURIComponent(nextType)}`, {
+      const response = await apiFetch(`/gm/names?type=${encodeURIComponent(nextType)}`, {
         cache: "no-store",
         headers: { "x-gm-key": gmKey },
       });
@@ -10880,11 +10927,267 @@ function GmPanel({ auth, campaignStore, party, overrides, onOverride, onResetOve
   );
 }
 
-// A character creation link (/?create=<code>) opens the creation wizard
-// instead of the dashboard.
+// ---------------------------------------------------------------------------
+// The site's front page (/): the campaigns marked "show on the front page",
+// plus Manage campaigns for the site owner (master password).
+// ---------------------------------------------------------------------------
+const ADMIN_KEY_STORAGE = "swrpg-admin-key";
+const homeBtn = "text-[11px] tracking-[0.15em] uppercase px-3 py-1.5 border transition-colors disabled:opacity-40";
+const homeField = "bg-[#0b0d0e] border px-2.5 py-1.5 text-[13px] outline-none focus:border-[#5ec8d8]";
+
+function SiteHome() {
+  const [listed, setListed] = useState(null);
+  const [manage, setManage] = useState(false);
+  useEffect(() => {
+    document.title = "SWRPG Dashboards";
+    fetch("/api/campaigns", { cache: "no-store" })
+      .then((r) => r.json())
+      .then((d) => setListed(Array.isArray(d.campaigns) ? d.campaigns : []))
+      .catch(() => setListed([]));
+  }, []);
+  return (
+    <div className="min-h-screen px-4 py-10" style={{ background: "#0b0d0e", color: "#e7e2d2" }}>
+      <div className="max-w-3xl mx-auto">
+        <div className="text-[11px] tracking-[0.3em] uppercase mb-1" style={{ color: "#5ec8d8" }}>Star Wars Roleplaying</div>
+        <h1 className="text-3xl uppercase tracking-wide mb-6" style={{ fontFamily: "'Rajdhani', sans-serif", fontWeight: 700 }}>Campaign Dashboards</h1>
+        {listed === null ? (
+          <p className="text-[13px]" style={{ color: "#8a8f93" }}>Loading…</p>
+        ) : listed.length === 0 ? (
+          <p className="text-[13px] mb-6" style={{ color: "#8a8f93" }}>Your GM will send you the link to your campaign.</p>
+        ) : (
+          <div className="grid gap-3 sm:grid-cols-2 mb-6">
+            {listed.map((c) => (
+              <a key={c.slug} href={`/c/${c.slug}/`} className="block border px-4 py-4 transition-colors hover:border-[#5ec8d8]" style={{ borderColor: "#2a2e31", background: "#131719" }}>
+                <div className="text-[20px] uppercase" style={{ fontFamily: "'Rajdhani', sans-serif", fontWeight: 700 }}>{c.name}</div>
+                <div className="text-[11px] mt-1" style={{ color: "#5ec8d8" }}>Open dashboard ▶</div>
+              </a>
+            ))}
+          </div>
+        )}
+        <div className="mt-10 pt-4 border-t" style={{ borderColor: "#2a2e31" }}>
+          {!manage ? (
+            <button type="button" onClick={() => setManage(true)} className="text-[11px] underline" style={{ color: "#5a5f62" }}>Manage campaigns</button>
+          ) : (
+            <SiteAdmin onClose={() => setManage(false)} />
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function SiteAdmin({ onClose }) {
+  const [key, setKey] = useState(() => { try { return campaignStorage.getItem(ADMIN_KEY_STORAGE) || ""; } catch { return ""; } });
+  const [typed, setTyped] = useState("");
+  const [campaigns, setCampaigns] = useState(null);
+  const [status, setStatus] = useState({ state: "idle", msg: "" });
+  const [form, setForm] = useState({ name: "", slug: "", gmPassword: "", private: true, listed: false });
+
+  const call = useCallback(async (path, method = "GET", body, useKey = key) => {
+    const res = await fetch(path, {
+      method,
+      headers: { "content-type": "application/json", "x-admin-key": useKey },
+      body: body ? JSON.stringify(body) : undefined,
+      cache: "no-store",
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok || data.error) {
+      const err = new Error(data.error || `The site said ${res.status}`);
+      err.status = res.status;
+      throw err;
+    }
+    return data;
+  }, [key]);
+
+  useEffect(() => {
+    if (!key) return;
+    call("/api/admin/campaigns").then((d) => setCampaigns(d.campaigns)).catch((err) => {
+      if (err.status === 401) { setKey(""); try { campaignStorage.removeItem(ADMIN_KEY_STORAGE); } catch { /* ignore */ } }
+      setStatus({ state: "error", msg: err.message });
+    });
+  }, [key, call]);
+
+  async function signIn(e) {
+    e.preventDefault();
+    const k = typed.trim();
+    if (!k) return;
+    setStatus({ state: "busy", msg: "Checking…" });
+    try {
+      await call("/api/admin/check", "GET", undefined, k);
+      try { campaignStorage.setItem(ADMIN_KEY_STORAGE, k); } catch { /* ignore */ }
+      setKey(k);
+      setTyped("");
+      setStatus({ state: "idle", msg: "" });
+    } catch (err) {
+      setStatus({ state: "error", msg: err.message });
+    }
+  }
+
+  function signOut() {
+    try { campaignStorage.removeItem(ADMIN_KEY_STORAGE); } catch { /* ignore */ }
+    setKey("");
+    setCampaigns(null);
+  }
+
+  async function run(label, fn) {
+    setStatus({ state: "busy", msg: `${label}…` });
+    try {
+      const msg = await fn();
+      setStatus({ state: "ok", msg: msg || "Done." });
+    } catch (err) {
+      setStatus({ state: "error", msg: err.message });
+    }
+  }
+
+  const suggestedSlug = form.slug || String(form.name).toLowerCase().normalize("NFKD").replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 30);
+  const fs = { borderColor: "#3a3f42", color: "#e7e2d2" };
+  const lbl = "block text-[10px] tracking-[0.15em] uppercase mb-1";
+
+  if (!key) {
+    return (
+      <form onSubmit={signIn} className="border p-4" style={{ borderColor: "#3a3f42", background: "#101315" }}>
+        <div className="text-[11px] tracking-[0.2em] uppercase mb-2" style={{ color: "#e0763a" }}>Manage campaigns</div>
+        <p className="text-[11px] leading-relaxed mb-3" style={{ color: "#8a8f93" }}>For the site owner. Uses the site's master password (the ADMIN_PASSWORD secret on Cloudflare, or GM_PASSWORD if that's the only one set).</p>
+        <div className="flex flex-wrap gap-2">
+          <input type="password" value={typed} onChange={(e) => setTyped(e.target.value)} className={`${homeField} flex-1 min-w-[200px]`} style={fs} placeholder="Master password" autoComplete="current-password" />
+          <button type="submit" className={homeBtn} style={{ color: "#101315", background: "#5ec8d8", borderColor: "#5ec8d8", fontFamily: "'Rajdhani', sans-serif", fontWeight: 700 }}>Sign in</button>
+          <button type="button" onClick={onClose} className={homeBtn} style={{ color: "#8a8f93", borderColor: "#3a3f42" }}>Cancel</button>
+        </div>
+        {status.msg && <p className="mt-2 text-[12px]" style={{ color: status.state === "error" ? "#c23b3b" : "#8a8f93" }}>{status.msg}</p>}
+      </form>
+    );
+  }
+
+  return (
+    <div className="border p-4" style={{ borderColor: "#3a3f42", background: "#101315" }}>
+      <div className="flex items-center justify-between gap-2 mb-3">
+        <div className="text-[11px] tracking-[0.2em] uppercase" style={{ color: "#e0763a" }}>Manage campaigns</div>
+        <button type="button" onClick={signOut} className="text-[11px] underline" style={{ color: "#8a8f93" }}>Sign out</button>
+      </div>
+
+      <div className="space-y-2 mb-5">
+        {campaigns === null && <p className="text-[12px]" style={{ color: "#8a8f93" }}>Loading…</p>}
+        {campaigns?.length === 0 && <p className="text-[12px]" style={{ color: "#8a8f93" }}>No campaigns yet. Create the first one below.</p>}
+        {(campaigns || []).map((c) => (
+          <div key={c.slug} className="border px-3 py-2.5" style={{ borderColor: "#2a2e31", background: "#131719" }}>
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <div className="min-w-0">
+                <div className="text-[16px] uppercase" style={{ fontFamily: "'Rajdhani', sans-serif", fontWeight: 700 }}>{c.name}</div>
+                <a href={`/c/${c.slug}/`} className="text-[11px] underline break-all" style={{ color: "#8fd3f4" }}>{`${window.location.origin}/c/${c.slug}/`}</a>
+              </div>
+              <div className="flex flex-wrap gap-1.5">
+                <button type="button" className={homeBtn} style={fs} onClick={() => {
+                  const name = window.prompt("New name for this campaign:", c.name);
+                  if (!name || !name.trim()) return;
+                  run("Renaming", async () => { const d = await call(`/api/admin/campaigns/${c.slug}`, "POST", { name }); setCampaigns(d.campaigns); return `Renamed to ${name.trim()}.`; });
+                }}>Rename</button>
+                <button type="button" className={homeBtn} style={fs} onClick={() => {
+                  const pw = window.prompt(`New GM password for ${c.name} (at least 6 characters). The GM will need to sign in again.`);
+                  if (!pw) return;
+                  run("Saving", async () => { const d = await call(`/api/admin/campaigns/${c.slug}`, "POST", { gmPassword: pw }); setCampaigns(d.campaigns); return `GM password changed for ${c.name}.`; });
+                }}>GM password</button>
+                <button type="button" className={homeBtn} style={{ ...fs, color: c.listed ? "#6fae60" : "#8a8f93" }} onClick={() => {
+                  run("Saving", async () => { const d = await call(`/api/admin/campaigns/${c.slug}`, "POST", { listed: !c.listed }); setCampaigns(d.campaigns); return c.listed ? `${c.name} is no longer on the front page.` : `${c.name} is on the front page.`; });
+                }} title="Whether this campaign appears on the front page">{c.listed ? "On front page" : "Unlisted"}</button>
+                <button type="button" className={homeBtn} style={{ borderColor: "#c23b3b66", color: "#c23b3b" }} onClick={() => {
+                  if (!window.confirm(`Take ${c.name} off the site? Its address stops working. Its data is kept: creating a campaign at the same address (${c.slug}) brings it back.`)) return;
+                  run("Removing", async () => { const d = await call(`/api/admin/campaigns/${c.slug}`, "DELETE"); setCampaigns(d.campaigns); return `${c.name} removed from the site.`; });
+                }}>Remove</button>
+              </div>
+            </div>
+            {!c.hasGmPassword && <div className="text-[11px] mt-1" style={{ color: "#c9a15a" }}>No GM password set: only the master password signs in as GM.</div>}
+          </div>
+        ))}
+      </div>
+
+      <div className="text-[11px] tracking-[0.2em] uppercase mb-2" style={{ color: "#5ec8d8" }}>New campaign</div>
+      <div className="grid gap-2 sm:grid-cols-2 mb-2">
+        <div>
+          <label className={lbl} style={{ color: "#8a8f93" }}>Name</label>
+          <input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} maxLength={80} className={`${homeField} w-full`} style={fs} placeholder="e.g. Salvage Rights" />
+        </div>
+        <div>
+          <label className={lbl} style={{ color: "#8a8f93" }}>Address</label>
+          <input value={form.slug} onChange={(e) => setForm({ ...form, slug: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, "") })} maxLength={33} className={`${homeField} w-full`} style={fs} placeholder={suggestedSlug || "from the name"} />
+        </div>
+        <div>
+          <label className={lbl} style={{ color: "#8a8f93" }}>GM password</label>
+          <input type="password" value={form.gmPassword} onChange={(e) => setForm({ ...form, gmPassword: e.target.value })} className={`${homeField} w-full`} style={fs} placeholder="At least 6 characters" autoComplete="new-password" />
+        </div>
+        <div className="flex flex-col justify-end gap-1 text-[12px]">
+          <label className="flex items-center gap-2 cursor-pointer"><input type="checkbox" checked={form.private} onChange={(e) => setForm({ ...form, private: e.target.checked })} /> Hard-to-guess address (adds 5 random characters)</label>
+          <label className="flex items-center gap-2 cursor-pointer"><input type="checkbox" checked={form.listed} onChange={(e) => setForm({ ...form, listed: e.target.checked })} /> Show on the front page</label>
+        </div>
+      </div>
+      <div className="text-[11px] mb-2" style={{ color: "#5a5f62" }}>
+        Address: {window.location.origin}/c/{suggestedSlug || "…"}{form.private ? "-xxxxx" : ""}/
+      </div>
+      <button
+        type="button"
+        disabled={!form.name.trim() || form.gmPassword.trim().length < 6 || status.state === "busy"}
+        onClick={() => run("Creating", async () => {
+          const d = await call("/api/admin/campaigns", "POST", { ...form, slug: form.slug || undefined });
+          setCampaigns(d.campaigns);
+          setForm({ name: "", slug: "", gmPassword: "", private: true, listed: false });
+          return `Created ${window.location.origin}/c/${d.slug}/ — open it, sign in as GM with its password, then Import all or create characters.`;
+        })}
+        className={homeBtn}
+        style={{ color: "#101315", background: "#5ec8d8", borderColor: "#5ec8d8", fontFamily: "'Rajdhani', sans-serif", fontWeight: 700 }}
+      >
+        Create campaign
+      </button>
+      {status.msg && <p className="mt-2 text-[12px] break-all" style={{ color: status.state === "error" ? "#c23b3b" : status.state === "busy" ? "#8a8f93" : "#6fae60" }}>{status.msg}</p>}
+    </div>
+  );
+}
+
+// A campaign address: check the campaign exists before showing anything.
+function CampaignGate({ children }) {
+  const [state, setState] = useState({ status: "loading" });
+  useEffect(() => {
+    let cancelled = false;
+    fetch(`/api/campaigns/${CAMPAIGN_SLUG}`, { cache: "no-store" })
+      .then(async (r) => ({ ok: r.ok, data: await r.json().catch(() => ({})) }))
+      .then(({ ok, data }) => {
+        if (cancelled) return;
+        if (ok && data.exists) {
+          document.title = data.name || "SWRPG";
+          setState({ status: "ok" });
+        } else {
+          setState({ status: "missing" });
+        }
+      })
+      // If the check itself fails (offline), try the dashboard anyway.
+      .catch(() => !cancelled && setState({ status: "ok" }));
+    return () => { cancelled = true; };
+  }, []);
+  if (state.status === "loading") return <div className="min-h-screen" style={{ background: "#0b0d0e" }} />;
+  if (state.status === "missing") {
+    return (
+      <div className="min-h-screen px-4 py-16" style={{ background: "#0b0d0e", color: "#e7e2d2" }}>
+        <div className="max-w-xl mx-auto border p-6" style={{ borderColor: "#3a3f42", background: "#16191b" }}>
+          <div className="text-[11px] tracking-[0.25em] uppercase mb-1" style={{ color: "#c23b3b" }}>Not found</div>
+          <h1 className="text-2xl uppercase mb-2" style={{ fontFamily: "'Rajdhani', sans-serif", fontWeight: 700 }}>No campaign at this address</h1>
+          <p className="text-[13px] mb-4" style={{ color: "#8a8f93" }}>Check the link your GM sent you.</p>
+          <a href="/" className="text-[12px] underline" style={{ color: "#5ec8d8" }}>Go to the front page</a>
+        </div>
+      </div>
+    );
+  }
+  return children;
+}
+
+// The front page (/) lists campaigns; a campaign address (/c/<slug>/) opens
+// that campaign's dashboard, or its character creation wizard when the link
+// carries ?create=<code>.
 export default function App() {
+  if (!CAMPAIGN_SLUG) return <SiteHome />;
   const createCode = typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("create") : null;
-  return createCode ? <CreationWizardPage code={createCode.trim().toLowerCase()} /> : <CampaignDashboard />;
+  return (
+    <CampaignGate>
+      {createCode ? <CreationWizardPage code={createCode.trim().toLowerCase()} /> : <CampaignDashboard />}
+    </CampaignGate>
+  );
 }
 
 function CampaignDashboard() {
@@ -10949,7 +11252,7 @@ function CampaignDashboard() {
   const gearStore = useGearStore(gmAuth.key);
   const [gmRevealed, setGmRevealed] = useState(() => {
     try {
-      return localStorage.getItem(GM_REVEAL_STORAGE) === "1";
+      return campaignStorage.getItem(GM_REVEAL_STORAGE) === "1";
     } catch {
       return false;
     }
@@ -10967,7 +11270,7 @@ function CampaignDashboard() {
       r.count = 0;
       setGmRevealed(true);
       try {
-        localStorage.setItem(GM_REVEAL_STORAGE, "1");
+        campaignStorage.setItem(GM_REVEAL_STORAGE, "1");
       } catch {
         /* ignore */
       }
@@ -10977,14 +11280,14 @@ function CampaignDashboard() {
     setGmRevealed(false);
     setViewMode("character");
     try {
-      localStorage.removeItem(GM_REVEAL_STORAGE);
+      campaignStorage.removeItem(GM_REVEAL_STORAGE);
     } catch {
       /* ignore */
     }
   }
   async function handleSetVisibility(key, hidden) {
     try {
-      await fetch("/visibility", {
+      await apiFetch("/visibility", {
         method: "POST",
         headers: { "content-type": "application/json", "x-gm-key": gmAuth.key },
         body: JSON.stringify({ key, hidden }),
@@ -10998,7 +11301,7 @@ function CampaignDashboard() {
   async function handleResetVisibility() {
     if (!window.confirm("Clear every live visibility override? Items fall back to whatever the campaign file itself says.")) return;
     try {
-      await fetch("/visibility", { method: "DELETE", headers: { "x-gm-key": gmAuth.key } });
+      await apiFetch("/visibility", { method: "DELETE", headers: { "x-gm-key": gmAuth.key } });
     } catch {
       // best-effort
     } finally {
@@ -11007,10 +11310,10 @@ function CampaignDashboard() {
   }
 
   const [playerName, setPlayerName] = useState(() => {
-    try { return localStorage.getItem("swrpg-dice-player-name") || ""; } catch { return ""; }
+    try { return campaignStorage.getItem("swrpg-dice-player-name") || ""; } catch { return ""; }
   });
   useEffect(() => {
-    try { localStorage.setItem("swrpg-dice-player-name", playerName); } catch { /* ignore */ }
+    try { campaignStorage.setItem("swrpg-dice-player-name", playerName); } catch { /* ignore */ }
   }, [playerName]);
 
   // Clicking a skill's dice pips (Character Sheet tab or Party View table)
@@ -11056,9 +11359,9 @@ function CampaignDashboard() {
       const clientId = getDicePoolClientId();
       const cached = readDicePoolCache();
       try {
-        localStorage.setItem("swrpg-dice-pool-cache", JSON.stringify({ pool, gmUpdatedAt: cached.gmUpdatedAt || 0, presetNonce: preset.nonce }));
+        campaignStorage.setItem("swrpg-dice-pool-cache", JSON.stringify({ pool, gmUpdatedAt: cached.gmUpdatedAt || 0, presetNonce: preset.nonce }));
       } catch { /* ignore */ }
-      fetch("/rolls", {
+      apiFetch("/rolls", {
         method: "PUT",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ clientId, player: (characterName || "Unnamed").slice(0, 40), label: preset.label, pool, weaponNote: preset.weaponNote, damage, automaticResults }),
@@ -11087,12 +11390,8 @@ function CampaignDashboard() {
     return () => clearTimeout(bootTimer.current);
   }, []);
 
-  useEffect(() => {
-    // Fixed to the repo's own name rather than the in-fiction campaign title
-    // (ledger.campaign) — those are two different
-    // names on purpose, and the browser tab should read the former.
-    document.title = "SWRPG - Beta"; // TEMPLATE: rename per campaign (also index.html)
-  }, []);
+  // The browser tab shows the campaign's name from the site's campaign list
+  // (set by CampaignGate), not the in-fiction title inside the campaign data.
 
   // Wounds/Strain/Destiny/Critical Injuries/Vehicle/Initiative all come from
   // the shared /manual Durable Object (see useManualStore) — every browser

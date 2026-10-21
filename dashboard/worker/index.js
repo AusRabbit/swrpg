@@ -47,7 +47,7 @@ import CHARGEN_DATA from "../public/data/chargen.json";
 
 const ROLL_LOG_MAX = 40;
 const POOL_DRAFT_TTL_MS = 5 * 60 * 1000;
-const CORS_HEADERS = { "access-control-allow-origin": "*", "access-control-allow-methods": "GET, POST, PUT, PATCH, DELETE, OPTIONS", "access-control-allow-headers": "content-type, x-gm-key" };
+const CORS_HEADERS = { "access-control-allow-origin": "*", "access-control-allow-methods": "GET, POST, PUT, PATCH, DELETE, OPTIONS", "access-control-allow-headers": "content-type, x-gm-key, x-admin-key" };
 // Dice pool breakdown (per die type, e.g. { proficiency: 2, difficulty: 3,
 // setback: 2, ... }) — stored alongside the summarised result so the shared
 // log can render the actual pool as icons, not just the outcome. Sanitized
@@ -619,9 +619,10 @@ export class CrewLog {
 }
 
 // --- GM auth ------------------------------------------------------------
-// One shared secret, set as a Worker secret (`GM_PASSWORD` — run
-// `wrangler secret put GM_PASSWORD` and never commit it here), sent by the
-// GM's browser as the x-gm-key header. No sessions, no rotation, no
+// Each campaign has its own GM password (set from the front page's Manage
+// campaigns, stored hashed in CampaignRegistry), sent by the GM's browser
+// as the x-gm-key header. The site's master password (the ADMIN_PASSWORD
+// secret, or GM_PASSWORD if that's all that's set) also works everywhere. No sessions, no rotation, no
 // per-user identity — the only thing this buys, and the only thing that
 // actually matters, is that the Worker can tell a GM request from a player
 // request server-side. A hand-typed password compared in the browser
@@ -643,20 +644,17 @@ function secretsMatch(a, b) {
   return diff === 0;
 }
 
+// Decided once per request by the campaign router (see checkGmKey below):
+// the campaign's own GM password, or the site's master password.
 function gmAuthorised(request, env) {
-  const expected = env.GM_PASSWORD;
-  // No secret configured -> nothing is GM-accessible. Failing closed means a
-  // Worker deployed without the secret hides GM-only writes rather than
-  // throwing them open to everyone.
-  if (!expected) return false;
-  return secretsMatch(request.headers.get(GM_HEADER) || "", expected);
+  return !!env.GM_OK;
 }
 
 function gmDenied(env) {
   return new Response(
     JSON.stringify({
-      error: env.GM_PASSWORD ? "Wrong GM key" : "No GM key configured on this Worker (wrangler secret put GM_PASSWORD)",
-      configured: !!env.GM_PASSWORD,
+      error: env.GM_CONFIGURED ? "Wrong GM key" : "This campaign has no GM password yet. Set one from the site's front page (Manage campaigns).",
+      configured: !!env.GM_CONFIGURED,
     }),
     { status: 401, headers: { "content-type": "application/json", "cache-control": "no-store", ...CORS_HEADERS } }
   );
@@ -2132,8 +2130,7 @@ export class CampaignLog {
   }
 }
 
-export default {
-  async fetch(request, env, ctx) {
+async function routeCampaign(request, env, ctx) {
     const url = new URL(request.url);
     // Is a GM key configured, and is this browser's stored key still right?
     // The GM sign-in form asks this before storing a key, and re-asks on
@@ -2196,7 +2193,7 @@ export default {
       if (request.method !== "GET" && request.method !== "OPTIONS" && !gmAuthorised(request, env)) {
         return gmDenied(env);
       }
-      const id = env.VISIBILITY_LOG.idFromName("shared-visibility-log");
+      const id = env.VISIBILITY_LOG.idFromName(doName(env, "shared-visibility-log"));
       const stub = env.VISIBILITY_LOG.get(id);
       return stub.fetch(request);
     }
@@ -2209,7 +2206,7 @@ export default {
       }
       // Fixed name -> always the same single DO instance, so the whole
       // campaign shares exactly one authoritative roll log.
-      const id = env.ROLL_LOG.idFromName("shared-roll-log");
+      const id = env.ROLL_LOG.idFromName(doName(env, "shared-roll-log"));
       const stub = env.ROLL_LOG.get(id);
       // Tell the log whether this request carries a valid GM key. Strip any
       // browser-supplied copy of the internal header first so it can't be
@@ -2228,7 +2225,7 @@ export default {
           headers: { "content-type": "application/json", "cache-control": "no-store", ...CORS_HEADERS },
         });
       }
-      const id = env.NOTES_LOG.idFromName("shared-notes-log");
+      const id = env.NOTES_LOG.idFromName(doName(env, "shared-notes-log"));
       const stub = env.NOTES_LOG.get(id);
       return stub.fetch(request);
     }
@@ -2239,7 +2236,7 @@ export default {
           headers: { "content-type": "application/json", "cache-control": "no-store", ...CORS_HEADERS },
         });
       }
-      const id = env.BIO_LOG.idFromName("shared-bio-log");
+      const id = env.BIO_LOG.idFromName(doName(env, "shared-bio-log"));
       const stub = env.BIO_LOG.get(id);
       return stub.fetch(request);
     }
@@ -2250,7 +2247,7 @@ export default {
           headers: { "content-type": "application/json", "cache-control": "no-store", ...CORS_HEADERS },
         });
       }
-      const id = env.CREW_LOG.idFromName("shared-crew-log");
+      const id = env.CREW_LOG.idFromName(doName(env, "shared-crew-log"));
       const stub = env.CREW_LOG.get(id);
       return stub.fetch(request);
     }
@@ -2263,7 +2260,7 @@ export default {
           headers: { "content-type": "application/json", "cache-control": "no-store", ...CORS_HEADERS },
         });
       }
-      const id = env.MANUAL_LOG.idFromName("shared-manual-log");
+      const id = env.MANUAL_LOG.idFromName(doName(env, "shared-manual-log"));
       const stub = env.MANUAL_LOG.get(id);
       return stub.fetch(request);
     }
@@ -2275,7 +2272,7 @@ export default {
           headers: { "content-type": "application/json", "cache-control": "no-store", ...CORS_HEADERS },
         });
       }
-      const id = env.ENEMY_LOG.idFromName("shared-enemy-board");
+      const id = env.ENEMY_LOG.idFromName(doName(env, "shared-enemy-board"));
       const stub = env.ENEMY_LOG.get(id);
 
       if (isGm) {
@@ -2308,7 +2305,7 @@ export default {
           headers: { "content-type": "application/json", "cache-control": "no-store", ...CORS_HEADERS },
         });
       }
-      const id = env.GEAR_LOG.idFromName("shared-gear-log");
+      const id = env.GEAR_LOG.idFromName(doName(env, "shared-gear-log"));
       const stub = env.GEAR_LOG.get(id);
 
       if (isGm) {
@@ -2342,7 +2339,7 @@ export default {
       }
       if (isGm && !gmAuthorised(request, env)) return gmDenied(env);
 
-      const stub = env.MAP_LOG.get(env.MAP_LOG.idFromName("shared-battle-map"));
+      const stub = env.MAP_LOG.get(env.MAP_LOG.idFromName(doName(env, "shared-battle-map")));
 
       // Zone add/remove is GM-only regardless of path, since it reshapes the
       // board for everyone.
@@ -2362,7 +2359,7 @@ export default {
         // A token move targeting an enemy id needs the GM key — only the GM
         // manipulates enemy tokens; anyone can move their own PC token.
         if (body?.id && !body?.off && !isGm && env.ENEMY_LOG) {
-          const eRes = await env.ENEMY_LOG.get(env.ENEMY_LOG.idFromName("shared-enemy-board")).fetch(new Request("https://enemy-board.internal/", { method: "GET" }));
+          const eRes = await env.ENEMY_LOG.get(env.ENEMY_LOG.idFromName(doName(env, "shared-enemy-board"))).fetch(new Request("https://enemy-board.internal/", { method: "GET" }));
           const enemies = (await eRes.json()).enemies || [];
           if (enemies.some((e) => e.id === body.id)) {
             return new Response(JSON.stringify({ error: "Only the GM can move enemy tokens" }), { status: 403, headers: { "content-type": "application/json", ...CORS_HEADERS } });
@@ -2376,7 +2373,7 @@ export default {
       const data = await res.json();
       let enemies = [];
       if (env.ENEMY_LOG) {
-        const eRes = await env.ENEMY_LOG.get(env.ENEMY_LOG.idFromName("shared-enemy-board")).fetch(new Request("https://enemy-board.internal/", { method: "GET" }));
+        const eRes = await env.ENEMY_LOG.get(env.ENEMY_LOG.idFromName(doName(env, "shared-enemy-board"))).fetch(new Request("https://enemy-board.internal/", { method: "GET" }));
         enemies = (await eRes.json()).enemies || [];
       }
       return new Response(JSON.stringify({ zones: data.zones, tokens: publicMapView(data.tokens, enemies) }), {
@@ -2415,14 +2412,14 @@ export default {
       const declared = Number(request.headers.get("content-length") || 0);
       if (declared > CREATION_DRAFT_MAX * 2) return new Response(JSON.stringify({ error: "That character is too large to save." }), { status: 413, headers: jsonHeaders });
       const body = request.method === "POST" || request.method === "PUT" ? await request.text() : undefined;
-      const stub = env.CAMPAIGN_LOG.get(env.CAMPAIGN_LOG.idFromName("shared-campaign"));
+      const stub = env.CAMPAIGN_LOG.get(env.CAMPAIGN_LOG.idFromName(doName(env, "shared-campaign")));
       const res = await stub.fetch(new Request(`https://campaign.internal/creation${code ? `/${code}` : ""}${action ? `/${action}` : ""}`, { method: request.method, body }));
       const data = await res.json();
 
       // On approval, also put the player's description into the shared
       // Description field on the character sheet (the /bio store).
       if (isGm && action === "approve" && res.ok && data.description && env.BIO_LOG) {
-        await env.BIO_LOG.get(env.BIO_LOG.idFromName("shared-bio-log")).fetch(new Request("https://bio.internal/", {
+        await env.BIO_LOG.get(env.BIO_LOG.idFromName(doName(env, "shared-bio-log"))).fetch(new Request("https://bio.internal/", {
           method: "POST",
           headers: { "content-type": "application/json" },
           body: JSON.stringify({ characterId: data.liveId, field: "description", text: data.description }),
@@ -2455,12 +2452,12 @@ export default {
         try { parsed = JSON.parse(bodyText || "{}"); } catch { parsed = {}; }
         let charId = parsed.characterId;
         if (!charId && internal.endsWith("/approve")) {
-          const listRes = await env.CAMPAIGN_LOG.get(env.CAMPAIGN_LOG.idFromName("shared-campaign")).fetch(new Request("https://campaign.internal/advance", { method: "GET" }));
+          const listRes = await env.CAMPAIGN_LOG.get(env.CAMPAIGN_LOG.idFromName(doName(env, "shared-campaign"))).fetch(new Request("https://campaign.internal/advance", { method: "GET" }));
           const rid = internal.split("/")[2];
           charId = ((await listRes.json()).requests || []).find((r) => r.id === rid)?.characterId;
         }
         if (charId) {
-          const vRes = await env.VISIBILITY_LOG.get(env.VISIBILITY_LOG.idFromName("shared-visibility-log")).fetch(new Request("https://visibility.internal/", { method: "GET" }));
+          const vRes = await env.VISIBILITY_LOG.get(env.VISIBILITY_LOG.idFromName(doName(env, "shared-visibility-log"))).fetch(new Request("https://visibility.internal/", { method: "GET" }));
           const ov = (await vRes.json()).overrides || {};
           const key = `${charId}::force::sensitive`;
           delete parsed.forceSensitive;
@@ -2468,7 +2465,7 @@ export default {
           bodyText = JSON.stringify(parsed);
         }
       }
-      const stub = env.CAMPAIGN_LOG.get(env.CAMPAIGN_LOG.idFromName("shared-campaign"));
+      const stub = env.CAMPAIGN_LOG.get(env.CAMPAIGN_LOG.idFromName(doName(env, "shared-campaign")));
       const res = await stub.fetch(new Request(`https://campaign.internal${internal}`, { method: request.method, body: bodyText }));
       return new Response(await res.text(), { status: res.status, headers: jsonHeaders });
     }
@@ -2493,7 +2490,7 @@ export default {
       }
       const isGm = url.pathname.startsWith("/gm/");
       if (isGm && !gmAuthorised(request, env)) return gmDenied(env);
-      const stub = env.CAMPAIGN_LOG.get(env.CAMPAIGN_LOG.idFromName("shared-campaign"));
+      const stub = env.CAMPAIGN_LOG.get(env.CAMPAIGN_LOG.idFromName(doName(env, "shared-campaign")));
       const sub = isGm ? url.pathname.slice("/gm/campaign".length) : "";
 
       if (isGm && request.method === "POST" && (sub === "/import" || sub === "/restore")) {
@@ -2557,7 +2554,7 @@ export default {
       // itself didn't change.
       let overrides = {};
       if (env.VISIBILITY_LOG && data.campaign) {
-        const vRes = await env.VISIBILITY_LOG.get(env.VISIBILITY_LOG.idFromName("shared-visibility-log")).fetch(new Request("https://visibility.internal/", { method: "GET" }));
+        const vRes = await env.VISIBILITY_LOG.get(env.VISIBILITY_LOG.idFromName(doName(env, "shared-visibility-log"))).fetch(new Request("https://visibility.internal/", { method: "GET" }));
         overrides = (await vRes.json()).overrides || {};
       }
       const tag = `${data.revision}:${quickHash(JSON.stringify(overrides))}`;
@@ -2565,5 +2562,225 @@ export default {
       return new Response(JSON.stringify({ campaign: publicCampaignView(data.campaign, overrides), revision: tag, updatedAt: data.updatedAt }), { status: 200, headers: jsonHeaders });
     }
     return env.ASSETS.fetch(request);
+}
+
+// =============================================================================
+// Several campaigns on one site.
+//
+// Every campaign lives under its own address, /c/<slug>/. The router below
+// strips that prefix, then runs the normal routes (routeCampaign above) with
+// every Durable Object name prefixed by the slug — so each campaign has its
+// own campaign data, roll log, dice pool, session state, map, notes and so
+// on, and nothing is shared between them. The browser does the same with
+// what it saves locally (see campaignStorage in src/App.jsx).
+//
+// The list of campaigns and their GM passwords (hashed) lives in one
+// CampaignRegistry Durable Object. The front page (/) lists the campaigns
+// marked "listed"; the site owner manages them with the master password.
+// =============================================================================
+
+const SLUG_RE = /^[a-z0-9](?:[a-z0-9-]{0,38}[a-z0-9])?$/;
+const RESERVED_SLUGS = new Set(["api", "assets", "data", "images", "c", "admin", "gm"]);
+const REGISTRY_CACHE_MS = 15_000;
+const ADMIN_HEADER = "x-admin-key";
+
+function doName(env, base) {
+  return `${env.CAMPAIGN_SLUG}:${base}`;
+}
+
+async function sha256Hex(text) {
+  const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(text));
+  return Array.from(new Uint8Array(buf), (b) => b.toString(16).padStart(2, "0")).join("");
+}
+function gmHashFor(slug, password) {
+  return sha256Hex(`swrpg-gm:${slug}:${password}`);
+}
+function masterPassword(env) {
+  return env.ADMIN_PASSWORD || env.GM_PASSWORD || "";
+}
+function adminAuthorised(request, env) {
+  const expected = masterPassword(env);
+  return !!expected && secretsMatch(request.headers.get(ADMIN_HEADER) || "", expected);
+}
+
+export class CampaignRegistry {
+  constructor(ctx, env) {
+    this.ctx = ctx;
+    this.env = env;
+    this.campaigns = {};
+    this.ctx.blockConcurrencyWhile(async () => {
+      this.campaigns = (await this.ctx.storage.get("campaigns")) || {};
+    });
+  }
+  json(body, status = 200) {
+    return new Response(JSON.stringify(body), { status, headers: { "content-type": "application/json", "cache-control": "no-store" } });
+  }
+  async fetch(request) {
+    const url = new URL(request.url);
+    if (request.method === "GET") return this.json({ campaigns: this.campaigns });
+    let body = {};
+    try { body = await request.json(); } catch { return this.json({ error: "Invalid JSON" }, 400); }
+    const slug = String(body.slug || "");
+    if (url.pathname === "/create") {
+      if (this.campaigns[slug]) return this.json({ error: "That address is already taken." }, 409);
+      if (Object.keys(this.campaigns).length >= 50) return this.json({ error: "This site already has 50 campaigns." }, 409);
+      this.campaigns[slug] = { name: body.name, listed: !!body.listed, gmHash: body.gmHash || "", createdAt: Date.now(), updatedAt: Date.now() };
+    } else if (url.pathname === "/update") {
+      const c = this.campaigns[slug];
+      if (!c) return this.json({ error: "No campaign at that address." }, 404);
+      if (typeof body.name === "string") c.name = body.name;
+      if (typeof body.listed === "boolean") c.listed = body.listed;
+      if (typeof body.gmHash === "string") c.gmHash = body.gmHash;
+      c.updatedAt = Date.now();
+    } else if (url.pathname === "/remove") {
+      if (!this.campaigns[slug]) return this.json({ error: "No campaign at that address." }, 404);
+      delete this.campaigns[slug];
+    } else {
+      return this.json({ error: "Not found" }, 404);
+    }
+    await this.ctx.storage.put("campaigns", this.campaigns);
+    return this.json({ ok: true, campaigns: this.campaigns });
+  }
+}
+
+// Each Worker instance keeps the registry for a few seconds, so ordinary
+// polling doesn't add a registry lookup to every request.
+let registryCache = { at: 0, campaigns: null };
+function registryStub(env) {
+  return env.CAMPAIGN_REGISTRY.get(env.CAMPAIGN_REGISTRY.idFromName("campaign-registry"));
+}
+async function loadRegistry(env, fresh = false) {
+  if (!fresh && registryCache.campaigns && Date.now() - registryCache.at < REGISTRY_CACHE_MS) return registryCache.campaigns;
+  const res = await registryStub(env).fetch(new Request("https://registry.internal/", { method: "GET" }));
+  const data = await res.json();
+  registryCache = { at: Date.now(), campaigns: data.campaigns || {} };
+  return registryCache.campaigns;
+}
+async function registryWrite(env, action, body) {
+  const res = await registryStub(env).fetch(new Request(`https://registry.internal/${action}`, { method: "POST", body: JSON.stringify(body) }));
+  const data = await res.json();
+  if (res.ok && data.campaigns) registryCache = { at: Date.now(), campaigns: data.campaigns };
+  return { status: res.status, data };
+}
+
+function apiJson(body, status = 200) {
+  return new Response(JSON.stringify(body), { status, headers: { "content-type": "application/json", "cache-control": "no-store", ...CORS_HEADERS } });
+}
+
+function slugFromName(name) {
+  return String(name || "").toLowerCase().normalize("NFKD").replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 30).replace(/-+$/g, "");
+}
+function randomSuffix(n = 5) {
+  const alphabet = "abcdefghijkmnpqrstuvwxyz23456789";
+  const bytes = crypto.getRandomValues(new Uint8Array(n));
+  return Array.from(bytes, (b) => alphabet[b % alphabet.length]).join("");
+}
+
+// Front-page and admin routes (no campaign in the address).
+//   GET    /api/campaigns              anyone: the listed campaigns
+//   GET    /api/campaigns/<slug>       anyone: does this campaign exist (and its name)
+//   GET    /api/admin/campaigns        master: every campaign
+//   POST   /api/admin/campaigns        master: { name, slug?, private?, gmPassword, listed }
+//   POST   /api/admin/campaigns/<slug> master: { name?, gmPassword?, listed? }
+//   DELETE /api/admin/campaigns/<slug> master: take it off the site (data is kept)
+async function handleApi(request, env, url) {
+  if (request.method === "OPTIONS") return new Response(null, { status: 204, headers: CORS_HEADERS });
+  if (!env.CAMPAIGN_REGISTRY) return apiJson({ error: "CAMPAIGN_REGISTRY Durable Object not bound — add it to wrangler.jsonc" }, 500);
+  const parts = url.pathname.split("/").filter(Boolean); // ["api", ...]
+  if (parts[1] === "campaigns" && request.method === "GET") {
+    const all = await loadRegistry(env);
+    if (parts[2]) {
+      const c = all[parts[2]];
+      return c ? apiJson({ exists: true, slug: parts[2], name: c.name }) : apiJson({ exists: false }, 404);
+    }
+    return apiJson({ campaigns: Object.entries(all).filter(([, c]) => c.listed).map(([slug, c]) => ({ slug, name: c.name })).sort((a, b) => a.name.localeCompare(b.name)) });
+  }
+  if (parts[1] !== "admin") return apiJson({ error: "Not found" }, 404);
+  if (!masterPassword(env)) return apiJson({ error: "No master password set on this site (wrangler secret put ADMIN_PASSWORD).", configured: false }, 401);
+  if (!adminAuthorised(request, env)) return apiJson({ error: "Wrong master password", configured: true }, 401);
+  if (parts[2] === "check") return apiJson({ ok: true });
+  if (parts[2] !== "campaigns") return apiJson({ error: "Not found" }, 404);
+  const declared = Number(request.headers.get("content-length") || 0);
+  if (declared > 10_000) return apiJson({ error: "Too large" }, 413);
+  const view = (all) => Object.entries(all).map(([slug, c]) => ({ slug, name: c.name, listed: !!c.listed, hasGmPassword: !!c.gmHash, createdAt: c.createdAt })).sort((a, b) => a.name.localeCompare(b.name));
+  if (request.method === "GET" && !parts[3]) return apiJson({ campaigns: view(await loadRegistry(env, true)) });
+  let body = {};
+  if (request.method === "POST") {
+    try { body = await request.json(); } catch { return apiJson({ error: "Invalid JSON" }, 400); }
+  }
+  const gmPassword = typeof body.gmPassword === "string" ? body.gmPassword.trim() : undefined;
+  if (gmPassword !== undefined && gmPassword && (gmPassword.length < 6 || gmPassword.length > 200)) return apiJson({ error: "The GM password needs 6 to 200 characters." }, 400);
+  const name = typeof body.name === "string" ? body.name.trim().slice(0, 80) : undefined;
+  if (request.method === "POST" && !parts[3]) {
+    if (!name) return apiJson({ error: "The campaign needs a name." }, 400);
+    if (!gmPassword) return apiJson({ error: "Set a GM password for the campaign." }, 400);
+    let slug = String(body.slug || "").trim().toLowerCase() || slugFromName(name);
+    if (!slug) slug = "campaign";
+    if (body.private) slug = `${slug.slice(0, 33)}-${randomSuffix()}`;
+    if (!SLUG_RE.test(slug) || RESERVED_SLUGS.has(slug)) return apiJson({ error: "The address can only use lowercase letters, numbers and dashes (up to 40)." }, 400);
+    const { status, data } = await registryWrite(env, "create", { slug, name, listed: !!body.listed, gmHash: await gmHashFor(slug, gmPassword) });
+    if (status !== 200) return apiJson({ error: data.error }, status);
+    return apiJson({ ok: true, slug, campaigns: view(data.campaigns) });
+  }
+  const slug = parts[3];
+  if (request.method === "POST") {
+    const patch = { slug };
+    if (name !== undefined) { if (!name) return apiJson({ error: "The campaign needs a name." }, 400); patch.name = name; }
+    if (typeof body.listed === "boolean") patch.listed = body.listed;
+    if (gmPassword) patch.gmHash = await gmHashFor(slug, gmPassword);
+    const { status, data } = await registryWrite(env, "update", patch);
+    if (status !== 200) return apiJson({ error: data.error }, status);
+    return apiJson({ ok: true, campaigns: view(data.campaigns) });
+  }
+  if (request.method === "DELETE") {
+    const { status, data } = await registryWrite(env, "remove", { slug });
+    if (status !== 200) return apiJson({ error: data.error }, status);
+    return apiJson({ ok: true, campaigns: view(data.campaigns) });
+  }
+  return apiJson({ error: "Method not allowed" }, 405);
+}
+
+async function checkGmKey(request, env, slug, entry) {
+  const key = request.headers.get(GM_HEADER) || "";
+  if (!key) return false;
+  const master = masterPassword(env);
+  if (master && secretsMatch(key, master)) return true;
+  if (!entry.gmHash) return false;
+  return secretsMatch(await gmHashFor(slug, key), entry.gmHash);
+}
+
+export default {
+  async fetch(request, env, ctx) {
+    const url = new URL(request.url);
+    if (url.pathname.startsWith("/api/")) return handleApi(request, env, url);
+
+    const m = /^\/c\/([a-z0-9-]{1,40})(\/.*)?$/.exec(url.pathname);
+    // The front page and the site's static files.
+    if (!m) return env.ASSETS.fetch(request);
+
+    const slug = m[1];
+    const rest = m[2] || "/";
+    const inner = new URL(url);
+    inner.pathname = rest;
+    const innerRequest = new Request(inner.toString(), request);
+
+    // Pages (anything that isn't an API call) are the same single-page app
+    // for every campaign; it reads the campaign from the address itself.
+    const registry = env.CAMPAIGN_REGISTRY ? await loadRegistry(env) : {};
+    let entry = registry[slug];
+    if (!entry && env.CAMPAIGN_REGISTRY) entry = (await loadRegistry(env, true))[slug];
+    if (!entry) {
+      if (request.method === "OPTIONS") return new Response(null, { status: 204, headers: CORS_HEADERS });
+      const accept = request.headers.get("accept") || "";
+      if (request.method === "GET" && accept.includes("text/html")) return env.ASSETS.fetch(new Request(new URL("/", url).toString(), request));
+      return apiJson({ error: "There's no campaign at this address." }, 404);
+    }
+
+    const scoped = Object.create(env);
+    scoped.CAMPAIGN_SLUG = slug;
+    scoped.CAMPAIGN_NAME = entry.name;
+    scoped.GM_CONFIGURED = !!entry.gmHash || !!masterPassword(env);
+    scoped.GM_OK = await checkGmKey(request, env, slug, entry);
+    return routeCampaign(innerRequest, scoped, ctx);
   },
 };

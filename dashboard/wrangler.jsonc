@@ -37,10 +37,13 @@
   // redeploy. GM key required to write (see GM_PASSWORD below); read is
   // open, same as every other shared log here.
   //
-  // GM_PASSWORD is a Worker *secret*, not a var — set it with
-  // `wrangler secret put GM_PASSWORD` (prompts for the value, never goes in
-  // this file or git). Gates every /gm/* route and any write to
-  // /visibility. The GM tab itself is also hidden behind a UI gesture (five
+  // ADMIN_PASSWORD is the site's master password, a Worker *secret* (not a
+  // var) — set it with `wrangler secret put ADMIN_PASSWORD`; it never goes
+  // in this file or git. It manages campaigns from the front page and also
+  // works as the GM password in every campaign. If it isn't set, an
+  // existing GM_PASSWORD secret plays the same role. Each campaign's own GM
+  // password is set from the front page and stored hashed. GM passwords gate
+  // every /gm/* route and any write to /visibility. The GM tab itself is also hidden behind a UI gesture (five
   // quick clicks on the campaign name) — that gesture is just a curtain so
   // players don't stumble onto a login form; GM_PASSWORD is the actual lock.
   // MANUAL_LOG (see worker/index.js /manual route + the ManualLog class) is
@@ -74,7 +77,8 @@
       { "name": "ENEMY_LOG", "class_name": "EnemyLog" },
       { "name": "MAP_LOG", "class_name": "ZoneMapLog" },
       { "name": "GEAR_LOG", "class_name": "GearLog" },
-      { "name": "CAMPAIGN_LOG", "class_name": "CampaignLog" }
+      { "name": "CAMPAIGN_LOG", "class_name": "CampaignLog" },
+      { "name": "CAMPAIGN_REGISTRY", "class_name": "CampaignRegistry" }
     ]
   },
   // A brand-new Worker gets every Durable Object class in one migration.
@@ -98,6 +102,13 @@
     {
       "tag": "v3",
       "new_sqlite_classes": ["CampaignLog"]
+    },
+    // CAMPAIGN_REGISTRY: the list of campaigns on this site (/c/<slug>/),
+    // their names and hashed GM passwords. Every other Durable Object is
+    // named per campaign, so campaigns never share data.
+    {
+      "tag": "v4",
+      "new_sqlite_classes": ["CampaignRegistry"]
     }
   ]
 }
