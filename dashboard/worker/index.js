@@ -1534,6 +1534,35 @@ function publicMapView(tokens, enemies) {
 // One previous campaign is kept as `snapshot` whenever an import replaces
 // the current one, so "Undo last import" can put it back.
 const CAMPAIGN_BODY_MAX = 1_500_000; // bytes of JSON accepted on import
+const WIKI_FILE_MAX = 15_000_000; // one file of an uploaded wiki
+const WIKI_TOTAL_MAX = 100_000_000; // the whole uploaded wiki
+const WIKI_FILES_MAX = 2000;
+const WIKI_CHUNK_BYTES = 1_000_000; // stored in pieces under the per-value limit
+const WIKI_TYPES = {
+  html: "text/html; charset=utf-8", htm: "text/html; charset=utf-8", css: "text/css; charset=utf-8",
+  js: "text/javascript; charset=utf-8", json: "application/json", txt: "text/plain; charset=utf-8",
+  png: "image/png", jpg: "image/jpeg", jpeg: "image/jpeg", gif: "image/gif", webp: "image/webp", avif: "image/avif",
+  svg: "image/svg+xml", ico: "image/x-icon", woff: "font/woff", woff2: "font/woff2", ttf: "font/ttf", otf: "font/otf",
+  mp3: "audio/mpeg", ogg: "audio/ogg", wav: "audio/wav", mp4: "video/mp4", webm: "video/webm", pdf: "application/pdf",
+};
+function wikiType(path) {
+  const ext = (path.split(".").pop() || "").toLowerCase();
+  return WIKI_TYPES[ext] || "application/octet-stream";
+}
+// A safe relative path inside the wiki: no "..", no leading slash, plain
+// characters only. Returns "" when it can't be used.
+function wikiCleanPath(raw) {
+  let p = String(raw || "").replace(/\\/g, "/").replace(/^\/+/, "");
+  try { p = decodeURIComponent(p); } catch { return ""; }
+  if (!p || p.length > 200 || !/^[A-Za-z0-9._()\- /]+$/.test(p)) return "";
+  const parts = p.split("/");
+  if (parts.some((x) => !x || x === "." || x === "..")) return "";
+  return parts.join("/");
+}
+// The uploaded wiki is GM-supplied HTML. It's served under a sandbox policy
+// (no allow-same-origin), so its scripts run in an isolated origin and can't
+// read this site's saved GM sign-ins or call its routes as the viewer.
+const WIKI_CSP = "sandbox allow-scripts allow-popups allow-popups-to-escape-sandbox allow-forms allow-modals";
 const CAMPAIGN_EDIT_MAX = 200_000; // bytes accepted by the settings / vehicle editors
 const CAMPAIGN_CHARACTERS_MAX = 40;
 const CAMPAIGN_DEPTH_MAX = 12;
@@ -1997,8 +2026,138 @@ export class CampaignLog {
   //   GET    /           -> { campaign, revision, updatedAt, hasSnapshot, snapshotSummary }
   //   POST   /import     -> replace the campaign (current one becomes the snapshot)
   //   POST   /restore    -> swap the snapshot back in (and keep the replaced one, so it can be redone)
+  // The campaign wiki: the docs/ folder wiki/build.py makes (index.html plus
+  // img/ and anything else), uploaded from the GM page as a zip. The browser
+  // unzips it and sends each file; they're stored under a new version and
+  // only swapped in on commit, so players never see a half-uploaded wiki.
+  // Files live in their own storage keys (in chunks under the per-value
+  // limit), never in the campaign record: that holds only a summary under
+  // `wiki` ({ fileName, size, files, uploadedAt }).
+  //   GET    /wiki/<path>        a file of the live wiki ("" = index.html)
+  //   POST   /wiki/begin         start an upload -> { version }
+  //   PUT    /wiki/file?v=&path= one file's bytes
+  //   POST   /wiki/commit        { version, fileName } -> make it live
+  //   DELETE /wiki               remove the wiki
+  async wikiDeletePrefix(prefix) {
+    for (;;) {
+      const batch = await this.ctx.storage.list({ prefix, limit: 128 });
+      if (!batch.size) return;
+      await this.ctx.storage.delete([...batch.keys()]);
+    }
+  }
+
+  async handleWiki(request, url) {
+    const sub = url.pathname.slice("/wiki".length).replace(/^\//, "");
+    const active = (await this.ctx.storage.get("wikiActive")) || null;
+    if (request.method === "GET") {
+      const path = wikiCleanPath(sub || "index.html");
+      if (!path) return new Response("Not found", { status: 404 });
+      if (!active) {
+        // A wiki uploaded as a single page before zips were supported.
+        const count = path === "index.html" ? (await this.ctx.storage.get("wikiChunks")) || 0 : 0;
+        if (!count) return new Response("Not found", { status: 404 });
+        const keys = Array.from({ length: count }, (_, i) => `wiki:${i}`);
+        const parts = await this.ctx.storage.get(keys);
+        return new Response(keys.map((k) => parts.get(k) || "").join(""), { status: 200, headers: { "x-wiki-etag": "legacy" } });
+      }
+      const meta = active.files[path];
+      if (!meta) return new Response("Not found", { status: 404 });
+      const etag = `"${active.version}-${quickHash(path)}"`;
+      if ((request.headers.get("if-none-match") || "") === etag) return new Response(null, { status: 304, headers: { "x-wiki-etag": etag } });
+      const keys = Array.from({ length: meta.chunks }, (_, i) => `wf:${active.version}:${path}:${i}`);
+      const got = new Map();
+      for (let i = 0; i < keys.length; i += 128) {
+        const part = await this.ctx.storage.get(keys.slice(i, i + 128));
+        for (const [k, v] of part) got.set(k, v);
+      }
+      const body = new Uint8Array(meta.size);
+      let off = 0;
+      for (const k of keys) {
+        const c = got.get(k);
+        if (!c) return new Response("This wiki file is incomplete", { status: 500 });
+        body.set(c, off);
+        off += c.byteLength;
+      }
+      return new Response(body, { status: 200, headers: { "x-wiki-etag": etag } });
+    }
+
+    if (request.method === "POST" && sub === "begin") {
+      const pending = await this.ctx.storage.get("wikiPending");
+      if (pending?.version) await this.wikiDeletePrefix(`wf:${pending.version}:`);
+      const version = crypto.randomUUID().slice(0, 8);
+      await this.ctx.storage.put("wikiPending", { version, startedAt: Date.now(), files: {} });
+      return this.json({ ok: true, version });
+    }
+
+    if (request.method === "PUT" && sub === "file") {
+      const pending = await this.ctx.storage.get("wikiPending");
+      const version = url.searchParams.get("v") || "";
+      if (!pending || pending.version !== version) return this.json({ error: "This upload has expired. Start it again." }, 409);
+      const path = wikiCleanPath(url.searchParams.get("path") || "");
+      if (!path) return this.json({ error: "That file name can't be used in a wiki." }, 400);
+      const bytes = new Uint8Array(await request.arrayBuffer());
+      if (bytes.byteLength > WIKI_FILE_MAX) return this.json({ error: `${path} is too large (over ${WIKI_FILE_MAX / 1e6} MB).` }, 413);
+      const prev = pending.files[path];
+      const total = Object.values(pending.files).reduce((n, f) => n + f.size, 0) - (prev ? prev.size : 0) + bytes.byteLength;
+      if (total > WIKI_TOTAL_MAX) return this.json({ error: `The wiki is too large (over ${WIKI_TOTAL_MAX / 1e6} MB in total).` }, 413);
+      if (!prev && Object.keys(pending.files).length >= WIKI_FILES_MAX) return this.json({ error: `Too many files (the limit is ${WIKI_FILES_MAX}).` }, 413);
+      const entries = {};
+      let chunks = 0;
+      for (let i = 0; i < bytes.byteLength || i === 0; i += WIKI_CHUNK_BYTES) {
+        entries[`wf:${version}:${path}:${chunks}`] = bytes.slice(i, i + WIKI_CHUNK_BYTES);
+        chunks += 1;
+        if (bytes.byteLength === 0) break;
+      }
+      await this.ctx.storage.put(entries);
+      pending.files[path] = { size: bytes.byteLength, chunks };
+      await this.ctx.storage.put("wikiPending", pending);
+      return this.json({ ok: true });
+    }
+
+    if (request.method === "POST" && sub === "commit") {
+      let body = {};
+      try { body = await request.json(); } catch { body = {}; }
+      const pending = await this.ctx.storage.get("wikiPending");
+      if (!pending || pending.version !== body.version) return this.json({ error: "This upload has expired. Start it again." }, 409);
+      if (!pending.files["index.html"]) return this.json({ error: "The upload has no index.html at its top level." }, 400);
+      const next = {
+        version: pending.version,
+        files: pending.files,
+        uploadedAt: Date.now(),
+        fileName: String(body.fileName || "wiki").slice(0, 120),
+      };
+      await this.ctx.storage.put("wikiActive", next);
+      await this.ctx.storage.delete("wikiPending");
+      if (active?.version) await this.wikiDeletePrefix(`wf:${active.version}:`);
+      await this.wikiDeleteLegacy();
+      const files = Object.values(next.files);
+      const campaign = this.campaign ? { ...this.campaign } : { campaign: "", characters: [], npcs: [], locations: [], vehicles: [] };
+      campaign.wiki = { fileName: next.fileName, size: files.reduce((n, f) => n + f.size, 0), files: files.length, uploadedAt: next.uploadedAt };
+      await this.save(campaign, this.snapshot);
+      return this.json({ ok: true, revision: this.revision, wiki: campaign.wiki });
+    }
+
+    if (request.method === "DELETE" && !sub) {
+      if (active?.version) await this.wikiDeletePrefix(`wf:${active.version}:`);
+      await this.ctx.storage.delete("wikiActive");
+      await this.wikiDeleteLegacy();
+      const campaign = this.campaign ? { ...this.campaign } : { campaign: "", characters: [], npcs: [], locations: [], vehicles: [] };
+      delete campaign.wiki;
+      await this.save(campaign, this.snapshot);
+      return this.json({ ok: true, revision: this.revision });
+    }
+    return this.json({ error: "Not found" }, 404);
+  }
+
+  async wikiDeleteLegacy() {
+    const old = (await this.ctx.storage.get("wikiChunks")) || 0;
+    if (old) await this.ctx.storage.delete(Array.from({ length: old }, (_, i) => `wiki:${i}`));
+    if (old) await this.ctx.storage.delete("wikiChunks");
+  }
+
   async fetch(request) {
     const url = new URL(request.url);
+    if (url.pathname === "/wiki" || url.pathname.startsWith("/wiki/")) return this.handleWiki(request, url);
     if (url.pathname.startsWith("/creation")) return this.handleCreation(request, url);
     if (url.pathname.startsWith("/advance") || url.pathname === "/xp") return this.handleXp(request, url);
     if (request.method === "GET") {
@@ -2469,6 +2628,54 @@ async function routeCampaign(request, env, ctx) {
       const res = await stub.fetch(new Request(`https://campaign.internal${internal}`, { method: request.method, body: bodyText }));
       return new Response(await res.text(), { status: res.status, headers: jsonHeaders });
     }
+    // The campaign's uploaded wiki (the docs/ folder from wiki/build.py).
+    //   GET    /wiki/, /wiki/<path>    anyone with the campaign link
+    //   POST   /gm/wiki/begin          GM: start an upload
+    //   PUT    /gm/wiki/file?v=&path=  GM: one file
+    //   POST   /gm/wiki/commit         GM: make the upload live
+    //   DELETE /gm/wiki                GM: remove the wiki
+    // HTML is served with a sandbox policy (see WIKI_CSP).
+    if (url.pathname === "/wiki" || url.pathname.startsWith("/wiki/") || url.pathname === "/gm/wiki" || url.pathname.startsWith("/gm/wiki/")) {
+      if (request.method === "OPTIONS") return new Response(null, { status: 204, headers: CORS_HEADERS });
+      const stub = env.CAMPAIGN_LOG.get(env.CAMPAIGN_LOG.idFromName(doName(env, "shared-campaign")));
+      const jsonHeaders = { "content-type": "application/json", "cache-control": "no-store", ...CORS_HEADERS };
+      if (url.pathname.startsWith("/gm/wiki")) {
+        if (!gmAuthorised(request, env)) return gmDenied(env);
+        const sub = url.pathname.slice("/gm/wiki".length);
+        const allowed = (request.method === "POST" && (sub === "/begin" || sub === "/commit")) || (request.method === "PUT" && sub === "/file") || (request.method === "DELETE" && sub === "");
+        if (!allowed) return new Response(JSON.stringify({ error: "Not found" }), { status: 404, headers: jsonHeaders });
+        const declared = Number(request.headers.get("content-length") || 0);
+        if (declared > WIKI_FILE_MAX) return new Response(JSON.stringify({ error: `That file is too large (over ${WIKI_FILE_MAX / 1e6} MB).` }), { status: 413, headers: jsonHeaders });
+        const body = request.method === "PUT" || request.method === "POST" ? await request.arrayBuffer() : undefined;
+        const res = await stub.fetch(new Request(`https://campaign.internal/wiki${sub}${url.search}`, { method: request.method, body }));
+        return new Response(await res.text(), { status: res.status, headers: jsonHeaders });
+      }
+      if (request.method !== "GET" && request.method !== "HEAD") return new Response("Method not allowed", { status: 405 });
+      // Relative links (img/…) need the trailing slash.
+      if (url.pathname === "/wiki") return new Response(null, { status: 301, headers: { location: `wiki/${url.search}` } });
+      const path = wikiCleanPath(url.pathname.slice("/wiki/".length) || "index.html");
+      const res = path
+        ? await stub.fetch(new Request(`https://campaign.internal/wiki/${encodeURIComponent(path).replace(/%2F/g, "/")}`, { method: "GET", headers: { "if-none-match": request.headers.get("if-none-match") || "" } }))
+        : new Response("Not found", { status: 404 });
+      const isHtml = path && /\.html?$/i.test(path);
+      const headers = {
+        "content-type": res.ok ? wikiType(path) : "text/plain; charset=utf-8",
+        "x-content-type-options": "nosniff",
+        "referrer-policy": "no-referrer",
+        "cache-control": "no-cache",
+      };
+      // HTML and SVG can carry scripts: both run sandboxed in an isolated origin.
+      if (isHtml || /\.svg$/i.test(path || "")) headers["content-security-policy"] = WIKI_CSP;
+      const etag = res.headers.get("x-wiki-etag");
+      if (etag && etag !== "legacy") headers.etag = etag;
+      if (res.status === 304) return new Response(null, { status: 304, headers });
+      if (!res.ok) {
+        headers["content-security-policy"] = WIKI_CSP;
+        return new Response(path === "index.html" ? "No wiki has been uploaded for this campaign yet." : "Not found", { status: 404, headers });
+      }
+      return new Response(request.method === "HEAD" ? null : res.body, { status: 200, headers });
+    }
+
     // Campaign data: the replacement for ledger.json (see CampaignLog).
     //   GET  /campaign            players: redacted, read only
     //   GET  /gm/campaign         GM: everything
@@ -2772,7 +2979,7 @@ export default {
     if (!entry) {
       if (request.method === "OPTIONS") return new Response(null, { status: 204, headers: CORS_HEADERS });
       const accept = request.headers.get("accept") || "";
-      if (request.method === "GET" && accept.includes("text/html")) return env.ASSETS.fetch(new Request(new URL("/", url).toString(), request));
+      if (request.method === "GET" && (accept.includes("text/html") || request.headers.get("sec-fetch-mode") === "navigate")) return env.ASSETS.fetch(new Request(new URL("/", url).toString(), request));
       return apiJson({ error: "There's no campaign at this address." }, 404);
     }
 

@@ -13,3 +13,6 @@ wiki/private/
 
 __pycache__/
 *.pyc
+
+# Prep files do not need to be saved on github 
+prep/

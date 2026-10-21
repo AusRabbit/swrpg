@@ -7,27 +7,30 @@ cross-linked cast, and a searchable talent list. It lives in this repo next to
 ## How it's published
 
 ```
-wiki/content/*.md  ->  wiki/build.py  ->  wiki/docs/index.html  ->  GitHub Pages
+wiki/content/*.md  ->  python wiki/build.py  ->  wiki/docs/  ->  zip  ->  GM page → Wiki → Upload
 ```
 
-- **GitHub builds it.** Every push to `main` that touches `wiki/` (or the
-  talent list or dice icons it borrows) runs `.github/workflows/wiki.yml`,
-  which builds the page and publishes it to GitHub Pages. `wiki/docs/` is not
-  committed.
-- **Cloudflare ignores it.** The dashboard Worker builds and serves only
-  `dashboard/`. To stop wiki-only pushes from triggering a Worker redeploy,
-  set the Worker's build watch paths to `dashboard/*` (Cloudflare dashboard →
-  the Worker → Settings → Build → Build watch paths).
+- **Build** (or have Claude run it): `python wiki/build.py` writes
+  `wiki/docs/` — `index.html` plus `img/` with any pictures from
+  `content/img/`. `wiki/docs/` is not committed.
+- **Zip the `docs` folder** (Windows: right-click → Compress to ZIP file;
+  macOS: right-click → Compress). Zipping the folder itself or just its
+  contents both work.
+- **Upload it to the campaign:** on that campaign's GM page, **Wiki → Upload
+  wiki…**, pick the zip. The page unzips it and uploads each file, then
+  switches the campaign over in one go. It's stored with that campaign only
+  and appears on its Wiki tab and at `/c/<campaign>/wiki/`. Uploading again
+  replaces the whole wiki (pictures you've deleted disappear too).
+- A wiki with no pictures can also be uploaded as just `index.html`.
+- **Limits:** 15 MB per file, 100 MB and 2,000 files per wiki. File names
+  may use letters, numbers, spaces, dots, dashes, underscores and brackets.
 - **Shared with the dashboard:** the talent list (`reference/talents.json`)
-  and the dice and symbol icons (`dashboard/public/images/`). Update them once
-  and both the dashboard and the wiki pick up the change.
-
-One-time GitHub setup: Settings → Pages → Build and deployment → Source:
-**GitHub Actions**. To link the wiki from the dashboard's Wiki tab, paste the
-Pages address into GM page → Campaign settings → Wiki link.
-
-GitHub Pages from a **private** repo needs a paid GitHub plan, and the
-published site is public either way. Keep anything secret out of `content/`.
+  and the dice and symbol icons (`dashboard/public/images/`), built into the
+  page.
+- **Privacy:** anyone with the campaign link can read the wiki, so keep
+  anything secret out of `content/`.
+- `.github/workflows/wiki.yml` (GitHub Pages) is no longer needed and can be
+  deleted, or kept if you also want a public copy.
 
 ## Editing
 

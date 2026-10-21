@@ -83,9 +83,12 @@ dice pool and roll-log name separately, so you can have several open at once.
    (or keep `GM_PASSWORD`) as a secret there.
 3. Open the site, press **Manage campaigns**, sign in with that password and
    create your first campaign. Send players its link.
-4. Wiki (per campaign): in GitHub, Settings → Pages → Source: **GitHub Actions**. Push, and
-   the wiki appears at `https://<user>.github.io/<repo>/`. Paste that URL
-   into GM page → Campaign settings → Wiki link.
+4. Wiki (per campaign): write the markdown in `wiki/content/` (pictures in
+   `wiki/content/img/`), run `python wiki/build.py`, zip the `wiki/docs`
+   folder, then on the campaign's GM page → **Wiki → Upload wiki…** pick
+   the zip. It shows on that campaign's Wiki tab straight away (and at
+   `/c/<campaign>/wiki/`). Upload again to replace it. No GitHub Pages
+   needed.
 5. Ships: GM page → Vehicles (bottom of the page, click to expand) →
    + Add vehicle. Pick a stock ship (or start blank), rename it, adjust the
    numbers and crew seats, then Add vehicle. Each vehicle gets its own
@@ -97,5 +100,5 @@ The deployed dashboard is a public URL. Anyone with a campaign's link can
 read whatever its players can see, so keep secrets in GM-only fields; a
 hard-to-guess address keeps unlisted campaigns out of sight. GM writes need
 that campaign's GM password (or the master password). To restrict the site itself, put it behind Cloudflare Access.
-The GitHub Pages wiki is public too, so only put player-known material in
-`wiki/content/`.
+An uploaded wiki has the same reach as the campaign link, so only put
+player-known material in `wiki/content/`.

@@ -227,7 +227,18 @@ for everything else:
   `/campaign/advance` (player XP purchase requests),
   `/gm/campaign/advance/<id>/approve|reject` and `/gm/campaign/xp`
   (GM XP awards), `/gm/campaign/settings` (title, wiki link) and
-  `/gm/campaign/vehicle` (add or edit a vehicle by id, or `{ removeId }`), and
+  `/gm/campaign/vehicle` (add or edit a vehicle by id, or `{ removeId }`)
+- **`GET /wiki/<path>`, `/gm/wiki/begin|file|commit`, `DELETE /gm/wiki`** —
+  the campaign's uploaded wiki: the `docs/` folder from `wiki/build.py`
+  (index.html, img/…). The GM page unzips the zip in the browser and sends
+  each file into a new version, which goes live only on commit (the old
+  version is then deleted). Files are stored in `CampaignLog` in 1 MB
+  chunks (limits: 15 MB per file, 100 MB and 2,000 files per wiki); the
+  campaign record carries only `wiki: { fileName, size, files, uploadedAt }`.
+  HTML and SVG are served with a `Content-Security-Policy: sandbox` header
+  (no same-origin) and the Wiki tab uses a sandboxed iframe, so the wiki
+  can't read the site's saved sign-ins. `run_worker_first` in `wrangler.jsonc` sends `/c/*` and
+  `/api/*` to the Worker so it can serve it, and
   `/gm/campaign/character` + `/gm/campaign/character/undo` (GM fixes to a
   sheet; the liveId never changes, and the previous version of each
   character is kept for one-step undo), and `/gm/campaign/character/import`

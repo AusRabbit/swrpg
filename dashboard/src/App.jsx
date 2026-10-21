@@ -4106,16 +4106,24 @@ function safeWikiUrl(raw) {
   }
 }
 
-function WikiPanel({ url }) {
-  const href = safeWikiUrl(url);
+// The campaign's wiki. An uploaded wiki (GM page → Campaign settings → Wiki)
+// is served by the Worker at /c/<slug>/wiki/ and wins; otherwise an external
+// wiki link, if one is set. The uploaded page runs sandboxed (no
+// allow-same-origin), so it can't touch this site's saved sign-ins.
+function WikiPanel({ url, wiki }) {
+  const uploaded = wiki && wiki.uploadedAt ? `${campaignBase()}wiki/?v=${wiki.uploadedAt}` : null;
+  const external = uploaded ? null : safeWikiUrl(url);
+  const href = uploaded || external;
   return (
     <div className="relative overflow-hidden border" style={{ borderColor: "#3a3f42", background: "#16191b", boxShadow: "0 0 30px rgba(94,200,216,0.06)" }}>
       <div className="p-3 sm:p-4">
-        <div className="text-[11px] tracking-[0.25em] uppercase mb-1" style={{ color: "#5ec8d8" }}>CAMPAIGN REFERENCE</div>
         <div className="flex items-center justify-between gap-3 flex-wrap mb-2">
-          <h1 className="text-2xl sm:text-3xl uppercase tracking-wide" style={{ color: "#e7e2d2", fontFamily: "'Rajdhani', sans-serif", fontWeight: 700 }}>
-            Wiki
-          </h1>
+          <div>
+            <div className="text-[11px] tracking-[0.25em] uppercase mb-1" style={{ color: "#5ec8d8" }}>CAMPAIGN REFERENCE</div>
+            <h1 className="text-2xl sm:text-3xl uppercase tracking-wide" style={{ color: "#e7e2d2", fontFamily: "'Rajdhani', sans-serif", fontWeight: 700 }}>
+              Wiki
+            </h1>
+          </div>
           {href && (
             <a
               href={href}
@@ -4130,20 +4138,25 @@ function WikiPanel({ url }) {
         </div>
         {!href ? (
           <p className="text-[13px]" style={{ color: "#5a5f62" }}>
-            No wiki link set yet. The GM sets it on the GM page, under Campaign settings.
+            No wiki yet. The GM uploads it on the GM page, under Campaign settings.
           </p>
         ) : (
           <>
-            <p className="text-[11px] leading-relaxed mb-3" style={{ color: "#5a5f62" }}>
-              If the wiki doesn't appear below, that site doesn't allow being shown inside another page — use Open in new tab.
-            </p>
+            {external && (
+              <p className="text-[11px] leading-relaxed mb-3" style={{ color: "#5a5f62" }}>
+                If the wiki doesn't appear below, that site doesn't allow being shown inside another page — use Open in new tab.
+              </p>
+            )}
             <iframe
+              key={href}
               src={href}
               title="Campaign wiki"
               className="w-full border"
-              style={{ height: "calc(100vh - 16rem)", minHeight: 480, borderColor: "#2a2e31", background: "#101315" }}
+              style={{ height: "calc(100vh - 14rem)", minHeight: 480, borderColor: "#2a2e31", background: "#101315" }}
               referrerPolicy="no-referrer"
-              sandbox="allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox allow-forms"
+              sandbox={uploaded
+                ? "allow-scripts allow-popups allow-popups-to-escape-sandbox allow-forms allow-modals"
+                : "allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox allow-forms"}
             />
           </>
         )}
@@ -6330,6 +6343,35 @@ function useCampaignStore(gmKey) {
     saveSettings: (settings) => gmPost("/gm/campaign/settings", JSON.stringify(settings)),
     saveVehicle: (vehicle) => gmPost("/gm/campaign/vehicle", JSON.stringify({ vehicle })),
     removeVehicle: (id) => gmPost("/gm/campaign/vehicle", JSON.stringify({ removeId: id })),
+    // files: [{ path, data: Uint8Array }]; onProgress(done, total)
+    async uploadWiki(files, fileName, onProgress) {
+      const call = async (path, init) => {
+        const res = await apiFetch(path, { ...init, headers: { ...(init.headers || {}), "x-gm-key": keyRef.current || "" } });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok || data.error) throw new Error(data.error || `The Worker said ${res.status}`);
+        return data;
+      };
+      const { version } = await call("/gm/wiki/begin", { method: "POST" });
+      for (let i = 0; i < files.length; i += 1) {
+        onProgress?.(i, files.length, files[i].path);
+        await call(`/gm/wiki/file?v=${encodeURIComponent(version)}&path=${encodeURIComponent(files[i].path)}`, {
+          method: "PUT",
+          headers: { "content-type": "application/octet-stream" },
+          body: files[i].data,
+        });
+      }
+      onProgress?.(files.length, files.length, "");
+      const data = await call("/gm/wiki/commit", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ version, fileName }) });
+      await fetchCampaign(true);
+      return data;
+    },
+    async removeWiki() {
+      const res = await apiFetch("/gm/wiki", { method: "DELETE", headers: { "x-gm-key": keyRef.current || "" } });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || data.error) throw new Error(data.error || `The Worker said ${res.status}`);
+      await fetchCampaign(true);
+      return data;
+    },
     importCharacter: (text) => gmPost("/gm/campaign/character/import", text),
     saveCharacter: (characterId, character, note) => gmPost("/gm/campaign/character", JSON.stringify({ characterId, character, note })),
     undoCharacter: (characterId) => gmPost("/gm/campaign/character/undo", JSON.stringify({ characterId })),
@@ -6601,11 +6643,11 @@ function GmCampaignSettingsSection({ store }) {
     <div className="border p-4 mb-5" style={{ borderColor: "#3a3f42", background: "#101315" }}>
       <div className="text-[11px] tracking-[0.2em] uppercase mb-1" style={{ color: "#5ec8d8" }}>Campaign settings</div>
       <p className="text-[11px] leading-relaxed mb-3" style={{ color: "#8a8f93" }}>
-        The campaign's name, and the wiki link players get on the Wiki tab (for example your GitHub Pages address).
+        The campaign's name, and optionally a link to a wiki hosted elsewhere.
       </p>
       <label className="block text-[10px] tracking-[0.15em] uppercase mb-1" style={{ color: "#8a8f93" }}>Campaign name</label>
       <input value={title} onChange={(e) => setTitle(e.target.value)} maxLength={120} className={`${field} mb-3`} style={{ borderColor: "#3a3f42", color: "#e7e2d2" }} placeholder="Campaign name" />
-      <label className="block text-[10px] tracking-[0.15em] uppercase mb-1" style={{ color: "#8a8f93" }}>Wiki link</label>
+      <label className="block text-[10px] tracking-[0.15em] uppercase mb-1" style={{ color: "#8a8f93" }}>External wiki link <span style={{ color: "#5a5f62", textTransform: "none", letterSpacing: 0 }}>(optional; only used when no wiki is uploaded below)</span></label>
       <input value={wiki} onChange={(e) => setWiki(e.target.value)} maxLength={500} className={`${field} mb-3`} style={{ borderColor: "#3a3f42", color: "#e7e2d2" }} placeholder="https://your-name.github.io/your-repo/" inputMode="url" />
       <div className="flex flex-wrap items-center gap-2">
         <button type="button" onClick={save} disabled={!dirty || status.state === "busy"} className={btn} style={{ color: "#101315", background: "#5ec8d8", borderColor: "#5ec8d8", fontFamily: "'Rajdhani', sans-serif", fontWeight: 700 }}>
@@ -6616,6 +6658,143 @@ function GmCampaignSettingsSection({ store }) {
         )}
         {status.msg && <span className="text-[12px]" style={{ color: status.state === "error" ? "#c23b3b" : status.state === "busy" ? "#8a8f93" : "#6fae60" }}>{status.msg}</span>}
       </div>
+    </div>
+  );
+}
+
+// Reads a .zip in the browser (stored or deflated entries, which is what
+// Windows "Compress to ZIP", macOS "Compress" and most tools write).
+// Returns [{ name, data: Uint8Array }] for every file (folders skipped).
+async function readZipEntries(buffer) {
+  const u8 = new Uint8Array(buffer);
+  const dv = new DataView(buffer);
+  let eocd = -1;
+  for (let i = u8.length - 22; i >= Math.max(0, u8.length - 65557); i -= 1) {
+    if (dv.getUint32(i, true) === 0x06054b50) { eocd = i; break; }
+  }
+  if (eocd < 0) throw new Error("that isn't a zip file");
+  const count = dv.getUint16(eocd + 10, true);
+  let p = dv.getUint32(eocd + 16, true);
+  if (count === 0xffff || p === 0xffffffff) throw new Error("it's a ZIP64 archive, which this page can't open; zip a smaller folder");
+  const utf8 = new TextDecoder("utf-8");
+  const out = [];
+  for (let n = 0; n < count; n += 1) {
+    if (dv.getUint32(p, true) !== 0x02014b50) throw new Error("the zip file looks damaged");
+    const flags = dv.getUint16(p + 8, true);
+    const method = dv.getUint16(p + 10, true);
+    const csize = dv.getUint32(p + 20, true);
+    const nameLen = dv.getUint16(p + 28, true);
+    const extraLen = dv.getUint16(p + 30, true);
+    const commentLen = dv.getUint16(p + 32, true);
+    const local = dv.getUint32(p + 42, true);
+    const name = utf8.decode(u8.subarray(p + 46, p + 46 + nameLen)).replace(/\\/g, "/");
+    p += 46 + nameLen + extraLen + commentLen;
+    if (name.endsWith("/")) continue;
+    if (flags & 1) throw new Error(`${name} is password-protected`);
+    const start = local + 30 + dv.getUint16(local + 26, true) + dv.getUint16(local + 28, true);
+    const raw = u8.subarray(start, start + csize);
+    let data;
+    if (method === 0) data = raw.slice();
+    else if (method === 8) {
+      if (typeof DecompressionStream === "undefined") throw new Error("this browser can't unzip files; try a current Chrome, Edge, Firefox or Safari");
+      data = new Uint8Array(await new Response(new Blob([raw]).stream().pipeThrough(new DecompressionStream("deflate-raw"))).arrayBuffer());
+    } else throw new Error(`${name} uses a compression type this page can't open`);
+    out.push({ name, data });
+  }
+  return out;
+}
+
+const WIKI_JUNK = /(^|\/)(__MACOSX\/|\.DS_Store$|Thumbs\.db$|desktop\.ini$|\.)/i;
+const WIKI_PATH_OK = /^[A-Za-z0-9._()\- /]+$/;
+
+// Turns the chosen file (a zip of the docs/ folder, or a single .html) into
+// the list of files to upload, rooted at the folder that holds index.html.
+async function prepareWikiUpload(file) {
+  if (/\.html?$/i.test(file.name)) {
+    return [{ path: "index.html", data: new Uint8Array(await file.arrayBuffer()) }];
+  }
+  if (!/\.zip$/i.test(file.name)) throw new Error("choose a .zip of the docs folder (or a single .html)");
+  const entries = (await readZipEntries(await file.arrayBuffer())).filter((e) => !WIKI_JUNK.test(e.name));
+  const indexes = entries.filter((e) => /(^|\/)index\.html?$/i.test(e.name)).sort((a, b) => a.name.split("/").length - b.name.split("/").length);
+  if (!indexes.length) throw new Error("the zip has no index.html; zip the docs folder that wiki/build.py makes");
+  const root = indexes[0].name.slice(0, indexes[0].name.length - indexes[0].name.split("/").pop().length);
+  const files = [];
+  const skipped = [];
+  for (const e of entries) {
+    if (!e.name.startsWith(root)) continue;
+    let path = e.name.slice(root.length);
+    if (e === indexes[0]) path = "index.html";
+    if (!WIKI_PATH_OK.test(path) || path.split("/").some((x) => !x || x === "..")) { skipped.push(path); continue; }
+    files.push({ path, data: e.data });
+  }
+  files.sort((a, b) => (a.path === "index.html" ? 1 : b.path === "index.html" ? -1 : a.path.localeCompare(b.path)));
+  return { files, skipped };
+}
+
+// GM page: upload the campaign wiki (the docs/ folder made by wiki/build.py, zipped).
+function GmWikiSection({ store }) {
+  const wiki = store.campaign?.wiki || null;
+  const fileRef = useRef(null);
+  const [status, setStatus] = useState({ state: "idle", msg: "" });
+  const btn = "text-[11px] tracking-[0.15em] uppercase px-3 py-1.5 border transition-colors disabled:opacity-40";
+
+  async function choose(e) {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    setStatus({ state: "busy", msg: `Opening ${file.name}…` });
+    try {
+      const prepared = await prepareWikiUpload(file);
+      const files = Array.isArray(prepared) ? prepared : prepared.files;
+      const skipped = Array.isArray(prepared) ? [] : prepared.skipped;
+      await store.uploadWiki(files, file.name, (done, total, path) => {
+        setStatus({ state: "busy", msg: done < total ? `Uploading ${done + 1} of ${total}: ${path}` : "Finishing…" });
+      });
+      const note = skipped.length ? ` Skipped ${skipped.length} file${skipped.length === 1 ? "" : "s"} with names a web address can't use: ${skipped.slice(0, 3).join(", ")}${skipped.length > 3 ? "…" : ""}.` : "";
+      setStatus({ state: skipped.length ? "error" : "ok", msg: `Uploaded ${file.name} (${files.length} file${files.length === 1 ? "" : "s"}). Players see it on the Wiki tab now.${note}` });
+    } catch (err) {
+      setStatus({ state: "error", msg: `Couldn't upload ${file.name}: ${err.message}` });
+    }
+  }
+
+  async function remove() {
+    if (!window.confirm("Remove the uploaded wiki? The Wiki tab will be empty (or fall back to the external link) until you upload another.")) return;
+    setStatus({ state: "busy", msg: "Removing…" });
+    try {
+      await store.removeWiki();
+      setStatus({ state: "ok", msg: "Wiki removed." });
+    } catch (err) {
+      setStatus({ state: "error", msg: err.message });
+    }
+  }
+
+  const sizeText = (n) => (n >= 1e6 ? `${(n / 1e6).toFixed(1)} MB` : `${Math.max(1, Math.round(n / 1e3))} KB`);
+  return (
+    <div className="border p-4 mb-5" style={{ borderColor: "#3a3f42", background: "#101315" }}>
+      <div className="text-[11px] tracking-[0.2em] uppercase mb-1" style={{ color: "#5ec8d8" }}>Wiki</div>
+      <p className="text-[11px] leading-relaxed mb-3" style={{ color: "#8a8f93" }}>
+        Run <code style={{ color: "#e7e2d2" }}>python wiki/build.py</code>, zip the <code style={{ color: "#e7e2d2" }}>wiki/docs</code> folder
+        (index.html plus img/), and upload the zip. It's stored with this campaign only and shown on the Wiki tab to anyone with the
+        campaign link. Uploading again replaces it in one go. A single .html file also works if the wiki has no pictures.
+      </p>
+      <div className="text-[12px] mb-3" style={{ color: "#e7e2d2" }}>
+        {wiki?.uploadedAt
+          ? <>Current: <strong>{wiki.fileName || "wiki"}</strong> · {wiki.files ? `${wiki.files} file${wiki.files === 1 ? "" : "s"} · ` : ""}{sizeText(wiki.size || 0)} · uploaded {new Date(wiki.uploadedAt).toLocaleString()}</>
+          : <span style={{ color: "#8a8f93" }}>No wiki uploaded yet.</span>}
+      </div>
+      <div className="flex flex-wrap items-center gap-2">
+        <input ref={fileRef} type="file" accept=".zip,application/zip,application/x-zip-compressed,.html,.htm,text/html" onChange={choose} className="hidden" />
+        <button type="button" onClick={() => fileRef.current?.click()} disabled={status.state === "busy"} className={btn} style={{ color: "#101315", background: "#5ec8d8", borderColor: "#5ec8d8", fontFamily: "'Rajdhani', sans-serif", fontWeight: 700 }}>
+          {wiki?.uploadedAt ? "Upload new version…" : "Upload wiki…"}
+        </button>
+        {wiki?.uploadedAt && (
+          <>
+            <a href={`${campaignBase()}wiki/?v=${wiki.uploadedAt}`} target="_blank" rel="noopener noreferrer" className="text-[11px] underline" style={{ color: "#8fd3f4" }}>Open wiki</a>
+            <button type="button" onClick={remove} disabled={status.state === "busy"} className={btn} style={{ color: "#c23b3b", borderColor: "#c23b3b66", fontFamily: "'Rajdhani', sans-serif" }}>Remove</button>
+          </>
+        )}
+      </div>
+      {status.msg && <p className="mt-2 text-[12px]" style={{ color: status.state === "error" ? "#c23b3b" : status.state === "busy" ? "#8a8f93" : "#6fae60" }}>{status.msg}</p>}
     </div>
   );
 }
@@ -10783,6 +10962,7 @@ function GmPanel({ auth, campaignStore, party, overrides, onOverride, onResetOve
           <>
             <GmCampaignDataSection store={campaignStore} />
             <GmCampaignSettingsSection store={campaignStore} />
+            <GmWikiSection store={campaignStore} />
             <GmCharacterCreationSection gmKey={auth.key} onAdded={() => campaignStore.refresh()} />
             <GmExperienceSection gmKey={auth.key} party={party} onChanged={() => campaignStore.refresh()} />
             <GmManualModeSection manual={manual} party={party} vehicles={vehicles} />
@@ -11755,7 +11935,7 @@ function CampaignDashboard() {
             gmKey={gmAuth.state === "in" ? gmAuth.key : null}
           />
         ) : viewMode === "wiki" ? (
-          <WikiPanel url={ledger.wikiUrl} />
+          <WikiPanel url={ledger.wikiUrl} wiki={ledger.wiki} />
         ) : viewMode.startsWith("vehicle:") ? (
           <VehicleTab
             key={viewVehicle?.id || "none"}
