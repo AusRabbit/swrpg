@@ -7457,20 +7457,25 @@ function GmCharacterEditorSection({ store, initialId = "", onConsumed }) {
 }
 
 // Shown in place of every tab until a campaign has been imported.
-function EmptyCampaignPanel({ status, error, isGm, onOpenGm }) {
+// Shown instead of a character sheet while the campaign has no visible
+// characters yet (or no campaign data at all).
+function EmptyCampaignPanel({ status, error, isGm, onOpenGm, noCharacters = false }) {
   return (
     <div className="border p-6 sm:p-8" style={{ borderColor: "#3a3f42", background: "#16191b" }}>
-      <div className="text-[11px] tracking-[0.25em] uppercase mb-1" style={{ color: "#5ec8d8" }}>NO CAMPAIGN LOADED</div>
+      <div className="text-[11px] tracking-[0.25em] uppercase mb-1" style={{ color: "#5ec8d8" }}>{noCharacters ? "NO CHARACTERS YET" : "NO CAMPAIGN LOADED"}</div>
       {status === "loading" ? (
         <p className="text-[13px]" style={{ color: "#8a8f93" }}>Loading the campaign…</p>
       ) : (
         <>
           <p className="text-[13px] leading-relaxed mb-2" style={{ color: "#e7e2d2" }}>
-            There's no campaign on this site yet.
+            {noCharacters
+              ? "This campaign has no characters yet. Players: if your GM sent you a character link, finish and submit your character there; it appears here once the GM approves it."
+              : "This campaign has no data yet."}
           </p>
           <p className="text-[12px] leading-relaxed" style={{ color: "#8a8f93" }}>
-            GM: open the GM page (click the campaign name five times), sign in, and use <strong>Import</strong> under Campaign
-            data to load a campaign file such as an existing <code>ledger.json</code>.
+            GM: click the campaign name at the top five times quickly to show the <strong>★ GM</strong> tab, sign in with this
+            campaign's GM password, then approve submitted characters under <strong>Character creation</strong>, or load a
+            campaign file with <strong>Import all</strong> under Campaign data.
           </p>
           {isGm && (
             <button type="button" onClick={onOpenGm} className="mt-3 text-[11px] tracking-[0.15em] uppercase px-3 py-1.5" style={{ background: "#e0763a", color: "#101315", fontFamily: "'Rajdhani', sans-serif", fontWeight: 700 }}>
@@ -11790,7 +11795,9 @@ function CampaignDashboard() {
           </div>
         </div>
 
-        {party.length > 0 && (
+        {/* Always shown, even before the first character exists, so the
+            GM tab is reachable on a brand-new campaign. */}
+        {(
           <div className="flex gap-1.5 mb-4 flex-wrap">
             {party.map((p, i) => visibilityOverrides[characterTabKey(p)] ? null : (
               <button
@@ -11973,6 +11980,14 @@ function CampaignDashboard() {
             gearStore={gearStore}
             editCharacterId={editCharacterId}
             onEditConsumed={() => setEditCharacterId("")}
+          />
+        ) : party.length === 0 && (viewMode === "character" || viewMode === "advancement" || viewMode === "party") ? (
+          <EmptyCampaignPanel
+            status={campaignStore.status}
+            error={campaignStore.error}
+            isGm={gmRevealed}
+            onOpenGm={() => setViewMode("gm")}
+            noCharacters
           />
         ) : viewMode === "advancement" ? (
           <AdvancementPlanner
