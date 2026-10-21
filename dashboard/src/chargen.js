@@ -256,8 +256,8 @@ export function computeBuild(draft, data, opts = {}) {
     ...(spec.forceSensitive ? { forceSensitive: true } : {}),
     characteristics: chars,
     vitals: {
-      wounds: { threshold: species.woundBase + chars.brawn },
-      strain: { threshold: species.strainBase + chars.willpower },
+      wounds: { threshold: species.woundBase + chars.brawn + talentThresholdBonus(talentList).wounds },
+      strain: { threshold: species.strainBase + chars.willpower + talentThresholdBonus(talentList).strain },
       soak: chars.brawn,
     },
     xp: { available: Math.max(0, xpLeft), total: xpStart },
@@ -290,6 +290,34 @@ export function computeBuild(draft, data, opts = {}) {
 }
 
 // ---------------------------------------------------------------------------
+// XP history in one place. `xp.total` is every XP the character has ever had
+// (starting XP plus awards and GM adjustments); `xpLog` records each award
+// ("award"), GM adjustment ("adjust") and purchase ("spend"). Older entries
+// have no kind: a negative one is a purchase unless it was "XP removed".
+export function xpBreakdown(character) {
+  const xp = character?.xp || {};
+  const log = Array.isArray(character?.xpLog) ? character.xpLog : [];
+  let earned = 0;
+  let spentInPlay = 0;
+  for (const e of log) {
+    const amount = Number(e?.amount) || 0;
+    const kind = e?.kind || (amount < 0 && e?.note !== "XP removed" ? "spend" : "award");
+    if (kind === "spend") spentInPlay += -amount;
+    else earned += amount;
+  }
+  const total = Number(xp.total) || 0;
+  const unspent = Number(xp.available) || 0;
+  return {
+    starting: total - earned, // species starting XP (+ any creation bonus)
+    earned, // awarded or adjusted since
+    total,
+    spentAtCreation: total - unspent - spentInPlay, // the character build (and anything spent before tracking)
+    spentInPlay, // approved purchases since
+    unspent,
+  };
+}
+
+// ---------------------------------------------------------------------------
 // Spending XP after creation (the Advancement Planner's "Submit for
 // approval"). Same costs as the planner: a skill rank is 5 x the new rank,
 // plus 5 if it isn't a career skill, up to rank 5; a talent is tier x 5 XP
@@ -306,6 +334,40 @@ export const TALENT_EFFECTS = {
   toughened: { wounds: 2 },
   grit: { strain: 1 },
 };
+
+// Wound/strain threshold bonus from a list of talents (each rank counts).
+export function talentThresholdBonus(talents) {
+  const out = { wounds: 0, strain: 0 };
+  for (const t of talents || []) {
+    const fx = TALENT_EFFECTS[String(t?.name || "").toLowerCase()];
+    if (!fx) continue;
+    const ranks = Math.max(1, Number(t.rank) || 1);
+    out.wounds += (fx.wounds || 0) * ranks;
+    out.strain += (fx.strain || 0) * ranks;
+  }
+  return out;
+}
+
+// Talents that always add Boost dice to particular skills (the ones whose
+// rules text says so with no conditions attached). A talent on a sheet can
+// override this with its own `boostsSkills` list (set on the GM page).
+// perRank: Boost dice per rank of the talent.
+export const TALENT_SKILL_BOOSTS = {
+  "physical training": { skills: ["Athletics", "Resilience"], perRank: 1 },
+  "stalker": { skills: ["Stealth", "Coordination"], perRank: 1 },
+  "uncanny senses": { skills: ["Perception", "Vigilance"], perRank: 2 },
+  "command": { skills: ["Leadership"], perRank: 1 },
+  "sense emotions": { skills: ["Charm", "Coercion", "Deception"], perRank: 1 },
+  "combat veteran": { skills: ["Brawl", "Discipline"], perRank: 1 },
+};
+
+// Which skills a talent boosts, and by how many dice in total.
+export function talentSkillBoosts(talent) {
+  const auto = TALENT_SKILL_BOOSTS[String(talent?.name || "").toLowerCase().trim()];
+  const skills = Array.isArray(talent?.boostsSkills) ? talent.boostsSkills : auto ? auto.skills : [];
+  const perRank = Number(talent?.boostPerRank) || (auto ? auto.perRank : 1);
+  return { skills, dice: perRank * Math.max(1, Number(talent?.rank) || 1), auto: !Array.isArray(talent?.boostsSkills) && !!auto };
+}
 
 export function normalizeSkillKey(s) {
   return String(s ?? "").toLowerCase().replace(/[^a-z]/g, "");
@@ -382,7 +444,7 @@ export function applyAdvancement(character, priced, note = "") {
     if (fx?.strain) next.vitals.strain = { ...(next.vitals.strain || {}), threshold: (Number(next.vitals.strain?.threshold) || 0) + fx.strain };
   }
   next.xp = { ...(next.xp || {}), available: Math.max(0, (Number(next.xp?.available) || 0) - priced.cost) };
-  next.xpLog = [...(Array.isArray(next.xpLog) ? next.xpLog : []), { at: new Date().toISOString(), amount: -priced.cost, note: [priced.lines.join("; "), note].filter(Boolean).join(" — ").slice(0, 600) }].slice(-200);
+  next.xpLog = [...(Array.isArray(next.xpLog) ? next.xpLog : []), { at: new Date().toISOString(), amount: -priced.cost, kind: "spend", note: [priced.lines.join("; "), note].filter(Boolean).join(" — ").slice(0, 600) }].slice(-200);
   next.updated = new Date().toISOString();
   return next;
 }

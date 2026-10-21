@@ -3,7 +3,7 @@ import { Swords } from "lucide-react";
 import {
   CHARACTERISTICS, CHAR_LABEL, ALL_SKILLS, CREATION_MAX_CHARACTERISTIC, CREATION_MAX_RANK, BASE_OBLIGATION,
   OBLIGATION_BONUSES, emptyDraft, computeBuild, characteristicCost, skillRankCost as creationSkillRankCost, talentCost, specializationsFor,
-  TALENT_EFFECTS, talentRankCounts,
+  TALENT_EFFECTS, talentRankCounts, xpBreakdown, talentSkillBoosts,
 } from "./chargen.js";
 
 // ---------------------------------------------------------------------------
@@ -237,6 +237,16 @@ function splitSpecial(special) {
     .filter((x) => x && x !== "—" && x !== "-");
 }
 
+// A character's Obligations as a list. Sheets edited on the GM page keep
+// `motivationObligation.obligations` (any number); older sheets and new
+// characters from the creation wizard have a single `obligation`.
+function characterObligations(character) {
+  const mo = character?.motivationObligation || {};
+  if (Array.isArray(mo.obligations)) return mo.obligations.filter((o) => o && typeof o === "object");
+  const one = mo.obligation;
+  return one && (one.type || Number(one.value) > 0 || one.note) ? [one] : [];
+}
+
 function normalizeSkillName(s) {
   return String(s ?? "").toLowerCase().replace(/[^a-z]/g, "");
 }
@@ -251,14 +261,19 @@ function buildSkills(character) {
   // to skill X" — species abilities live in their own array (see e.g. the
   // Duros's Astrogation boost) rather than the Talents list, since they
   // aren't a purchased talent and shouldn't render as one on the sheet.
+  // Talents boost through talentSkillBoosts (src/chargen.js): known talents
+  // like Physical Training work automatically, and the GM can set any
+  // talent's skills by hand on the GM page.
   [...(character?.talents || []), ...(character?.speciesAbilities || [])].forEach((t) => {
-    if (Array.isArray(t.boostsSkills)) {
-      t.boostsSkills.forEach((skillName) => {
-        const key = normalizeSkillName(skillName);
-        boostMap.set(key, (boostMap.get(key) || 0) + (t.rank || 1));
-      });
-    }
+    const { skills, dice } = talentSkillBoosts(t);
+    skills.forEach((skillName) => {
+      const key = normalizeSkillName(skillName);
+      boostMap.set(key, (boostMap.get(key) || 0) + dice);
+    });
   });
+  // Extra dice the GM added to a skill by hand (gear, species, story):
+  // character.skillDice = { "Athletics": { boost: 1, setback: 0 } }.
+  const manualDice = new Map(Object.entries(character?.skillDice || {}).map(([k, v]) => [normalizeSkillName(k), v || {}]));
 
   return FULL_SKILL_LIST.map((canon) => {
     const match = skillMap.get(normalizeSkillName(canon.name));
@@ -269,7 +284,8 @@ function buildSkills(character) {
       rank: match?.rank ?? 0,
       career: match?.career ?? false,
       characteristic: chars[canon.char] ?? 0,
-      boost: boostMap.get(normalizeSkillName(canon.name)) || 0,
+      boost: (boostMap.get(normalizeSkillName(canon.name)) || 0) + Math.max(0, Number(manualDice.get(normalizeSkillName(canon.name))?.boost) || 0),
+      setback: Math.max(0, Number(manualDice.get(normalizeSkillName(canon.name))?.setback) || 0),
     };
   });
 }
@@ -2840,7 +2856,7 @@ function SharedRollLog({ log, logStatus, soundOn, setSoundOn, animationsOn, setA
                               </thead>
                               <tbody>
                                 {entry.utility.table.map((o, i) => (
-                                  <tr key={i} style={{ color: entry.utility.triggered && entry.utility.triggered.startsWith(o.name) ? "#ffb000" : "#e7e2d2" }}>
+                                  <tr key={i} style={{ color: (Number.isInteger(entry.utility.triggeredIndex) && entry.utility.triggeredIndex >= 0 ? entry.utility.triggeredIndex === i : entry.utility.triggered && entry.utility.triggered.startsWith(o.name)) ? "#ffb000" : "#e7e2d2" }}>
                                     <td className="pr-3 py-0.5">{o.name}</td>
                                     <td className="pr-3 py-0.5">{o.type}</td>
                                     <td className="pr-3 py-0.5">{o.value}</td>
@@ -3359,23 +3375,26 @@ function DiceRollerPanel({ playerName, setPlayerName, preset, partyDestiny, dest
   // ledger order). Nothing here is recorded anywhere — it's the GM's call
   // what happens next.
   function handleObligationCheck() {
+    // Each Obligation gets its own slice, so a character with two
+    // Obligations has two rows (per the core rules).
     const table = (party || [])
-      .map((c) => {
-        const ob = c?.motivationObligation?.obligation;
+      .flatMap((c) => characterObligations(c).map((ob) => {
         const value = Number(ob?.value) || 0;
-        if (!ob || value <= 0) return null;
+        if (value <= 0) return null;
         return { id: c.liveId || c.name, name: c.name, type: ob.type || "Obligation", value };
-      })
+      }))
       .filter(Boolean);
     const total = table.reduce((sum, o) => sum + o.value, 0);
     const roll = rollUtilityD100();
     let triggered = null;
+    let triggeredIndex = -1;
     if (total > 0 && roll <= total) {
       let cursor = 0;
-      for (const o of table) {
-        cursor += o.value;
+      for (let i = 0; i < table.length; i += 1) {
+        cursor += table[i].value;
         if (roll <= cursor) {
-          triggered = o;
+          triggered = table[i];
+          triggeredIndex = i;
           break;
         }
       }
@@ -3403,6 +3422,8 @@ function DiceRollerPanel({ playerName, setPlayerName, preset, partyDestiny, dest
       table,
       double: doubleResult,
       triggered: triggered ? `${triggered.name} (${triggered.type})` : null,
+      triggeredIndex,
+      table: table.map(({ name, type, value }) => ({ name, type, value })),
     });
   }
 
@@ -4334,7 +4355,7 @@ function VehicleWeaponCard({ weapon, skill, onRoll, rollTitle, compact = false }
           {skill && (
             <div className="flex items-center gap-2">
               <TipLabel text="Pool" title={STAT_TIPS.pool[0]} body={STAT_TIPS.pool[1]} width={290} />
-              <SkillPips rank={skill.rank} characteristic={skill.characteristic} boost={(skill.boost || 0) + adjustments.boost} setback={adjustments.setback} />
+              <SkillPips rank={skill.rank} characteristic={skill.characteristic} boost={(skill.boost || 0) + adjustments.boost} setback={(skill.setback || 0) + adjustments.setback} />
             </div>
           )}
         </div>
@@ -4576,7 +4597,7 @@ function VehicleTab({ vehicle, party, partySkillSets, live, loadSkillIntoRoller,
                         >
                           <span className="text-[13px]" style={{ color: clickable ? "#e7e2d2" : "#5a5f62" }}>{action.name}</span>
                           {clickable ? (
-                            <SkillPips rank={skill.rank} characteristic={skill.characteristic} boost={skill.boost} />
+                            <SkillPips rank={skill.rank} characteristic={skill.characteristic} boost={skill.boost} setback={skill.setback || 0} />
                           ) : (
                             <span className="text-[10px] tracking-[0.1em] uppercase" style={{ color: "#5a5f62" }}>unassigned</span>
                           )}
@@ -5246,7 +5267,7 @@ function WeaponCard({ weapon, skill, onLoad, qty, onAdjustQty, brawn }) {
             <TipLabel text="Pool" title={STAT_TIPS.pool[0]} body={STAT_TIPS.pool[1]} width={290} />
             {skill ? (
               <span className="inline-flex items-center gap-2 flex-wrap">
-                <SkillPips rank={skill.rank} characteristic={skill.characteristic} boost={(skill.boost || 0) + rollAdjustments.boost} setback={rollAdjustments.setback} />
+                <SkillPips rank={skill.rank} characteristic={skill.characteristic} boost={(skill.boost || 0) + rollAdjustments.boost} setback={(skill.setback || 0) + rollAdjustments.setback} />
                 {rollAdjustments.advantage > 0 && <span className="inline-flex items-center gap-0.5 text-[10px]" style={{ color: "#6fae60" }}><SymbolIcon sym="a" size={13} /> +1</span>}
                 {rollAdjustments.threat > 0 && <span className="inline-flex items-center gap-0.5 text-[10px]" style={{ color: "#c23b3b" }}><SymbolIcon sym="t" size={13} /> +1</span>}
               </span>
@@ -7244,17 +7265,43 @@ function GmCharacterEditorSection({ store, initialId = "", onConsumed }) {
     });
   }
 
+  // Talents like Toughened (+2 wounds per rank) and Grit (+1 strain per
+  // rank) move the thresholds when their ranks change on this page.
+  function applyTalentFx(d, name, rankDelta) {
+    const fx = TALENT_EFFECTS[String(name || "").toLowerCase()];
+    if (!fx || !rankDelta) return null;
+    d.vitals = d.vitals || {};
+    if (fx.wounds) d.vitals.wounds = { ...(d.vitals.wounds || {}), threshold: Math.max(0, (Number(d.vitals.wounds?.threshold) || 0) + fx.wounds * rankDelta) };
+    if (fx.strain) d.vitals.strain = { ...(d.vitals.strain || {}), threshold: Math.max(0, (Number(d.vitals.strain?.threshold) || 0) + fx.strain * rankDelta) };
+    return [fx.wounds ? `wound threshold ${fx.wounds * rankDelta > 0 ? "+" : ""}${fx.wounds * rankDelta}` : null, fx.strain ? `strain threshold ${fx.strain * rankDelta > 0 ? "+" : ""}${fx.strain * rankDelta}` : null].filter(Boolean).join(", ");
+  }
+
+  function setSkillDie(skillName, kind, value) {
+    edit((d) => {
+      const n = Math.max(0, Math.min(5, Number(value) || 0));
+      const dice = { ...(d.skillDice || {}) };
+      const entry = { ...(dice[skillName] || {}) };
+      if (n) entry[kind] = n; else delete entry[kind];
+      if (Object.keys(entry).length) dice[skillName] = entry; else delete dice[skillName];
+      if (Object.keys(dice).length) d.skillDice = dice; else delete d.skillDice;
+      return d;
+    });
+  }
+
   function addTalent() {
     if (!addPick) return;
+    const fx = TALENT_EFFECTS[String(addPick.name).toLowerCase()];
+    const fxNote = fx ? [fx.wounds ? `wound threshold +${fx.wounds}` : null, fx.strain ? `strain threshold +${fx.strain}` : null].filter(Boolean).join(", ") : null;
     edit((d) => {
       d.talents = Array.isArray(d.talents) ? d.talents : [];
       const same = d.talents.find((t) => String(t.name).toLowerCase() === addPick.name.toLowerCase() && Number(t.tier) === Number(addPick.tier));
       if (same) same.rank = (Number(same.rank) || 1) + 1;
       else d.talents.push({ name: addPick.name, tier: Number(addPick.tier), rank: 1, ranked: /^yes$/i.test(String(addPick.ranked || "")), activation: addPick.activation || "", description: addPick.text_swrpg || "" });
+      applyTalentFx(d, addPick.name, 1);
       return d;
     });
-    const fx = TALENT_EFFECTS[addPick.name.toLowerCase()];
-    setStatus({ state: "idle", msg: fx ? `Added ${addPick.name}. Its threshold bonus isn't applied automatically here, so adjust Wounds/Strain below if needed.` : `Added ${addPick.name}.` });
+    const boosts = talentSkillBoosts({ name: addPick.name });
+    setStatus({ state: "idle", msg: `Added ${addPick.name}.${fxNote ? ` ${fxNote[0].toUpperCase()}${fxNote.slice(1)}.` : ""}${boosts.skills.length ? ` Adds Boost to ${boosts.skills.join(", ")}.` : ""}` });
     setAddPick(null);
     setAddKey((k) => k + 1);
   }
@@ -7369,7 +7416,6 @@ function GmCharacterEditorSection({ store, initialId = "", onConsumed }) {
               ["Strain", draft.vitals?.strain?.threshold, (d, v) => { d.vitals = d.vitals || {}; d.vitals.strain = { ...(d.vitals.strain || {}), threshold: v }; }],
               ["Soak", draft.vitals?.soak, (d, v) => { d.vitals = d.vitals || {}; d.vitals.soak = v; }],
               ["XP unspent", draft.xp?.available, (d, v) => { d.xp = { ...(d.xp || {}), available: v }; }],
-              ["XP total", draft.xp?.total, (d, v) => { d.xp = { ...(d.xp || {}), total: v }; }],
               ["Credits", draft.credits, (d, v) => { d.credits = v; }],
             ].map(([l, v, set]) => (
               <div key={l}>
@@ -7377,7 +7423,98 @@ function GmCharacterEditorSection({ store, initialId = "", onConsumed }) {
                 <input type="number" min={0} value={numVal(v)} onChange={(e) => edit((d) => { set(d, toNum(e.target.value)); return d; })} className={`${field} w-full`} style={fs} />
               </div>
             ))}
+            {(() => {
+              // Read-only: worked out from the saved sheet, plus any change to
+              // unspent XP typed above (saved as a GM adjustment).
+              const b = xpBreakdown(saved || draft);
+              const adjust = (Number(draft.xp?.available) || 0) - (Number(saved?.xp?.available) || 0);
+              return (
+                <div title="Every XP this character has had: starting XP plus everything awarded. Not edited here; it follows awards, and any change you make to XP unspent.">
+                  <label className="block text-[10px] mb-0.5" style={{ color: "#5a5f62" }}>XP total</label>
+                  <div className={`${field} w-full mono-num`} style={{ ...fs, color: "#8fd3f4", borderStyle: "dashed" }}>{b.total + adjust}</div>
+                </div>
+              );
+            })()}
           </div>
+          {(() => {
+            const b = xpBreakdown(saved || draft);
+            const adjust = (Number(draft.xp?.available) || 0) - (Number(saved?.xp?.available) || 0);
+            const row = (label, value, color = "#e7e2d2") => (
+              <div className="flex items-baseline justify-between gap-3">
+                <span style={{ color: "#8a8f93" }}>{label}</span>
+                <span className="mono-num" style={{ color }}>{value}</span>
+              </div>
+            );
+            return (
+              <div className="border px-3 py-2 mb-3 text-[12px] grid gap-x-6 gap-y-0.5 sm:grid-cols-2" style={{ borderColor: "#2a2e31", background: "#0e1113" }}>
+                {row("Starting XP", b.starting)}
+                {row("Spent on character build", b.spentAtCreation)}
+                {row("Earned during the campaign", `+${b.earned + adjust}`, "#6fae60")}
+                {row("Spent during the campaign", b.spentInPlay)}
+                {row("Unspent", b.unspent + adjust, "#ffb000")}
+                {row("Total XP", b.total + adjust, "#8fd3f4")}
+                {adjust !== 0 && <div className="sm:col-span-2 text-[11px] mt-1" style={{ color: "#c9a15a" }}>Saving records a GM adjustment of {adjust > 0 ? "+" : ""}{adjust} XP.</div>}
+              </div>
+            );
+          })()}
+
+          <div className={lbl} style={{ color: "#8a8f93" }}>Motivation</div>
+          <textarea
+            rows={2}
+            value={draft.motivationObligation?.motivation || ""}
+            onChange={(e) => edit((d) => { d.motivationObligation = { ...(d.motivationObligation || {}), motivation: e.target.value }; return d; })}
+            maxLength={600}
+            className={`${field} w-full mb-3`}
+            style={fs}
+            placeholder="e.g. Belief — Freedom: no one should be owned"
+          />
+
+          <div className={lbl} style={{ color: "#8a8f93" }}>
+            Obligations <span style={{ color: "#5a5f62" }}>· total {characterObligations(draft).reduce((n, o) => n + (Number(o.value) || 0), 0)}</span>
+          </div>
+          <div className="space-y-2 mb-2">
+            {characterObligations(draft).length === 0 && <div className="text-[12px]" style={{ color: "#5a5f62" }}>No Obligations.</div>}
+            {characterObligations(draft).map((o, i) => {
+              // Editing always writes the list form, converting an older
+              // single `obligation` the first time.
+              const setOb = (patch) => edit((d) => {
+                const list = characterObligations(d).map((x) => ({ ...x }));
+                list[i] = { ...list[i], ...patch };
+                d.motivationObligation = { ...(d.motivationObligation || {}), obligations: list };
+                delete d.motivationObligation.obligation;
+                return d;
+              });
+              return (
+                <div key={i} className="border p-2" style={{ borderColor: "#2a2e31", background: "#0e1113" }}>
+                  <div className="flex flex-wrap items-center gap-2 mb-1.5">
+                    <input value={o.type || ""} onChange={(e) => setOb({ type: e.target.value })} maxLength={60} className={`${field} flex-1 min-w-[160px]`} style={fs} placeholder="Type, e.g. Debt, Bounty, Favor" />
+                    <label className="text-[10px]" style={{ color: "#5a5f62" }}>Value</label>
+                    <input type="number" min={0} max={100} value={o.value ?? ""} onChange={(e) => setOb({ value: e.target.value === "" ? "" : Number(e.target.value) })} className={`${field} w-20`} style={fs} />
+                    <button type="button" onClick={() => edit((d) => {
+                      const list = characterObligations(d).filter((_, j) => j !== i);
+                      d.motivationObligation = { ...(d.motivationObligation || {}), obligations: list };
+                      delete d.motivationObligation.obligation;
+                      return d;
+                    })} className="text-[12px] px-1" style={{ color: "#c23b3b" }} title="Remove this Obligation">✕</button>
+                  </div>
+                  <textarea rows={2} value={o.note || ""} onChange={(e) => setOb({ note: e.target.value })} maxLength={1500} className={`${field} w-full`} style={fs} placeholder="Who or what it's owed to, and what's at stake" />
+                </div>
+              );
+            })}
+          </div>
+          <button
+            type="button"
+            onClick={() => edit((d) => {
+              const list = [...characterObligations(d).map((x) => ({ ...x })), { type: "", value: 5, note: "" }];
+              d.motivationObligation = { ...(d.motivationObligation || {}), obligations: list };
+              delete d.motivationObligation.obligation;
+              return d;
+            })}
+            className={`${btn} mb-4`}
+            style={ghost}
+          >
+            + Add obligation
+          </button>
 
           <div className={lbl} style={{ color: "#8a8f93" }}>Skills (rank · career)</div>
           <div className="grid gap-x-4 sm:grid-cols-2 mb-3">
@@ -7393,6 +7530,25 @@ function GmCharacterEditorSection({ store, initialId = "", onConsumed }) {
                     <label className="flex items-center gap-1 text-[10px] cursor-pointer" style={{ color: s.career ? "#6fae60" : "#5a5f62" }} title="Career skill">
                       <input type="checkbox" checked={s.career} onChange={(e) => setSkill(s.name, { career: e.target.checked })} />C
                     </label>
+                    {["boost", "setback"].map((kind) => {
+                      const v = Number(draft.skillDice?.[s.name]?.[kind]) || 0;
+                      return (
+                        <button
+                          key={kind}
+                          type="button"
+                          onClick={(e) => setSkillDie(s.name, kind, e.shiftKey || e.altKey ? v - 1 : v + 1)}
+                          onContextMenu={(e) => { e.preventDefault(); setSkillDie(s.name, kind, v - 1); }}
+                          className="inline-flex items-center gap-0.5 px-1 h-6 border text-[10px] mono-num"
+                          style={{ borderColor: v ? (kind === "boost" ? "#5ec8d8" : "#8a8f93") : "#2a2e31", color: v ? "#e7e2d2" : "#3a3f42", opacity: v ? 1 : 0.6 }}
+                          title={`Extra ${kind === "boost" ? "Boost" : "Setback"} dice on ${s.name}, added by hand (gear, species, story). Click to add one; right-click to remove one.`}
+                        >
+                          {kind === "boost"
+                            ? <img src={BOOST_ICON} alt="Boost" style={{ width: 9, height: 9 }} />
+                            : <span style={{ display: "inline-block", width: 9, height: 9, background: "#111", border: "1px solid #8a8f93" }} />}
+                          {v || ""}
+                        </button>
+                      );
+                    })}
                   </div>
                 ))}
               </div>
@@ -7404,16 +7560,54 @@ function GmCharacterEditorSection({ store, initialId = "", onConsumed }) {
           </div>
           <div className="mb-2">
             {(draft.talents || []).length === 0 && <div className="text-[12px]" style={{ color: "#5a5f62" }}>No talents.</div>}
-            {(draft.talents || []).map((t, i) => (
-              <div key={i} className="flex items-center gap-2 py-0.5 text-[12px]" style={{ color: "#e7e2d2" }}>
-                <span className="flex-1 truncate">{t.name}</span>
-                <label className="text-[10px]" style={{ color: "#5a5f62" }}>Tier</label>
-                <input type="number" min={1} max={5} value={numVal(t.tier)} onChange={(e) => edit((d) => { d.talents[i].tier = toNum(e.target.value); return d; })} className={`${field} w-14`} style={fs} />
-                <label className="text-[10px]" style={{ color: "#5a5f62" }}>Rank</label>
-                <input type="number" min={1} max={10} value={numVal(t.rank ?? 1)} onChange={(e) => edit((d) => { d.talents[i].rank = toNum(e.target.value); return d; })} className={`${field} w-14`} style={fs} />
-                <button type="button" onClick={() => edit((d) => { d.talents.splice(i, 1); return d; })} className="text-[12px] px-1" style={{ color: "#c23b3b" }} title="Remove talent">✕</button>
-              </div>
-            ))}
+            {(draft.talents || []).map((t, i) => {
+              const tb = talentSkillBoosts(t);
+              const setBoostSkills = (list) => edit((d) => { d.talents[i].boostsSkills = list; return d; });
+              return (
+                <div key={i} className="py-1 border-b" style={{ borderColor: "#1c2023" }}>
+                  <div className="flex items-center gap-2 text-[12px]" style={{ color: "#e7e2d2" }}>
+                    <span className="flex-1 truncate">{t.name}</span>
+                    <label className="text-[10px]" style={{ color: "#5a5f62" }}>Tier</label>
+                    <input type="number" min={1} max={5} value={numVal(t.tier)} onChange={(e) => edit((d) => { d.talents[i].tier = toNum(e.target.value); return d; })} className={`${field} w-14`} style={fs} />
+                    <label className="text-[10px]" style={{ color: "#5a5f62" }}>Rank</label>
+                    <input type="number" min={1} max={10} value={numVal(t.rank ?? 1)} onChange={(e) => edit((d) => {
+                      const before = Math.max(1, Number(d.talents[i].rank) || 1);
+                      d.talents[i].rank = toNum(e.target.value);
+                      const after = Math.max(1, Number(d.talents[i].rank) || 1);
+                      applyTalentFx(d, d.talents[i].name, after - before);
+                      return d;
+                    })} className={`${field} w-14`} style={fs} />
+                    <button type="button" onClick={() => edit((d) => {
+                      const gone = d.talents[i];
+                      d.talents.splice(i, 1);
+                      applyTalentFx(d, gone.name, -Math.max(1, Number(gone.rank) || 1));
+                      return d;
+                    })} className="text-[12px] px-1" style={{ color: "#c23b3b" }} title="Remove talent (also undoes Toughened/Grit threshold bonuses)">✕</button>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-1.5 mt-1 text-[11px]" style={{ color: "#8a8f93" }}>
+                    <span title="Skills this talent adds Boost dice to on the sheet and in the Dice Roller">Boosts:</span>
+                    {tb.skills.length === 0 && <span style={{ color: "#5a5f62" }}>none</span>}
+                    {tb.skills.map((sk) => (
+                      <span key={sk} className="inline-flex items-center gap-1 px-1.5 py-0.5" style={{ background: "#1c2a2e", color: "#8fd3f4" }}>
+                        <img src={BOOST_ICON} alt="" style={{ width: 9, height: 9 }} />{sk}{tb.dice > 1 ? ` ×${tb.dice}` : ""}
+                        <button type="button" onClick={() => setBoostSkills(tb.skills.filter((x) => x !== sk))} style={{ color: "#c23b3b" }} title={`Stop ${t.name} boosting ${sk}`}>✕</button>
+                      </span>
+                    ))}
+                    {tb.auto && <span style={{ color: "#5a5f62" }}>(automatic)</span>}
+                    <select
+                      value=""
+                      onChange={(e) => { if (e.target.value) setBoostSkills([...new Set([...tb.skills, e.target.value])]); }}
+                      className="bg-[#0b0d0e] border px-1 py-0.5 text-[11px]"
+                      style={fs}
+                      title="Make this talent add a Boost die to another skill"
+                    >
+                      <option value="">+ skill…</option>
+                      {FULL_SKILL_LIST.filter((x) => !tb.skills.includes(x.name)).map((x) => <option key={x.name} value={x.name}>{x.name}</option>)}
+                    </select>
+                  </div>
+                </div>
+              );
+            })}
           </div>
           <div className="flex flex-wrap items-start gap-2 mb-3">
             <select value={addTier} onChange={(e) => { setAddTier(Number(e.target.value)); setAddPick(null); setAddKey((k) => k + 1); }} className={field} style={fs}>
@@ -10198,6 +10392,32 @@ function BattleMapPanel({ roster, enemies, party, isGm, mapStore, onSaveEnemies 
     hasCenteredRef.current = true;
   }, [occupiedCenter, mapZoom]);
 
+  // The mouse wheel scrolls the page, not the map, so scrolling down past the
+  // map never gets "stuck" in it. The map still pans with Shift + wheel, a
+  // trackpad's sideways swipe, its scrollbars, or touch-dragging on a phone.
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return undefined;
+    function pageScroller(from) {
+      for (let n = from.parentElement; n && n !== document.body; n = n.parentElement) {
+        const oy = getComputedStyle(n).overflowY;
+        if ((oy === "auto" || oy === "scroll") && n.scrollHeight > n.clientHeight) return n;
+      }
+      return null;
+    }
+    function onWheel(e) {
+      if (e.shiftKey || e.ctrlKey || e.metaKey || e.altKey) return; // pan / browser zoom
+      if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) return; // sideways trackpad swipe pans the map
+      e.preventDefault();
+      const unit = e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? window.innerHeight : 1;
+      const target = pageScroller(el);
+      if (target) target.scrollBy({ top: e.deltaY * unit });
+      else window.scrollBy({ top: e.deltaY * unit });
+    }
+    el.addEventListener("wheel", onWheel, { passive: false });
+    return () => el.removeEventListener("wheel", onWheel);
+  }, []);
+
   return (
     <div className="relative overflow-hidden border" style={{ borderColor: "#3a3f42", background: "#16191b", boxShadow: "0 0 30px rgba(94,200,216,0.06)" }}>
       <div className="p-5 sm:p-7">
@@ -10307,6 +10527,7 @@ function BattleMapPanel({ roster, enemies, party, isGm, mapStore, onSaveEnemies 
               <div className="flex items-center gap-2"><span style={{ width: 14, height: 14, borderRadius: "50%", background: "#3b82c2", display: "inline-block" }} /> Player</div>
               <div className="flex items-center gap-2"><span style={{ width: 14, height: 14, borderRadius: 3, background: "#c23b3b", display: "inline-block" }} /> Enemy</div>
               <div className="flex items-center gap-2"><span style={{ width: 14, height: 14, borderRadius: 3, background: "#c23b3b", opacity: 0.4, display: "inline-block" }} /> Down</div>
+              <div title="The mouse wheel scrolls the page. To move around a map bigger than the screen, hold Shift while scrolling, swipe sideways on a trackpad, or drag the scrollbars.">Shift + scroll pans the map</div>
               {isGm && (
                 <div className="flex items-center gap-2">
                   <span style={{ width: 14, height: 14, borderRadius: 3, background: "#c23b3b", border: "2px dashed #ffb000", display: "inline-block", boxSizing: "border-box" }} />
@@ -10317,7 +10538,9 @@ function BattleMapPanel({ roster, enemies, party, isGm, mapStore, onSaveEnemies 
           </div>
         </div>
 
-        <div ref={scrollRef} className="overflow-auto" style={{ height: "min(90vh, 1000px)", overscrollBehavior: "contain" }}>
+        {/* Only as tall as the map needs (up to most of the screen), so a
+            small map has no scroll box at all. */}
+        <div ref={scrollRef} className="overflow-auto" style={{ maxHeight: "min(90vh, 1000px)" }}>
           <div style={{ minWidth: "100%", minHeight: "100%", width: "max-content", height: "max-content", display: "grid", placeItems: "center", padding: 8, boxSizing: "border-box" }}>
           <div style={{ width: boardWidth * mapZoom, height: boardHeight * mapZoom, minWidth: Math.round(400 * mapZoom), flexShrink: 0 }}>
           <div className="relative" style={{ width: boardWidth, height: boardHeight, transform: `scale(${mapZoom})`, transformOrigin: "top left" }}>
@@ -11532,7 +11755,7 @@ function CampaignDashboard() {
   function loadSkillIntoRoller(skill, characterName, weaponNote, damage = null, adjustments = {}, options = {}) {
     const proficiency = Math.min(skill.rank, skill.characteristic);
     const ability = Math.max(skill.rank, skill.characteristic) - proficiency;
-    const pool = { ...EMPTY_POOL, proficiency, ability, boost: (skill.boost || 0) + (adjustments.boost || 0), setback: adjustments.setback || 0 };
+    const pool = { ...EMPTY_POOL, proficiency, ability, boost: (skill.boost || 0) + (adjustments.boost || 0), setback: (skill.setback || 0) + (adjustments.setback || 0) };
     const automaticResults = { ...EMPTY_MANUAL, a: adjustments.advantage || 0, t: adjustments.threat || 0 };
     diceSeedRef.current += 1;
     const preset = {
@@ -11708,7 +11931,7 @@ function CampaignDashboard() {
     .map((g) => ({ id: g.id, name: g.name, note: g.note || undefined, isNew: isRecentlyAdded(g.addedAt) }));
   const inv = [...(active.inventory || []).filter((i) => !effectiveHidden("inventory", i)), ...gearInventory];
   const mo = active.motivationObligation || {};
-  const obligation = mo.obligation || {};
+  const obligations = characterObligations(active);
   const chars = active.characteristics || {};
   const skills = buildSkills(active);
   const talents = [...(active.talents || [])].sort((a, b) => (a.tier ?? 99) - (b.tier ?? 99));
@@ -12180,7 +12403,7 @@ function CampaignDashboard() {
                                     title="Load into Dice Roller"
                                     className="hover:opacity-80 transition-opacity"
                                   >
-                                    <SkillPips rank={s?.rank ?? 0} characteristic={s?.characteristic ?? 0} boost={s?.boost ?? 0} />
+                                    <SkillPips rank={s?.rank ?? 0} characteristic={s?.characteristic ?? 0} boost={s?.boost ?? 0} setback={s?.setback ?? 0} />
                                   </button>
                                 </td>
                               );
@@ -12262,17 +12485,21 @@ function CampaignDashboard() {
             <CharacterDescriptionField characterId={active.liveId || active.name} species={active.species} />
 
             <>
-                {(mo.motivation || obligation.type) && (
+                {(mo.motivation || obligations.length > 0) && (
                   <div className="space-y-3 mb-5 pb-5 border-b" style={{ borderColor: "#2a2e31" }}>
                     {mo.motivation && (
-                      <Stat label="Motivation"><span className="text-[13px]" style={{ color: "#e7e2d2" }}>{mo.motivation}</span></Stat>
+                      <Stat label="Motivation"><span className="text-[13px] whitespace-pre-line" style={{ color: "#e7e2d2" }}>{mo.motivation}</span></Stat>
                     )}
-                    {obligation.type && (
-                      <Stat label="Obligation">
-                        <span className="text-[13px]" style={{ color: "#e7e2d2" }}>
-                          {obligation.type} <span className="mono-num" style={{ color: "#ffb000" }}>({obligation.value})</span>
-                          {obligation.note ? ` — ${obligation.note}` : ""}
-                        </span>
+                    {obligations.length > 0 && (
+                      <Stat label={obligations.length > 1 ? `Obligations (total ${obligations.reduce((n, o) => n + (Number(o.value) || 0), 0)})` : "Obligation"}>
+                        <div className="space-y-1">
+                          {obligations.map((o, i) => (
+                            <div key={i} className="text-[13px]" style={{ color: "#e7e2d2" }}>
+                              {o.type || "Obligation"} <span className="mono-num" style={{ color: "#ffb000" }}>({Number(o.value) || 0})</span>
+                              {o.note ? ` — ${o.note}` : ""}
+                            </div>
+                          ))}
+                        </div>
                       </Stat>
                     )}
                   </div>
@@ -12571,7 +12798,7 @@ function CampaignDashboard() {
                                   {s.name} <span style={{ color: "#5a5f62" }}>({CHAR_ABBR[s.char] || "?"})</span>
                                 </span>
                               </SkillNameTip>
-                              <SkillPips rank={s.rank} characteristic={s.characteristic} boost={s.boost} />
+                              <SkillPips rank={s.rank} characteristic={s.characteristic} boost={s.boost} setback={s.setback || 0} />
                             </button>
                           ))}
                         </div>

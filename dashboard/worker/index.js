@@ -261,7 +261,7 @@ export class RollLog {
         if (kind) {
           const rollNum = Number(body.utility.roll);
           const table = Array.isArray(body.utility.table)
-            ? body.utility.table.slice(0, 12).map((o) => ({
+            ? body.utility.table.slice(0, 40).map((o) => ({
                 name: String(o?.name ?? "").slice(0, 40),
                 type: String(o?.type ?? "").slice(0, 40),
                 value: Number.isFinite(Number(o?.value)) ? Math.max(0, Math.min(999, Math.floor(Number(o.value)))) : 0,
@@ -277,6 +277,7 @@ export class RollLog {
             modifier: Number.isFinite(Number(body.utility.modifier)) ? Math.max(0, Math.min(999, Math.floor(Number(body.utility.modifier)))) : 0,
             total: Number.isFinite(Number(body.utility.total)) ? Math.max(0, Math.min(999, Math.floor(Number(body.utility.total)))) : 0,
             triggered: body.utility.triggered ? String(body.utility.triggered).slice(0, 80) : null,
+            triggeredIndex: Number.isInteger(body.utility.triggeredIndex) ? Math.max(-1, Math.min(40, body.utility.triggeredIndex)) : -1,
             double: !!body.utility.double,
             table,
           };
@@ -1690,7 +1691,7 @@ function sanitizeCampaignSettings(raw) {
 // liveId never changes (wounds, strain, crew seats and bios are keyed on it),
 // numbers are forced to numbers, and the name must stay unique.
 // Returns { character } or { error }.
-function sanitizeCharacterEdit(raw, before, characters, idx) {
+function sanitizeCharacterEdit(raw, before, characters, idx, { fromFile = false } = {}) {
   if (!raw || typeof raw !== "object" || Array.isArray(raw)) return { error: "That isn't a character sheet." };
   const c = cleanCampaignValue(raw, 0) || {};
   c.name = String(c.name || "").trim().slice(0, 80);
@@ -1711,11 +1712,51 @@ function sanitizeCharacterEdit(raw, before, characters, idx) {
   c.talents = (Array.isArray(c.talents) ? c.talents : [])
     .filter((t) => t && typeof t === "object" && String(t.name || "").trim())
     .map((t) => ({ ...t, name: String(t.name).trim(), tier: num(t.tier, 1, 5, 1), rank: num(t.rank, 1, 10, 1) }));
+  // Extra dice the GM added to skills by hand: { "Athletics": { boost, setback } }.
+  if (c.skillDice && typeof c.skillDice === "object") {
+    const dice = {};
+    for (const [k, v] of Object.entries(c.skillDice).slice(0, 60)) {
+      const boost = num(v?.boost, 0, 5);
+      const setback = num(v?.setback, 0, 5);
+      if (boost || setback) dice[String(k).slice(0, 60)] = { ...(boost ? { boost } : {}), ...(setback ? { setback } : {}) };
+    }
+    if (Object.keys(dice).length) c.skillDice = dice; else delete c.skillDice;
+  } else delete c.skillDice;
+  c.talents = c.talents.map((t) => (Array.isArray(t.boostsSkills) ? { ...t, boostsSkills: t.boostsSkills.map((x) => String(x || "").slice(0, 60)).filter(Boolean).slice(0, 20) } : t));
   c.vitals = c.vitals && typeof c.vitals === "object" ? c.vitals : {};
   c.vitals.wounds = { ...(c.vitals.wounds || {}), threshold: num(c.vitals.wounds?.threshold, 0, 99) };
   c.vitals.strain = { ...(c.vitals.strain || {}), threshold: num(c.vitals.strain?.threshold, 0, 99) };
   c.vitals.soak = num(c.vitals.soak, 0, 99);
-  c.xp = { ...(c.xp || {}), available: num(c.xp?.available, 0, 100000), total: num(c.xp?.total, 0, 100000) };
+  // XP total isn't edited directly: it's everything the character has ever
+  // had. Changing unspent XP here counts as a GM adjustment, so the total
+  // moves by the same amount and the change is logged.
+  // (A character file being imported keeps its own XP figures and history.)
+  if (fromFile) {
+    c.xp = { ...(c.xp || {}), available: num(c.xp?.available, 0, 100000), total: num(c.xp?.total, 0, 100000) };
+    c.xpLog = Array.isArray(c.xpLog) ? c.xpLog.slice(-200) : [];
+  } else {
+    const beforeAvail = Number(before?.xp?.available) || 0;
+    const beforeTotal = Number(before?.xp?.total) || 0;
+    const available = num(c.xp?.available, 0, 100000);
+    const delta = available - beforeAvail;
+    c.xp = { ...(c.xp || {}), available, total: Math.max(0, beforeTotal + delta) };
+    const log = Array.isArray(before?.xpLog) ? before.xpLog : [];
+    c.xpLog = delta ? [...log, { at: new Date().toISOString(), amount: delta, kind: "adjust", note: "GM edit" }].slice(-200) : log;
+  }
+  // Motivation and any number of Obligations (the GM page writes a list;
+  // older sheets have a single `obligation`, left as it is until edited).
+  if (c.motivationObligation && typeof c.motivationObligation === "object") {
+    const mo = c.motivationObligation;
+    mo.motivation = String(mo.motivation || "").slice(0, 600);
+    if (Array.isArray(mo.obligations)) {
+      mo.obligations = mo.obligations
+        .filter((o) => o && typeof o === "object")
+        .slice(0, 12)
+        .map((o) => ({ type: String(o.type || "").trim().slice(0, 60), value: num(o.value, 0, 100), note: String(o.note || "").trim().slice(0, 1500) }))
+        .filter((o) => o.type || o.value || o.note);
+      delete mo.obligation;
+    }
+  }
   if (c.credits !== undefined) c.credits = num(c.credits, 0, 100000000);
   c.updated = new Date().toISOString();
   return { character: c };
@@ -2007,7 +2048,7 @@ export class CampaignLog {
         const xp = c.xp || {};
         const available = Math.max(0, (Number(xp.available) || 0) + amount);
         const total = Math.max(0, (Number(xp.total) || 0) + amount);
-        const xpLog = [...(Array.isArray(c.xpLog) ? c.xpLog : []), { at, amount, note: reason || (amount > 0 ? "XP awarded" : "XP removed") }].slice(-200);
+        const xpLog = [...(Array.isArray(c.xpLog) ? c.xpLog : []), { at, amount, kind: "award", note: reason || (amount > 0 ? "XP awarded" : "XP removed") }].slice(-200);
         return { ...c, xp: { ...xp, available, total }, xpLog, updated: at };
       });
       if (!names.length) return this.json({ error: "None of those characters are in the campaign." }, 404);
@@ -2240,7 +2281,7 @@ export class CampaignLog {
       if (idx === -1) idx = characters.findIndex((c) => c.name === name);
       const before = idx === -1 ? { liveId: "" } : characters[idx];
       if (idx === -1 && characters.length >= CAMPAIGN_CHARACTERS_MAX) return this.json({ error: `The campaign already has ${CAMPAIGN_CHARACTERS_MAX} characters.` }, 409);
-      const { character, error } = sanitizeCharacterEdit(incoming, before, characters, idx);
+      const { character, error } = sanitizeCharacterEdit(incoming, before, characters, idx, { fromFile: true });
       if (error) return this.json({ error }, 400);
       if (idx === -1) {
         character.liveId = creationSlug(incoming.liveId || character.name, characters.flatMap((c) => [c.liveId, c.name]).filter(Boolean));

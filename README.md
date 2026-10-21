@@ -51,9 +51,20 @@ new deployment. The site never reads it directly.
   "Whole party"), enter the amount and a reason.
 - **Fixing a sheet:** on a character's sheet press **✎ Edit sheet (GM)**
   (or GM page → Edit a character, at the bottom). Change skill ranks, career skills,
-  talents, characteristics, thresholds, XP and credits; anything else
+  talents, characteristics, thresholds, XP, credits, Motivation and
+  Obligations (add, edit or remove any number); anything else
   (weapons, armour, gear) through the "full sheet as JSON" box. Edits don't
-  charge or refund XP. **Undo last edit** puts back the previous version.
+  charge or refund XP. **XP total** isn't editable: it's every XP the
+  character has had, shown with a breakdown (starting XP, spent on the
+  build, earned and spent during the campaign, unspent). Changing XP
+  unspent is logged as a GM adjustment and moves the total with it.
+  Adding, removing or re-ranking Toughened/Grit moves the wound/strain
+  threshold. Each talent shows the skills it Boosts (automatic for Physical
+  Training, Stalker, Uncanny Senses, Command, Sense Emotions and Combat
+  Veteran; add or remove skills per talent), and each skill has buttons for
+  extra Boost/Setback dice added by hand (click to add, right-click to
+  remove).
+  **Undo last edit** puts back the previous version.
 - **Spending XP:** players open their sheet's XP box (Advancement Planner),
   choose skills and talents, and press **Submit for approval**. The
   ★ GM tab pulses with a count while anything is waiting. Approve or reject
