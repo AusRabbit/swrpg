@@ -1588,6 +1588,8 @@ function publicMapView(tokens, enemies) {
 // One previous campaign is kept as `snapshot` whenever an import replaces
 // the current one, so "Undo last import" can put it back.
 const CAMPAIGN_BODY_MAX = 1_500_000; // bytes of JSON accepted on import
+const PORTRAIT_MAX_BYTES = 2_000_000;
+const PORTRAIT_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
 const WIKI_FILE_MAX = 15_000_000; // one file of an uploaded wiki
 const WIKI_TOTAL_MAX = 100_000_000; // the whole uploaded wiki
 const WIKI_FILES_MAX = 2000;
@@ -1712,6 +1714,19 @@ function sanitizeCharacterEdit(raw, before, characters, idx, { fromFile = false 
   c.talents = (Array.isArray(c.talents) ? c.talents : [])
     .filter((t) => t && typeof t === "object" && String(t.name || "").trim())
     .map((t) => ({ ...t, name: String(t.name).trim(), tier: num(t.tier, 1, 5, 1), rank: num(t.rank, 1, 10, 1) }));
+  // Portrait: an uploaded picture ("upload:<time>", set by the upload route),
+  // a web address, or a picture bundled with the site (/images/...).
+  if (typeof c.portrait === "string" && c.portrait) {
+    const p = c.portrait.trim().slice(0, 500);
+    if (/^upload:\d+$/.test(p) || /^\/images\/[\w./ -]+$/.test(p)) c.portrait = p;
+    else {
+      try {
+        const u = new URL(p);
+        c.portrait = u.protocol === "https:" || u.protocol === "http:" ? u.toString() : undefined;
+      } catch { c.portrait = undefined; }
+    }
+    if (!c.portrait) delete c.portrait;
+  } else delete c.portrait;
   // Extra dice the GM added to skills by hand: { "Athletics": { boost, setback } }.
   if (c.skillDice && typeof c.skillDice === "object") {
     const dice = {};
@@ -2243,6 +2258,64 @@ export class CampaignLog {
     return this.json({ error: "Not found" }, 404);
   }
 
+  // Character portraits uploaded from the GM page. One image per character
+  // (already resized in the browser), stored under "portrait:<id>"; the
+  // character's `portrait` becomes "upload:<timestamp>" so the sheet knows
+  // to load it from /portrait/<id> and so a new upload busts the cache.
+  async handlePortrait(request, url) {
+    if (url.pathname === "/portraits/export" && request.method === "GET") {
+      const all = await this.ctx.storage.list({ prefix: "portrait:" });
+      const out = {};
+      for (const [k, v] of all) {
+        let bin = "";
+        const bytes = v.bytes;
+        for (let i = 0; i < bytes.length; i += 0x8000) bin += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000));
+        out[k.slice("portrait:".length)] = { type: v.type, data: btoa(bin) };
+      }
+      return this.json({ portraits: out });
+    }
+    if (url.pathname === "/portraits/import" && request.method === "POST") {
+      let body = {};
+      try { body = await request.json(); } catch { body = {}; }
+      const entries = {};
+      for (const [id, p] of Object.entries(body.portraits || {}).slice(0, CAMPAIGN_CHARACTERS_MAX)) {
+        if (!PORTRAIT_TYPES.includes(p?.type) || typeof p?.data !== "string") continue;
+        let bytes;
+        try { bytes = Uint8Array.from(atob(p.data), (ch) => ch.charCodeAt(0)); } catch { continue; }
+        if (bytes.byteLength && bytes.byteLength <= PORTRAIT_MAX_BYTES) entries[`portrait:${String(id).slice(0, 80)}`] = { type: p.type, bytes };
+      }
+      if (Object.keys(entries).length) await this.ctx.storage.put(entries);
+      return this.json({ ok: true, restored: Object.keys(entries).length });
+    }
+    const id = String(url.searchParams.get("id") || "").slice(0, 80);
+    if (!id) return this.json({ error: "Which character?" }, 400);
+    if (request.method === "GET") {
+      const p = await this.ctx.storage.get(`portrait:${id}`);
+      if (!p) return new Response("Not found", { status: 404 });
+      return new Response(p.bytes, { status: 200, headers: { "content-type": p.type } });
+    }
+    const characters = Array.isArray(this.campaign?.characters) ? [...this.campaign.characters] : [];
+    const idx = characters.findIndex((c) => (c.liveId || c.name) === id);
+    if (idx === -1) return this.json({ error: "That character isn't in the campaign." }, 404);
+    if (request.method === "PUT") {
+      const type = String(request.headers.get("content-type") || "").split(";")[0].trim().toLowerCase();
+      if (!PORTRAIT_TYPES.includes(type)) return this.json({ error: "Use a JPEG, PNG, WebP or GIF picture." }, 400);
+      const bytes = new Uint8Array(await request.arrayBuffer());
+      if (!bytes.byteLength) return this.json({ error: "That picture is empty." }, 400);
+      if (bytes.byteLength > PORTRAIT_MAX_BYTES) return this.json({ error: "That picture is too large (over 2 MB)." }, 413);
+      await this.ctx.storage.put(`portrait:${id}`, { type, bytes });
+      characters[idx] = { ...characters[idx], portrait: `upload:${Date.now()}` };
+    } else if (request.method === "DELETE") {
+      await this.ctx.storage.delete(`portrait:${id}`);
+      const { portrait, ...rest } = characters[idx];
+      characters[idx] = rest;
+    } else {
+      return this.json({ error: "Method not allowed" }, 405);
+    }
+    await this.save({ ...this.campaign, characters }, this.snapshot);
+    return this.json({ ok: true, revision: this.revision, portrait: characters[idx].portrait || null });
+  }
+
   async wikiDeleteLegacy() {
     const old = (await this.ctx.storage.get("wikiChunks")) || 0;
     if (old) await this.ctx.storage.delete(Array.from({ length: old }, (_, i) => `wiki:${i}`));
@@ -2252,6 +2325,7 @@ export class CampaignLog {
   async fetch(request) {
     const url = new URL(request.url);
     if (url.pathname === "/wiki" || url.pathname.startsWith("/wiki/")) return this.handleWiki(request, url);
+    if (url.pathname === "/portrait" || url.pathname.startsWith("/portraits/")) return this.handlePortrait(request, url);
     if (url.pathname.startsWith("/creation")) return this.handleCreation(request, url);
     if (url.pathname.startsWith("/advance") || url.pathname === "/xp") return this.handleXp(request, url);
     if (request.method === "GET") {
@@ -2322,6 +2396,21 @@ export class CampaignLog {
       characters[idx] = next;
       this.charUndo[characterId] = undoEntry;
       await this.ctx.storage.put("charUndo", this.charUndo);
+      await this.save({ ...this.campaign, characters }, this.snapshot);
+      return this.json({ ok: true, revision: this.revision });
+    }
+    // Reorder the characters (the order of the dashboard's character tabs).
+    // body: { order: [characterId, ...] }; anyone not listed keeps their
+    // relative place at the end.
+    if (request.method === "POST" && url.pathname === "/order") {
+      let raw;
+      try { raw = await request.json(); } catch { return this.json({ error: "That request isn't valid JSON." }, 400); }
+      if (!this.campaign) return this.json({ error: "There's no campaign loaded yet." }, 409);
+      const order = Array.isArray(raw?.order) ? raw.order.map((x) => String(x)) : [];
+      const characters = Array.isArray(this.campaign.characters) ? [...this.campaign.characters] : [];
+      const idOf = (c) => c.liveId || c.name;
+      const rank = (c) => { const i = order.indexOf(idOf(c)); return i === -1 ? order.length + characters.indexOf(c) : i; };
+      characters.sort((a, b) => rank(a) - rank(b));
       await this.save({ ...this.campaign, characters }, this.snapshot);
       return this.json({ ok: true, revision: this.revision });
     }
@@ -2410,7 +2499,8 @@ async function exportLive(env) {
     doJson(env.CREW_LOG, env, "shared-crew-log"),
   ]);
   const { initiative, enabled, ...session } = manual || {};
-  return { bios: bio.bios || {}, overrides: vis.overrides || {}, gear: gear.gear || [], session, crew: crew.crew || {} };
+  const portraits = await doJson(env.CAMPAIGN_LOG, env, "shared-campaign", "/portraits/export");
+  return { bios: bio.bios || {}, overrides: vis.overrides || {}, gear: gear.gear || [], session, crew: crew.crew || {}, portraits: portraits.portraits || {} };
 }
 async function importLive(env, live) {
   if (!live || typeof live !== "object") return;
@@ -2420,6 +2510,7 @@ async function importLive(env, live) {
   if (live.overrides && typeof live.overrides === "object") jobs.push(doJson(env.VISIBILITY_LOG, env, "shared-visibility-log", "/__restore", post({ overrides: live.overrides })));
   if (Array.isArray(live.gear)) jobs.push(doJson(env.GEAR_LOG, env, "shared-gear-log", "/", post({ gear: live.gear })));
   if (live.crew && typeof live.crew === "object") jobs.push(doJson(env.CREW_LOG, env, "shared-crew-log", "/__restore", post({ crew: live.crew })));
+  if (live.portraits && typeof live.portraits === "object") jobs.push(doJson(env.CAMPAIGN_LOG, env, "shared-campaign", "/portraits/import", post({ portraits: live.portraits })));
   if (live.session && typeof live.session === "object") {
     const { initiative, enabled, ...session } = live.session;
     jobs.push((async () => {
@@ -2769,6 +2860,33 @@ async function routeCampaign(request, env, ctx) {
       const res = await stub.fetch(new Request(`https://campaign.internal${internal}`, { method: request.method, body: bodyText }));
       return new Response(await res.text(), { status: res.status, headers: jsonHeaders });
     }
+    // Character portraits.
+    //   GET    /portrait/<id>      anyone with the campaign link
+    //   PUT    /gm/portrait/<id>   GM: upload (body is the image)
+    //   DELETE /gm/portrait/<id>   GM: remove
+    const portraitMatch = /^\/(gm\/)?portrait\/([^/]{1,200})$/.exec(url.pathname);
+    if (portraitMatch) {
+      if (request.method === "OPTIONS") return new Response(null, { status: 204, headers: CORS_HEADERS });
+      const isGm = !!portraitMatch[1];
+      let id;
+      try { id = decodeURIComponent(portraitMatch[2]); } catch { id = ""; }
+      const stub = env.CAMPAIGN_LOG.get(env.CAMPAIGN_LOG.idFromName(doName(env, "shared-campaign")));
+      const target = `https://campaign.internal/portrait?id=${encodeURIComponent(id)}`;
+      if (isGm) {
+        if (!gmAuthorised(request, env)) return gmDenied(env);
+        if (request.method !== "PUT" && request.method !== "DELETE") return new Response(JSON.stringify({ error: "Method not allowed" }), { status: 405, headers: { "content-type": "application/json", ...CORS_HEADERS } });
+        const declared = Number(request.headers.get("content-length") || 0);
+        if (declared > PORTRAIT_MAX_BYTES) return new Response(JSON.stringify({ error: "That picture is too large (over 2 MB)." }), { status: 413, headers: { "content-type": "application/json", ...CORS_HEADERS } });
+        const res = await stub.fetch(new Request(target, { method: request.method, headers: { "content-type": request.headers.get("content-type") || "" }, body: request.method === "PUT" ? await request.arrayBuffer() : undefined }));
+        return new Response(await res.text(), { status: res.status, headers: { "content-type": "application/json", "cache-control": "no-store", ...CORS_HEADERS } });
+      }
+      if (request.method !== "GET" && request.method !== "HEAD") return new Response("Method not allowed", { status: 405 });
+      const res = await stub.fetch(new Request(target, { method: "GET" }));
+      if (!res.ok) return new Response("Not found", { status: 404, headers: { "cache-control": "no-cache" } });
+      // The address carries ?v=<upload time>, so a cached copy is always the current picture.
+      return new Response(request.method === "HEAD" ? null : res.body, { status: 200, headers: { "content-type": res.headers.get("content-type") || "image/jpeg", "cache-control": "public, max-age=31536000, immutable", "x-content-type-options": "nosniff" } });
+    }
+
     // The campaign's uploaded wiki (the docs/ folder from wiki/build.py).
     //   GET    /wiki/, /wiki/<path>    anyone with the campaign link
     //   POST   /gm/wiki/begin          GM: start an upload
@@ -2825,6 +2943,7 @@ async function routeCampaign(request, env, ctx) {
     //   GET  /gm/campaign/export  GM: download the whole campaign
     //   POST /gm/campaign/settings GM: title and wiki link
     //   POST /gm/campaign/vehicle  GM: add, edit or remove the vehicle
+    //   POST /gm/campaign/order    GM: { order: [characterId, ...] } tab order
     //   POST /gm/campaign/character       GM: fix a character sheet { characterId, character, note }
     //   POST /gm/campaign/character/undo  GM: put back the version before the last fix
     //   POST /gm/campaign/character/import GM: add or replace one character from a file
@@ -2874,7 +2993,7 @@ async function routeCampaign(request, env, ctx) {
 
       // POST /gm/campaign/settings  { title?, wikiUrl? }
       // POST /gm/campaign/vehicle   { vehicle: {...} | null }
-      if (isGm && request.method === "POST" && (sub === "/settings" || sub === "/vehicle" || sub === "/character" || sub === "/character/undo" || sub === "/character/import")) {
+      if (isGm && request.method === "POST" && (sub === "/settings" || sub === "/vehicle" || sub === "/order" || sub === "/character" || sub === "/character/undo" || sub === "/character/import")) {
         const declared = Number(request.headers.get("content-length") || 0);
         const body = declared > CAMPAIGN_EDIT_MAX ? "" : await request.text();
         if (declared > CAMPAIGN_EDIT_MAX || body.length > CAMPAIGN_EDIT_MAX) {

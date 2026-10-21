@@ -247,6 +247,35 @@ function characterObligations(character) {
   return one && (one.type || Number(one.value) > 0 || one.note) ? [one] : [];
 }
 
+// Where a character's portrait comes from: an uploaded picture
+// ("upload:<time>", served by this campaign's /portrait/<id>), a web address,
+// or a picture bundled with the site.
+function portraitSrc(character) {
+  const p = character?.portrait;
+  if (typeof p !== "string" || !p) return "";
+  if (p.startsWith("upload:")) return `${campaignBase()}portrait/${encodeURIComponent(character.liveId || character.name)}?v=${p.slice(7)}`;
+  return p;
+}
+
+// Shrinks a chosen picture in the browser (longest side 800px) so uploads
+// stay small and quick. Animated GIFs are sent as they are.
+async function preparePortrait(file) {
+  if (!/^image\//.test(file.type)) throw new Error("that isn't a picture");
+  if (file.type === "image/gif" && file.size <= 2_000_000) return { blob: file, type: "image/gif" };
+  const bitmap = await createImageBitmap(file);
+  const scale = Math.min(1, 800 / Math.max(bitmap.width, bitmap.height));
+  const canvas = document.createElement("canvas");
+  canvas.width = Math.max(1, Math.round(bitmap.width * scale));
+  canvas.height = Math.max(1, Math.round(bitmap.height * scale));
+  canvas.getContext("2d").drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+  const toBlob = (type, q) => new Promise((resolve) => canvas.toBlob(resolve, type, q));
+  let blob = await toBlob("image/webp", 0.85);
+  if (!blob || blob.type !== "image/webp") blob = await toBlob("image/jpeg", 0.85);
+  if (!blob) throw new Error("this browser couldn't prepare the picture");
+  if (blob.size > 2_000_000) throw new Error("the picture is still over 2 MB after shrinking");
+  return { blob, type: blob.type };
+}
+
 function normalizeSkillName(s) {
   return String(s ?? "").toLowerCase().replace(/[^a-z]/g, "");
 }
@@ -4291,19 +4320,36 @@ function FireArcIcon({ arc, size = 30 }) {
 // the same rules tooltips). When `onRoll` is given the whole card is a
 // button that loads the gunner's pool with this weapon's damage, so the roll
 // log shows "Total damage: x" exactly as personal weapons do.
-function VehicleWeaponCard({ weapon, skill, onRoll, rollTitle, compact = false }) {
+// The ammo counter for a vehicle weapon with Limited Ammo: shared live
+// (the /manual store's itemQty, like personal weapons), starting full at the
+// weapon's Limited Ammo rating. Keyed by vehicle, slot and name.
+function vehicleAmmo(manual, vehicle, weapon, index) {
+  const limit = weaponQualityRank(weapon?.qualities || "", "Limited Ammo");
+  if (!limit || !manual || !vehicle) return null;
+  const key = `vwpn:${vehicle.id}:${index}:${weapon.name || ""}`;
+  const value = manual.itemQty?.[key] ?? limit;
+  return {
+    limit,
+    value,
+    adjust: (d) => manual.setQty(key, Math.max(0, value + d)),
+  };
+}
+
+function VehicleWeaponCard({ weapon, skill, onRoll, rollTitle, compact = false, ammo = null }) {
+  const [blockedMsg, setBlockedMsg] = useState(null);
   const adjustments = weaponRollAdjustments(weapon.qualities || "");
   const totalDamage = Math.max(0, (Number(weapon.damage) || 0) + adjustments.damage);
   const arc = fireArcSet(weapon.fireArc);
   const bandIdx = vehicleRangeIndex(weapon.range);
   const specials = splitSpecial(weapon.qualities || "");
-  const clickable = !!onRoll;
+  const outOfAmmo = !!ammo && ammo.value <= 0;
+  const clickable = !!onRoll && !outOfAmmo;
   return (
     <div
-      onClick={clickable ? () => onRoll(totalDamage, adjustments) : undefined}
-      title={clickable ? rollTitle : undefined}
-      className={`grid transition-colors ${clickable ? "cursor-pointer" : ""}`}
-      style={{ gridTemplateColumns: "4px 1fr auto", border: "1px solid #2a2e31", background: "#131719" }}
+      onClick={clickable ? () => onRoll(totalDamage, adjustments) : outOfAmmo && onRoll ? () => { setBlockedMsg("Out of ammo. Reload it with + when the crew restocks."); setTimeout(() => setBlockedMsg(null), COPY_CONFIRM_MS); } : undefined}
+      title={clickable ? rollTitle : outOfAmmo ? "Out of ammo" : undefined}
+      className={`grid transition-colors ${clickable ? "cursor-pointer" : outOfAmmo && onRoll ? "cursor-not-allowed" : ""}`}
+      style={{ gridTemplateColumns: "4px 1fr auto", border: "1px solid #2a2e31", background: "#131719", opacity: outOfAmmo ? 0.55 : 1 }}
       onMouseEnter={(e) => {
         if (!clickable) return;
         e.currentTarget.style.borderColor = "#5ec8d8";
@@ -4323,6 +4369,13 @@ function VehicleWeaponCard({ weapon, skill, onRoll, rollTitle, compact = false }
             {weapon.name}
           </span>
           <span className="text-[10px] tracking-[0.12em] uppercase" style={{ color: "#8a8f93" }}>Gunnery</span>
+          {ammo && (
+            <span onClick={(e) => e.stopPropagation()} className="inline-flex items-center gap-1.5">
+              <span className="text-[10px] tracking-[0.12em] uppercase" style={{ color: outOfAmmo ? "#c23b3b" : "#8a8f93" }}>Ammo</span>
+              <QtyStepper value={ammo.value} onAdjust={ammo.adjust} title={`Shots left (Limited Ammo ${ammo.limit}). Shared live with the table.`} />
+              <span className="text-[10px] mono-num" style={{ color: "#5a5f62" }}>/ {ammo.limit}</span>
+            </span>
+          )}
         </div>
         <div className="flex items-center gap-5 flex-wrap">
           <div className="flex items-baseline gap-1.5">
@@ -4364,6 +4417,7 @@ function VehicleWeaponCard({ weapon, skill, onRoll, rollTitle, compact = false }
             {specials.map((sp, i) => <SpecialChip key={i} text={sp} />)}
           </div>
         )}
+        {blockedMsg && <div className="text-[11px]" style={{ color: "#c23b3b" }}>{blockedMsg}</div>}
       </div>
       <div className="flex items-center pl-2 pr-3">
         {clickable && (
@@ -4461,7 +4515,7 @@ function VehicleTab({ vehicle, party, partySkillSets, live, loadSkillIntoRoller,
             <div className="text-[11px] tracking-[0.2em] uppercase mb-2" style={{ color: "#8a8f93" }}>Weapons</div>
             <div className="space-y-2">
               {vehicle.weapons.map((w, i) => (
-                <VehicleWeaponCard key={i} weapon={w} />
+                <VehicleWeaponCard key={i} weapon={w} ammo={vehicleAmmo(manual, vehicle, w, i)} />
               ))}
             </div>
           </div>
@@ -4523,6 +4577,7 @@ function VehicleTab({ vehicle, party, partySkillSets, live, loadSkillIntoRoller,
                           weapon={weapon}
                           skill={gunnery}
                           compact
+                          ammo={vehicleAmmo(manual, vehicle, weapon, pos.weaponIndex)}
                           onRoll={gunnery ? (dmg) => loadSkillIntoRoller(gunnery, characterLabel(assignedKey), weapon.qualities || null, dmg) : undefined}
                           rollTitle={`Load ${characterLabel(assignedKey)}'s Gunnery pool for ${weapon.name} into the Dice Roller`}
                         />
@@ -4557,7 +4612,6 @@ function VehicleTab({ vehicle, party, partySkillSets, live, loadSkillIntoRoller,
                   <div className="space-y-1.5">
                     {pos.actions.map((action, ai) => {
                       const skill = assignedIdx > -1 ? partySkillSets[assignedIdx].find((s) => s.name === action.skill) : null;
-                      const clickable = !!skill;
                       // "Fire …" Gunnery actions roll this seat's weapon (or, for the
                       // pilot's slaved fire, the first forward-firing one), so the
                       // roll log shows Total damage like a personal weapon does.
@@ -4566,6 +4620,9 @@ function VehicleTab({ vehicle, party, partySkillSets, live, loadSkillIntoRoller,
                         ? weapon || (vehicle.weapons || []).find((w) => fireArcSet(w.fireArc)?.fore) || null
                         : null;
                       const actionDamage = actionWeapon ? Math.max(0, (Number(actionWeapon.damage) || 0) + weaponRollAdjustments(actionWeapon.qualities || "").damage) : null;
+                      const actionAmmo = actionWeapon ? vehicleAmmo(manual, vehicle, actionWeapon, (vehicle.weapons || []).indexOf(actionWeapon)) : null;
+                      const noAmmo = !!actionAmmo && actionAmmo.value <= 0;
+                      const clickable = !!skill && !noAmmo;
                       const tooltip = [action.description, action.requirement ? `Requirement: ${action.requirement}` : null]
                         .filter(Boolean)
                         .join("\n\n");
@@ -4578,7 +4635,7 @@ function VehicleTab({ vehicle, party, partySkillSets, live, loadSkillIntoRoller,
                               ? () => loadSkillIntoRoller(skill, characterLabel(assignedKey), actionWeapon ? actionWeapon.qualities || null : weapon ? weapon.qualities : null, actionDamage)
                               : undefined
                           }
-                          title={clickable ? `${tooltip}\n\nClick to load ${action.skill} into the Dice Roller.` : `${tooltip}\n\nAssign a crew member to preview this action's pool.`}
+                          title={clickable ? `${tooltip}\n\nClick to load ${action.skill} into the Dice Roller.` : noAmmo ? `${tooltip}\n\n${actionWeapon.name} is out of ammo.` : `${tooltip}\n\nAssign a crew member to preview this action's pool.`}
                           className="w-full flex items-center justify-between gap-3 text-left px-2.5 py-1.5 border transition-colors disabled:cursor-not-allowed"
                           style={{
                             borderColor: clickable ? "#2a2e31" : "#2a2e3155",
@@ -4596,11 +4653,12 @@ function VehicleTab({ vehicle, party, partySkillSets, live, loadSkillIntoRoller,
                           }}
                         >
                           <span className="text-[13px]" style={{ color: clickable ? "#e7e2d2" : "#5a5f62" }}>{action.name}</span>
-                          {clickable ? (
+                          {skill ? (
                             <SkillPips rank={skill.rank} characteristic={skill.characteristic} boost={skill.boost} setback={skill.setback || 0} />
                           ) : (
                             <span className="text-[10px] tracking-[0.1em] uppercase" style={{ color: "#5a5f62" }}>unassigned</span>
                           )}
+                          {noAmmo && <span className="text-[10px] tracking-[0.1em] uppercase" style={{ color: "#c23b3b" }}>out of ammo</span>}
                         </button>
                       );
                     })}
@@ -6364,6 +6422,7 @@ function useCampaignStore(gmKey) {
     saveSettings: (settings) => gmPost("/gm/campaign/settings", JSON.stringify(settings)),
     saveVehicle: (vehicle) => gmPost("/gm/campaign/vehicle", JSON.stringify({ vehicle })),
     removeVehicle: (id) => gmPost("/gm/campaign/vehicle", JSON.stringify({ removeId: id })),
+    saveCharacterOrder: (order) => gmPost("/gm/campaign/order", JSON.stringify({ order })),
     // files: [{ path, data: Uint8Array }]; onProgress(done, total)
     async uploadWiki(files, fileName, onProgress) {
       const call = async (path, init) => {
@@ -6383,6 +6442,20 @@ function useCampaignStore(gmKey) {
       }
       onProgress?.(files.length, files.length, "");
       const data = await call("/gm/wiki/commit", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ version, fileName }) });
+      await fetchCampaign(true);
+      return data;
+    },
+    async uploadPortrait(characterId, blob, type) {
+      const res = await apiFetch(`/gm/portrait/${encodeURIComponent(characterId)}`, { method: "PUT", headers: { "content-type": type, "x-gm-key": keyRef.current || "" }, body: blob });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || data.error) throw new Error(data.error || `The Worker said ${res.status}`);
+      await fetchCampaign(true);
+      return data;
+    },
+    async removePortrait(characterId) {
+      const res = await apiFetch(`/gm/portrait/${encodeURIComponent(characterId)}`, { method: "DELETE", headers: { "x-gm-key": keyRef.current || "" } });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || data.error) throw new Error(data.error || `The Worker said ${res.status}`);
       await fetchCampaign(true);
       return data;
     },
@@ -7194,6 +7267,142 @@ function GmVehicleEditor({ store, saved, onClose }) {
   );
 }
 
+// GM page: the order of the character tabs along the top of the dashboard.
+function GmCharacterOrderSection({ store }) {
+  const characters = store.campaign?.characters || [];
+  const idOf = (c) => c.liveId || c.name;
+  const savedIds = characters.map(idOf);
+  const [open, setOpen] = useState(false);
+  const [ids, setIds] = useState(savedIds);
+  const [status, setStatus] = useState({ state: "idle", msg: "" });
+  const dirty = ids.join("|") !== savedIds.join("|");
+  useEffect(() => {
+    if (!dirty) setIds(savedIds);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [savedIds.join("|")]);
+  // Keep the list in step if characters are added or removed meanwhile.
+  const list = [...ids.filter((id) => savedIds.includes(id)), ...savedIds.filter((id) => !ids.includes(id))];
+  const byId = Object.fromEntries(characters.map((c) => [idOf(c), c]));
+  const move = (i, delta) => {
+    const next = [...list];
+    const j = i + delta;
+    if (j < 0 || j >= next.length) return;
+    [next[i], next[j]] = [next[j], next[i]];
+    setIds(next);
+    setStatus({ state: "idle", msg: "" });
+  };
+  async function save() {
+    setStatus({ state: "busy", msg: "Saving…" });
+    try {
+      await store.saveCharacterOrder(list);
+      setStatus({ state: "ok", msg: "Saved. The tabs follow this order for everyone." });
+    } catch (err) {
+      setStatus({ state: "error", msg: err.message });
+    }
+  }
+  const btn = "text-[11px] tracking-[0.15em] uppercase px-3 py-1.5 border transition-colors disabled:opacity-40";
+  const arrow = "w-7 h-7 border text-[12px] disabled:opacity-25";
+  return (
+    <div className="border mb-5" style={{ borderColor: "#3a3f42", background: "#101315" }}>
+      <button type="button" onClick={() => setOpen((o) => !o)} className="w-full flex items-center justify-between gap-3 px-4 py-3 text-left">
+        <span className="text-[11px] tracking-[0.2em] uppercase" style={{ color: "#5ec8d8" }}>Character tab order</span>
+        <span className="text-[11px] truncate" style={{ color: "#8a8f93" }}>
+          {characters.length ? characters.map((c) => c.name).join(" · ") : "No characters yet"} <span className="ml-2" style={{ color: "#5ec8d8" }}>{open ? "▲" : "▼"}</span>
+        </span>
+      </button>
+      {open && (
+        <div className="px-4 pb-4">
+          <p className="text-[11px] leading-relaxed mb-3" style={{ color: "#8a8f93" }}>Move characters up or down, then save. Hidden characters keep their place but don't show as tabs to players.</p>
+          <div className="space-y-1.5 mb-3">
+            {list.map((id, i) => (
+              <div key={id} className="flex items-center gap-2 border px-2 py-1.5" style={{ borderColor: "#2a2e31", background: "#131719" }}>
+                <span className="w-5 text-right text-[11px] mono-num" style={{ color: "#5a5f62" }}>{i + 1}</span>
+                <span className="flex-1 truncate text-[13px]" style={{ color: "#e7e2d2", fontFamily: "'Rajdhani', sans-serif", fontWeight: 700 }}>
+                  {byId[id]?.name || id}{byId[id]?.hidden && <span className="text-[10px] ml-2 uppercase" style={{ color: "#c9a15a" }}>hidden</span>}
+                </span>
+                <button type="button" onClick={() => move(i, -1)} disabled={i === 0} className={arrow} style={{ borderColor: "#3a3f42", color: "#e7e2d2" }} title="Move up (earlier tab)">▲</button>
+                <button type="button" onClick={() => move(i, 1)} disabled={i === list.length - 1} className={arrow} style={{ borderColor: "#3a3f42", color: "#e7e2d2" }} title="Move down (later tab)">▼</button>
+              </div>
+            ))}
+          </div>
+          <div className="flex items-center gap-2">
+            <button type="button" onClick={save} disabled={!dirty || status.state === "busy"} className={btn} style={{ color: "#101315", background: "#5ec8d8", borderColor: "#5ec8d8", fontFamily: "'Rajdhani', sans-serif", fontWeight: 700 }}>Save order</button>
+            {dirty && <button type="button" onClick={() => { setIds(savedIds); setStatus({ state: "idle", msg: "" }); }} className={btn} style={{ color: "#8a8f93", borderColor: "#3a3f42", fontFamily: "'Rajdhani', sans-serif" }}>Cancel</button>}
+            {status.msg && <span className="text-[12px]" style={{ color: status.state === "error" ? "#c23b3b" : status.state === "busy" ? "#8a8f93" : "#6fae60" }}>{status.msg}</span>}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// Edit a character → Portrait. Upload a picture (shrunk in the browser and
+// stored with the campaign), or point at a picture on the web.
+function GmPortraitEditor({ store, character, onChanged, onUrl, draftPortrait }) {
+  const fileRef = useRef(null);
+  const [status, setStatus] = useState({ state: "idle", msg: "" });
+  const [urlOpen, setUrlOpen] = useState(false);
+  const [url, setUrl] = useState("");
+  if (!character) return null;
+  const id = character.liveId || character.name;
+  const shown = portraitSrc({ ...character, portrait: draftPortrait });
+  const btn = "text-[11px] tracking-[0.15em] uppercase px-3 py-1.5 border transition-colors disabled:opacity-40";
+  async function choose(e) {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    setStatus({ state: "busy", msg: "Uploading…" });
+    try {
+      const { blob, type } = await preparePortrait(file);
+      const r = await store.uploadPortrait(id, blob, type);
+      onChanged?.(r.portrait);
+      setStatus({ state: "ok", msg: `Portrait updated (${Math.max(1, Math.round(blob.size / 1000))} KB).` });
+    } catch (err) {
+      setStatus({ state: "error", msg: `Couldn't use ${file.name}: ${err.message}` });
+    }
+  }
+  async function remove() {
+    if (!window.confirm(`Remove ${character.name}'s portrait?`)) return;
+    setStatus({ state: "busy", msg: "Removing…" });
+    try {
+      if (String(character.portrait || "").startsWith("upload:")) await store.removePortrait(id);
+      onUrl?.("");
+      onChanged?.(null);
+      setStatus({ state: "ok", msg: String(character.portrait || "").startsWith("upload:") ? "Portrait removed." : "Portrait cleared. Save the character to keep the change." });
+    } catch (err) {
+      setStatus({ state: "error", msg: err.message });
+    }
+  }
+  return (
+    <div className="flex flex-wrap items-start gap-3 mb-3">
+      {shown ? (
+        <img src={shown} alt="" className="h-24 w-auto max-w-[6rem] object-contain border" style={{ borderColor: "#3a3f42", background: "#101315" }} />
+      ) : (
+        <div className="h-24 w-[4.8rem] border flex items-center justify-center text-center text-[9px] uppercase tracking-[0.1em] px-1" style={{ borderColor: "#3a3f42", color: "#5a5f62" }}>No portrait</div>
+      )}
+      <div className="flex-1 min-w-[220px]">
+        <div className="block text-[10px] tracking-[0.15em] uppercase mb-1" style={{ color: "#8a8f93" }}>Portrait</div>
+        <div className="flex flex-wrap items-center gap-2">
+          <input ref={fileRef} type="file" accept="image/*" onChange={choose} className="hidden" />
+          <button type="button" onClick={() => fileRef.current?.click()} disabled={status.state === "busy"} className={btn} style={{ color: "#101315", background: "#5ec8d8", borderColor: "#5ec8d8", fontFamily: "'Rajdhani', sans-serif", fontWeight: 700 }}>
+            {shown ? "Replace picture…" : "Upload picture…"}
+          </button>
+          <button type="button" onClick={() => setUrlOpen((o) => !o)} className="text-[11px] underline" style={{ color: "#8fd3f4" }}>use a web address</button>
+          {shown && <button type="button" onClick={remove} disabled={status.state === "busy"} className={btn} style={{ color: "#c23b3b", borderColor: "#c23b3b66", fontFamily: "'Rajdhani', sans-serif" }}>Remove</button>}
+        </div>
+        {urlOpen && (
+          <div className="flex flex-wrap gap-2 mt-2">
+            <input value={url} onChange={(e) => setUrl(e.target.value)} placeholder="https://…/portrait.png" className="bg-[#0b0d0e] border px-2 py-1 text-[12px] flex-1 min-w-[200px]" style={{ borderColor: "#3a3f42", color: "#e7e2d2" }} />
+            <button type="button" disabled={!/^https?:\/\//i.test(url.trim())} onClick={() => { onUrl?.(url.trim()); setUrlOpen(false); setUrl(""); setStatus({ state: "ok", msg: "Picture address set. Save the character to keep it." }); }} className={btn} style={{ color: "#e7e2d2", borderColor: "#3a3f42", fontFamily: "'Rajdhani', sans-serif" }}>Use it</button>
+          </div>
+        )}
+        <div className="text-[10px] mt-1" style={{ color: "#5a5f62" }}>Uploads are shrunk to 800px and saved straight away; players see them within a few seconds.</div>
+        {status.msg && <p className="mt-1 text-[12px]" style={{ color: status.state === "error" ? "#c23b3b" : status.state === "busy" ? "#8a8f93" : "#6fae60" }}>{status.msg}</p>}
+      </div>
+    </div>
+  );
+}
+
 // GM page: fix a character sheet by hand (a wrong skill rank, a missing or
 // extra talent, thresholds, XP). Saves the whole sheet; the worker keeps the
 // previous version so the last fix can be undone.
@@ -7391,6 +7600,13 @@ function GmCharacterEditorSection({ store, initialId = "", onConsumed }) {
 
       {draft && (
         <>
+          <GmPortraitEditor
+            store={store}
+            character={saved}
+            onChanged={(portrait) => { if (dirty) edit((d) => { if (portrait) d.portrait = portrait; else delete d.portrait; return d; }); }}
+            onUrl={(url) => edit((d) => { if (url) d.portrait = url; else delete d.portrait; return d; })}
+            draftPortrait={draft.portrait}
+          />
           <div className="grid gap-2 sm:grid-cols-3 mb-3">
             {[["name", "Name"], ["species", "Species"], ["career", "Career — specialisation"]].map(([k, l]) => (
               <div key={k}>
@@ -11333,6 +11549,7 @@ function GmPanel({ auth, campaignStore, party, overrides, onOverride, onResetOve
 
             {/* Used now and then, so they sit at the bottom. */}
             <div className="mt-6">
+              <GmCharacterOrderSection store={campaignStore} />
               <GmVehicleSection store={campaignStore} />
               <GmCharacterEditorSection store={campaignStore} initialId={editCharacterId} onConsumed={onEditConsumed} />
             </div>
@@ -11880,6 +12097,22 @@ function CampaignDashboard() {
   useEffect(() => {
     if (party.length && activeIdx >= party.length) setActiveIdx(0);
   }, [party.length, activeIdx]);
+  // When the GM reorders the tabs, stay on the same character rather than
+  // whoever now sits at the same position.
+  const partyOrderKey = party.map((c) => c.liveId || c.name).join("|");
+  const activeIdRef = useRef(null);
+  useEffect(() => {
+    const id = activeIdRef.current;
+    if (!id) return;
+    const i = party.findIndex((c) => (c.liveId || c.name) === id);
+    if (i >= 0 && i !== activeIdx) setActiveIdx(i);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [partyOrderKey]);
+  useEffect(() => {
+    const c = party[activeIdx];
+    if (c) activeIdRef.current = c.liveId || c.name;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeIdx, partyOrderKey]);
   const active = party[activeIdx] || {};
   const overlay = applyLiveOverlay(active, live);
 
@@ -12436,13 +12669,13 @@ function CampaignDashboard() {
                   // than blowing out the header row.
                   <div className="relative group flex-shrink-0">
                     <img
-                      src={active.portrait}
+                      src={portraitSrc(active)}
                       alt={`${active.name || "Character"} portrait`}
                       className="h-20 w-auto max-w-[5rem] object-contain border cursor-zoom-in"
                       style={{ borderColor: "#3a3f42", background: "#101315" }}
                     />
                     <div className="hidden group-hover:flex fixed inset-0 items-center justify-center pointer-events-none" style={{ zIndex: 130, background: "rgba(8,10,11,0.78)" }} aria-hidden="true">
-                      <img src={active.portrait} alt="" className="max-w-[92vw] max-h-[92vh] object-contain border" style={{ borderColor: "#5ec8d8", background: "#101315", boxShadow: "0 16px 60px rgba(0,0,0,0.85)" }} />
+                      <img src={portraitSrc(active)} alt="" className="max-w-[92vw] max-h-[92vh] object-contain border" style={{ borderColor: "#5ec8d8", background: "#101315", boxShadow: "0 16px 60px rgba(0,0,0,0.85)" }} />
                     </div>
                   </div>
                 ) : (

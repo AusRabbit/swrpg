@@ -64,7 +64,12 @@ new deployment. The site never reads it directly.
   Veteran; add or remove skills per talent), and each skill has buttons for
   extra Boost/Setback dice added by hand (click to add, right-click to
   remove).
+  **Portrait:** upload a picture (shrunk to 800px in the browser and saved
+  with the campaign straight away) or use a web address. Portraits travel
+  with Export all / Import all.
   **Undo last edit** puts back the previous version.
+- **Tab order:** GM page → Character tab order (near the bottom): move
+  characters up or down and **Save order**; everyone's tabs follow it.
 - **Spending XP:** players open their sheet's XP box (Advancement Planner),
   choose skills and talents, and press **Submit for approval**. The
   ★ GM tab pulses with a count while anything is waiting. Approve or reject
