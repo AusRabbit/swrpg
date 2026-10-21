@@ -7,12 +7,12 @@ import {
 } from "./chargen.js";
 
 // ---------------------------------------------------------------------------
-// Several campaigns, one site. Each campaign lives at /c/<slug>/ and the
+// Several campaigns, one site. Each campaign lives at /campaign/<slug>/ and the
 // Worker keeps its data apart from every other campaign's. Two helpers make
 // the browser side match:
 //
 //  - apiFetch: every call to the Worker's own routes (/rolls, /manual,
-//    /campaign, /gm/…) is sent to /c/<slug>/… for this page's campaign.
+//    /campaign, /gm/…) is sent to /campaign/<slug>/… for this page's campaign.
 //    Static files (/data, /images, /sounds, /assets) and the site-wide /api
 //    routes are left alone.
 //  - campaignStorage: everything this site saves in the browser (GM sign-in,
@@ -23,20 +23,20 @@ import {
 // ---------------------------------------------------------------------------
 const CAMPAIGN_SLUG = (() => {
   if (typeof window === "undefined") return "";
-  const m = /^\/c\/([a-z0-9-]{1,40})(?:\/|$)/.exec(window.location.pathname);
+  const m = /^\/campaign\/([a-z0-9-]{1,40})(?:\/|$)/.exec(window.location.pathname);
   return m ? m[1] : "";
 })();
 
-// This campaign's home address, e.g. "/c/salvage-rights/" (or "/" off-campaign).
+// This campaign's home address, e.g. "/campaign/salvage-rights/" (or "/" off-campaign).
 function campaignBase() {
-  return CAMPAIGN_SLUG ? `/c/${CAMPAIGN_SLUG}/` : "/";
+  return CAMPAIGN_SLUG ? `/campaign/${CAMPAIGN_SLUG}/` : "/";
 }
 
 const STATIC_PREFIXES = ["/data/", "/images/", "/sounds/", "/assets/", "/api/"];
 function campaignUrl(url) {
   if (!CAMPAIGN_SLUG || typeof url !== "string" || !url.startsWith("/") || url.startsWith("//")) return url;
   if (STATIC_PREFIXES.some((p) => url.startsWith(p))) return url;
-  return `/c/${CAMPAIGN_SLUG}${url}`;
+  return `/campaign/${CAMPAIGN_SLUG}${url}`;
 }
 function apiFetch(input, init) {
   return fetch(campaignUrl(input), init);
@@ -4107,7 +4107,7 @@ function safeWikiUrl(raw) {
 }
 
 // The campaign's wiki. An uploaded wiki (GM page → Campaign settings → Wiki)
-// is served by the Worker at /c/<slug>/wiki/ and wins; otherwise an external
+// is served by the Worker at /campaign/<slug>/wiki/ and wins; otherwise an external
 // wiki link, if one is set. The uploaded page runs sandboxed (no
 // allow-same-origin), so it can't touch this site's saved sign-ins.
 function WikiPanel({ url, wiki }) {
@@ -6426,12 +6426,18 @@ function GmCampaignDataSection({ store }) {
   const charFileRef = useRef(null);
   const allCharacters = store.campaign?.characters || [];
 
-  function exportCharacter() {
+  async function exportCharacter() {
     const c = allCharacters.find((x) => (x.liveId || x.name) === exportId);
     if (!c) return;
+    // Bring the character's sheet notes (description, Notes boxes, credits) along.
+    let bio = null;
+    try {
+      const r = await apiFetch(`/bio?_=${Date.now()}`, { cache: "no-store" });
+      bio = (await r.json())?.bios?.[c.liveId || c.name] || null;
+    } catch { bio = null; }
     const day = new Date().toISOString().slice(0, 10);
     const slug = String(c.name || "character").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "character";
-    const blob = new Blob([JSON.stringify({ format: "swrpg-character", exportedAt: new Date().toISOString(), character: c }, null, 2)], { type: "application/json" });
+    const blob = new Blob([JSON.stringify({ format: "swrpg-character", exportedAt: new Date().toISOString(), character: c, ...(bio ? { live: { bio } } : {}) }, null, 2)], { type: "application/json" });
     const a = document.createElement("a");
     a.href = URL.createObjectURL(blob);
     a.download = `${slug}-${day}.json`;
@@ -6495,7 +6501,9 @@ function GmCampaignDataSection({ store }) {
       <p className="text-[11px] leading-relaxed mb-3" style={{ color: "#8a8f93" }}>
         The characters and vehicles everyone sees. <strong style={{ color: "#e7e2d2" }}>Import all</strong> replaces the whole
         campaign from a file (the one it replaces is kept so you can undo); <strong style={{ color: "#e7e2d2" }}>Export all</strong> downloads
-        everything as one file, your backup. <strong style={{ color: "#e7e2d2" }}>One character</strong> moves a single sheet in or out:
+        everything as one file, your backup, including what players type on their sheets (description, Notes, credits), your live
+        show/hide choices, field-acquired gear, wounds/strain/Destiny/critical injuries, vehicle damage and crew seats. Rolls, the GM inbox,
+        the battle map, enemies and the wiki aren't included. <strong style={{ color: "#e7e2d2" }}>One character</strong> moves a single sheet (with its notes) in or out:
         importing replaces the character with the same name (undoable) or adds them if they're new. Players never receive hidden characters or gear.
       </p>
       <div className="text-[12px] mb-3" style={{ color: "#e7e2d2" }}>
@@ -6523,7 +6531,7 @@ function GmCampaignDataSection({ store }) {
             type="button"
             disabled={status.state === "busy"}
             onClick={() => {
-              if (!window.confirm(`Undo the last import and go back to ${describeCampaign(store.snapshotSummary)}? The campaign loaded now is kept, so you can undo this too.`)) return;
+              if (!window.confirm(`Undo the last import and go back to ${describeCampaign(store.snapshotSummary)}? The campaign loaded now is kept, so you can undo this too. (Sheet notes, session state, gear and crew seats from the import stay as they are.)`)) return;
               run("Restoring", async () => { const r = await store.restorePrevious(); return `Restored ${describeCampaign(r.summary)}.`; });
             }}
             className={btn}
@@ -6591,7 +6599,7 @@ function GmCampaignDataSection({ store }) {
               onClick={() => {
                 const { text, name } = pending;
                 setPending(null);
-                run("Importing", async () => { const r = await store.importCampaign(text); return `Imported ${name}: ${describeCampaign(r.summary)}.`; });
+                run("Importing", async () => { const r = await store.importCampaign(text); return `Imported ${name}: ${describeCampaign(r.summary)}${r.liveRestored ? ", plus sheet notes, gear, session state and crew seats" : ""}.`; });
               }}
               className={btn}
               style={{ color: "#101315", background: "#ffb000", borderColor: "#ffb000", fontFamily: "'Rajdhani', sans-serif", fontWeight: 700 }}
@@ -11137,7 +11145,7 @@ function SiteHome() {
         ) : (
           <div className="grid gap-3 sm:grid-cols-2 mb-6">
             {listed.map((c) => (
-              <a key={c.slug} href={`/c/${c.slug}/`} className="block border px-4 py-4 transition-colors hover:border-[#5ec8d8]" style={{ borderColor: "#2a2e31", background: "#131719" }}>
+              <a key={c.slug} href={`/campaign/${c.slug}/`} className="block border px-4 py-4 transition-colors hover:border-[#5ec8d8]" style={{ borderColor: "#2a2e31", background: "#131719" }}>
                 <div className="text-[20px] uppercase" style={{ fontFamily: "'Rajdhani', sans-serif", fontWeight: 700 }}>{c.name}</div>
                 <div className="text-[11px] mt-1" style={{ color: "#5ec8d8" }}>Open dashboard ▶</div>
               </a>
@@ -11253,7 +11261,7 @@ function SiteAdmin({ onClose }) {
             <div className="flex flex-wrap items-center justify-between gap-2">
               <div className="min-w-0">
                 <div className="text-[16px] uppercase" style={{ fontFamily: "'Rajdhani', sans-serif", fontWeight: 700 }}>{c.name}</div>
-                <a href={`/c/${c.slug}/`} className="text-[11px] underline break-all" style={{ color: "#8fd3f4" }}>{`${window.location.origin}/c/${c.slug}/`}</a>
+                <a href={`/campaign/${c.slug}/`} className="text-[11px] underline break-all" style={{ color: "#8fd3f4" }}>{`${window.location.origin}/campaign/${c.slug}/`}</a>
               </div>
               <div className="flex flex-wrap gap-1.5">
                 <button type="button" className={homeBtn} style={fs} onClick={() => {
@@ -11300,7 +11308,7 @@ function SiteAdmin({ onClose }) {
         </div>
       </div>
       <div className="text-[11px] mb-2" style={{ color: "#5a5f62" }}>
-        Address: {window.location.origin}/c/{suggestedSlug || "…"}{form.private ? "-xxxxx" : ""}/
+        Address: {window.location.origin}/campaign/{suggestedSlug || "…"}{form.private ? "-xxxxx" : ""}/
       </div>
       <button
         type="button"
@@ -11309,7 +11317,7 @@ function SiteAdmin({ onClose }) {
           const d = await call("/api/admin/campaigns", "POST", { ...form, slug: form.slug || undefined });
           setCampaigns(d.campaigns);
           setForm({ name: "", slug: "", gmPassword: "", private: true, listed: false });
-          return `Created ${window.location.origin}/c/${d.slug}/ — open it, sign in as GM with its password, then Import all or create characters.`;
+          return `Created ${window.location.origin}/campaign/${d.slug}/ — open it, sign in as GM with its password, then Import all or create characters.`;
         })}
         className={homeBtn}
         style={{ color: "#101315", background: "#5ec8d8", borderColor: "#5ec8d8", fontFamily: "'Rajdhani', sans-serif", fontWeight: 700 }}
@@ -11357,7 +11365,7 @@ function CampaignGate({ children }) {
   return children;
 }
 
-// The front page (/) lists campaigns; a campaign address (/c/<slug>/) opens
+// The front page (/) lists campaigns; a campaign address (/campaign/<slug>/) opens
 // that campaign's dashboard, or its character creation wizard when the link
 // carries ?create=<code>.
 export default function App() {

@@ -1,6 +1,6 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "swrpg-beta", // TEMPLATE: rename per campaign (lowercase letters, numbers and dashes)
+  "name": "swrpg", // The Worker name: part of the workers.dev address (swrpg.<account>.workers.dev). Changing it creates a new, empty Worker.
   "compatibility_date": "2026-07-30",
   "main": "worker/index.js",
   "keep_vars": true,
@@ -8,11 +8,12 @@
     "directory": "./dist",
     "binding": "ASSETS",
     "not_found_handling": "single-page-application",
-    // Everything under a campaign address and the site API goes to the
+    // Everything under a campaign address (/campaign/<slug>/, plus old /c/
+    // links that redirect there) and the site API goes to the
     // Worker first: it serves the API, the campaign's uploaded wiki
-    // (/c/<slug>/wiki/) and, for any other page, the dashboard itself.
+    // (/campaign/<slug>/wiki/) and, for any other page, the dashboard itself.
     // Static files (/assets, /data, /images, /sounds) are served directly.
-    "run_worker_first": ["/api/*", "/c/*"]
+    "run_worker_first": ["/api/*", "/campaign/*", "/c/*"]
   },
   "observability": {
     "enabled": true
@@ -108,7 +109,7 @@
       "tag": "v3",
       "new_sqlite_classes": ["CampaignLog"]
     },
-    // CAMPAIGN_REGISTRY: the list of campaigns on this site (/c/<slug>/),
+    // CAMPAIGN_REGISTRY: the list of campaigns on this site (/campaign/<slug>/),
     // their names and hashed GM passwords. Every other Durable Object is
     // named per campaign, so campaigns never share data.
     {

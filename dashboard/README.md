@@ -183,13 +183,13 @@ Two sources, two different update rhythms:
 ## Several campaigns
 
 The Worker serves many campaigns. A campaign's pages and API calls live
-under `/c/<slug>/`; the router at the bottom of `worker/index.js` strips
+under `/campaign/<slug>/`; the router at the bottom of `worker/index.js` strips
 that prefix and runs the normal routes with every Durable Object named
 `<slug>:<store>`, so campaigns share nothing. `CampaignRegistry` (one
 Durable Object) holds the campaign list, names, "listed" flags and hashed
 GM passwords; `/api/campaigns` serves the front page and `/api/admin/*`
 (master password, `x-admin-key`) manages it. In the browser, `apiFetch`
-adds the `/c/<slug>` prefix to every Worker call and `campaignStorage`
+adds the `/campaign/<slug>` prefix to every Worker call and `campaignStorage`
 prefixes every saved key with `<slug>:` (only the dice sound/animation
 switches are shared). Static files (`/data`, `/images`, `/sounds`,
 `/assets`) are the same for every campaign.
@@ -237,7 +237,7 @@ for everything else:
   campaign record carries only `wiki: { fileName, size, files, uploadedAt }`.
   HTML and SVG are served with a `Content-Security-Policy: sandbox` header
   (no same-origin) and the Wiki tab uses a sandboxed iframe, so the wiki
-  can't read the site's saved sign-ins. `run_worker_first` in `wrangler.jsonc` sends `/c/*` and
+  can't read the site's saved sign-ins. `run_worker_first` in `wrangler.jsonc` sends `/campaign/*` (and old `/c/*` links, which redirect) and
   `/api/*` to the Worker so it can serve it, and
   `/gm/campaign/character` + `/gm/campaign/character/undo` (GM fixes to a
   sheet; the liveId never changes, and the previous version of each

@@ -493,6 +493,28 @@ export class BioLog {
     if (request.method === "OPTIONS") {
       return new Response(null, { status: 204, headers: CORS_HEADERS });
     }
+    // Bulk restore from a campaign import (only reachable from the Worker
+    // itself: no public route forwards this path).
+    if (new URL(request.url).pathname === "/__restore" && request.method === "POST") {
+      let body = {};
+      try { body = await request.json(); } catch { body = {}; }
+      const incoming = body.bios && typeof body.bios === "object" ? body.bios : {};
+      const next = body.merge ? { ...this.bios } : {};
+      for (const [rawId, entry] of Object.entries(incoming).slice(0, 200)) {
+        const id = String(rawId).trim().slice(0, BIO_KEY_MAX);
+        if (!id || !entry || typeof entry !== "object") continue;
+        const clean = {};
+        for (const f of BIO_FIELDS) {
+          const t = String(entry[f] ?? "").trim().slice(0, BIO_TEXT_MAX);
+          if (t) clean[f] = t;
+        }
+        if (Object.keys(clean).length) next[id] = clean;
+        else if (body.merge) delete next[id];
+      }
+      this.bios = next;
+      await this.ctx.storage.put("bios", this.bios);
+      return new Response(JSON.stringify({ ok: true }), { status: 200, headers: { "content-type": "application/json" } });
+    }
 
     if (request.method === "GET") {
       const normalized = {};
@@ -574,6 +596,22 @@ export class CrewLog {
   async fetch(request) {
     if (request.method === "OPTIONS") {
       return new Response(null, { status: 204, headers: CORS_HEADERS });
+    }
+    // Bulk restore from a campaign import (only reachable from the Worker
+    // itself: no public route forwards this path).
+    if (new URL(request.url).pathname === "/__restore" && request.method === "POST") {
+      let body = {};
+      try { body = await request.json(); } catch { body = {}; }
+      const incoming = body.crew && typeof body.crew === "object" ? body.crew : {};
+      const next = {};
+      for (const [k, v] of Object.entries(incoming).slice(0, 500)) {
+        const key = String(k).trim().slice(0, CREW_KEY_MAX);
+        const val = String(v ?? "").trim().slice(0, CREW_KEY_MAX);
+        if (key && val) next[key] = val;
+      }
+      this.crew = next;
+      await this.ctx.storage.put("crew", this.crew);
+      return new Response(JSON.stringify({ ok: true }), { status: 200, headers: { "content-type": "application/json" } });
     }
 
     if (request.method === "GET") {
@@ -696,6 +734,21 @@ export class VisibilityLog {
   async fetch(request) {
     if (request.method === "OPTIONS") {
       return new Response(null, { status: 204, headers: CORS_HEADERS });
+    }
+    // Bulk restore from a campaign import (only reachable from the Worker
+    // itself: no public route forwards this path).
+    if (new URL(request.url).pathname === "/__restore" && request.method === "POST") {
+      let body = {};
+      try { body = await request.json(); } catch { body = {}; }
+      const incoming = body.overrides && typeof body.overrides === "object" ? body.overrides : {};
+      const next = {};
+      for (const [k, v] of Object.entries(incoming).slice(0, 2000)) {
+        const key = String(k).trim().slice(0, VISIBILITY_KEY_MAX);
+        if (key) next[key] = !!v;
+      }
+      this.overrides = next;
+      await this.ctx.storage.put("overrides", this.overrides);
+      return new Response(JSON.stringify({ ok: true }), { status: 200, headers: { "content-type": "application/json" } });
     }
 
     if (request.method === "GET") {
@@ -2274,6 +2327,12 @@ export class CampaignLog {
       }
       const { campaign, error } = sanitizeCampaignImport(raw);
       if (error) return this.json({ error }, 400);
+      // The wiki is uploaded per campaign, not carried in the file: keep
+      // whatever this campaign already has.
+      delete campaign.live;
+      delete campaign.exportedAt;
+      if (this.campaign?.wiki) campaign.wiki = this.campaign.wiki;
+      else delete campaign.wiki;
       const snapshot = this.campaign ? { campaign: this.campaign, savedAt: Date.now() } : this.snapshot;
       await this.save(campaign, snapshot);
       return this.json({ ok: true, revision: this.revision, summary: campaignSummary(campaign) });
@@ -2287,6 +2346,47 @@ export class CampaignLog {
     }
     return this.json({ error: "Method not allowed" }, 405);
   }
+}
+
+// --- Campaign "live" data in exports ----------------------------------------
+// Export all also carries the things that live outside the campaign record:
+// the per-character fields players type on their sheets (description, the
+// Notes boxes, credits), the GM's live show/hide and Force-sensitivity
+// overrides, field-acquired gear, session state (wounds, strain, Destiny,
+// critical injuries, vehicle damage, item counts, worn armour) and crew
+// seats. Import all puts them back. Rolls, the notes inbox, the battle map,
+// the enemy board, initiative and the wiki are left out.
+async function doJson(ns, env, name, path = "/", init = { method: "GET" }) {
+  const res = await ns.get(ns.idFromName(doName(env, name))).fetch(new Request(`https://live.internal${path}`, init));
+  return res.json().catch(() => ({}));
+}
+async function exportLive(env) {
+  const [bio, vis, gear, manual, crew] = await Promise.all([
+    doJson(env.BIO_LOG, env, "shared-bio-log"),
+    doJson(env.VISIBILITY_LOG, env, "shared-visibility-log"),
+    doJson(env.GEAR_LOG, env, "shared-gear-log"),
+    doJson(env.MANUAL_LOG, env, "shared-manual-log"),
+    doJson(env.CREW_LOG, env, "shared-crew-log"),
+  ]);
+  const { initiative, enabled, ...session } = manual || {};
+  return { bios: bio.bios || {}, overrides: vis.overrides || {}, gear: gear.gear || [], session, crew: crew.crew || {} };
+}
+async function importLive(env, live) {
+  if (!live || typeof live !== "object") return;
+  const post = (body) => ({ method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
+  const jobs = [];
+  if (live.bios && typeof live.bios === "object") jobs.push(doJson(env.BIO_LOG, env, "shared-bio-log", "/__restore", post({ bios: live.bios })));
+  if (live.overrides && typeof live.overrides === "object") jobs.push(doJson(env.VISIBILITY_LOG, env, "shared-visibility-log", "/__restore", post({ overrides: live.overrides })));
+  if (Array.isArray(live.gear)) jobs.push(doJson(env.GEAR_LOG, env, "shared-gear-log", "/", post({ gear: live.gear })));
+  if (live.crew && typeof live.crew === "object") jobs.push(doJson(env.CREW_LOG, env, "shared-crew-log", "/__restore", post({ crew: live.crew })));
+  if (live.session && typeof live.session === "object") {
+    const { initiative, enabled, ...session } = live.session;
+    jobs.push((async () => {
+      await doJson(env.MANUAL_LOG, env, "shared-manual-log", "/", { method: "DELETE" });
+      await doJson(env.MANUAL_LOG, env, "shared-manual-log", "/", post(session));
+    })());
+  }
+  await Promise.all(jobs);
 }
 
 async function routeCampaign(request, env, ctx) {
@@ -2705,11 +2805,30 @@ async function routeCampaign(request, env, ctx) {
         if (declared > CAMPAIGN_BODY_MAX) {
           return new Response(JSON.stringify({ error: "That file is too big for a campaign (over 1.5 MB)." }), { status: 413, headers: jsonHeaders });
         }
-        const body = sub === "/import" ? await request.text() : "";
+        let body = sub === "/import" ? await request.text() : "";
         if (body.length > CAMPAIGN_BODY_MAX) {
           return new Response(JSON.stringify({ error: "That file is too big for a campaign (over 1.5 MB)." }), { status: 413, headers: jsonHeaders });
         }
-        return stub.fetch(new Request(`https://campaign.internal${sub}`, { method: "POST", body: sub === "/import" ? body : undefined }));
+        // The live section (sheet notes, session state…) goes to its own
+        // stores, not into the campaign record.
+        let live = null;
+        if (sub === "/import") {
+          try {
+            const parsed = JSON.parse(body);
+            if (parsed && typeof parsed === "object" && parsed.live) {
+              live = parsed.live;
+              delete parsed.live;
+              body = JSON.stringify(parsed);
+            }
+          } catch { /* the Durable Object reports bad JSON */ }
+        }
+        const res = await stub.fetch(new Request(`https://campaign.internal${sub}`, { method: "POST", body: sub === "/import" ? body : undefined }));
+        if (res.ok && live) {
+          await importLive(env, live);
+          const data = await res.json();
+          return new Response(JSON.stringify({ ...data, liveRestored: true }), { status: 200, headers: jsonHeaders });
+        }
+        return res;
       }
 
       // POST /gm/campaign/settings  { title?, wikiUrl? }
@@ -2720,7 +2839,19 @@ async function routeCampaign(request, env, ctx) {
         if (declared > CAMPAIGN_EDIT_MAX || body.length > CAMPAIGN_EDIT_MAX) {
           return new Response(JSON.stringify({ error: "That's too large to save." }), { status: 413, headers: jsonHeaders });
         }
-        return stub.fetch(new Request(`https://campaign.internal${sub}`, { method: "POST", body }));
+        const res = await stub.fetch(new Request(`https://campaign.internal${sub}`, { method: "POST", body }));
+        // A character file can carry that character's sheet notes
+        // ({ live: { bio: {...} } }): put them back under its (new) id.
+        if (sub === "/character/import" && res.ok) {
+          const data = await res.json();
+          let bio = null;
+          try { bio = JSON.parse(body)?.live?.bio || null; } catch { bio = null; }
+          if (bio && typeof bio === "object" && data.liveId) {
+            await doJson(env.BIO_LOG, env, "shared-bio-log", "/__restore", { method: "POST", body: JSON.stringify({ merge: true, bios: { [data.liveId]: bio } }) });
+          }
+          return new Response(JSON.stringify(data), { status: 200, headers: jsonHeaders });
+        }
+        return res;
       }
 
       if (request.method !== "GET") {
@@ -2734,7 +2865,10 @@ async function routeCampaign(request, env, ctx) {
         if (!data.campaign) return new Response(JSON.stringify({ error: "There's no campaign loaded to export yet." }), { status: 404, headers: jsonHeaders });
         const day = new Date().toISOString().slice(0, 10);
         const slug = String(data.campaign.campaign || "campaign").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "campaign";
-        return new Response(JSON.stringify(data.campaign, null, 2), {
+        const { wiki, ...exported } = data.campaign;
+        exported.live = await exportLive(env);
+        exported.exportedAt = new Date().toISOString();
+        return new Response(JSON.stringify(exported, null, 2), {
           status: 200,
           headers: {
             "content-type": "application/json",
@@ -2774,7 +2908,7 @@ async function routeCampaign(request, env, ctx) {
 // =============================================================================
 // Several campaigns on one site.
 //
-// Every campaign lives under its own address, /c/<slug>/. The router below
+// Every campaign lives under its own address, /campaign/<slug>/. The router below
 // strips that prefix, then runs the normal routes (routeCampaign above) with
 // every Durable Object name prefixed by the slug — so each campaign has its
 // own campaign data, roll log, dice pool, session state, map, notes and so
@@ -2787,7 +2921,7 @@ async function routeCampaign(request, env, ctx) {
 // =============================================================================
 
 const SLUG_RE = /^[a-z0-9](?:[a-z0-9-]{0,38}[a-z0-9])?$/;
-const RESERVED_SLUGS = new Set(["api", "assets", "data", "images", "c", "admin", "gm"]);
+const RESERVED_SLUGS = new Set(["api", "assets", "data", "images", "sounds", "c", "campaign", "admin", "gm"]);
 const REGISTRY_CACHE_MS = 15_000;
 const ADMIN_HEADER = "x-admin-key";
 
@@ -2924,7 +3058,8 @@ async function handleApi(request, env, url) {
     let slug = String(body.slug || "").trim().toLowerCase() || slugFromName(name);
     if (!slug) slug = "campaign";
     if (body.private) slug = `${slug.slice(0, 33)}-${randomSuffix()}`;
-    if (!SLUG_RE.test(slug) || RESERVED_SLUGS.has(slug)) return apiJson({ error: "The address can only use lowercase letters, numbers and dashes (up to 40)." }, 400);
+    if (RESERVED_SLUGS.has(slug)) return apiJson({ error: `"${slug}" is used by the site itself; pick another address.` }, 400);
+    if (!SLUG_RE.test(slug)) return apiJson({ error: "The address can only use lowercase letters, numbers and dashes (up to 40)." }, 400);
     const { status, data } = await registryWrite(env, "create", { slug, name, listed: !!body.listed, gmHash: await gmHashFor(slug, gmPassword) });
     if (status !== 200) return apiJson({ error: data.error }, status);
     return apiJson({ ok: true, slug, campaigns: view(data.campaigns) });
@@ -2961,7 +3096,13 @@ export default {
     const url = new URL(request.url);
     if (url.pathname.startsWith("/api/")) return handleApi(request, env, url);
 
-    const m = /^\/c\/([a-z0-9-]{1,40})(\/.*)?$/.exec(url.pathname);
+    // Links from before campaigns moved to /campaign/<slug>/ still work.
+    const old = /^\/c\/([a-z0-9-]{1,40})(\/.*)?$/.exec(url.pathname);
+    if (old && (request.method === "GET" || request.method === "HEAD")) {
+      return new Response(null, { status: 301, headers: { location: `/campaign/${old[1]}${old[2] || "/"}${url.search}` } });
+    }
+
+    const m = /^\/campaign\/([a-z0-9-]{1,40})(\/.*)?$/.exec(url.pathname);
     // The front page and the site's static files.
     if (!m) return env.ASSETS.fetch(request);
 

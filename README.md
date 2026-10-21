@@ -30,10 +30,16 @@ Objects:
   each have their own store.
 
 Back up from the GM page: **Campaign data → Export all** downloads the whole
-campaign as one JSON file, and **Import all** restores it (with Undo).
-**One character** exports a single sheet, and imports one back: it replaces
-the character with the same name (undoable from Edit a character) or adds
-them as new.
+campaign as one JSON file, and **Import all** restores it (with Undo for the
+campaign record). The file also carries a `live` section: what players type
+on their sheets (description, the Notes boxes, credits), the GM's live
+show/hide and Force-sensitivity overrides, field-acquired gear, session state
+(wounds, strain, Destiny, critical injuries, vehicle damage, item counts, worn
+armour) and crew seats. Import all puts those back too. Not included: rolls,
+the GM inbox, the battle map, the enemy board, initiative and the wiki.
+**One character** exports a single sheet with its notes, and imports one
+back: it replaces the character with the same name (undoable from Edit a
+character) or adds them as new.
 `dashboard/public/data/ledger.json` is a sample of that format: Import it to start a
 new deployment. The site never reads it directly.
 
@@ -57,7 +63,7 @@ new deployment. The site never reads it directly.
 ## Several campaigns on one site
 
 One deployment hosts any number of campaigns, each at its own address:
-`https://<site>/c/<campaign>/`. Every campaign has its own data (sheets,
+`https://<site>/campaign/<campaign>/`. Every campaign has its own data (sheets,
 rolls, dice pool, wounds, map, notes…) and its own GM password; nothing is
 shared between them. The browser also saves each campaign's GM sign-in,
 dice pool and roll-log name separately, so you can have several open at once.
@@ -72,8 +78,9 @@ dice pool and roll-log name separately, so you can have several open at once.
 - **Master password**: the `ADMIN_PASSWORD` secret on Cloudflare, or your
   existing `GM_PASSWORD` if that's the only one set. It also signs in as GM
   in every campaign.
-- **Moving a campaign in**: on its old site, GM page → Campaign data →
-  Export all. On the new campaign's GM page, Import all.
+- **Moving a campaign** (to another site, or to a new address): GM page →
+  Campaign data → Export all on the old one, Import all on the new one, then
+  upload the wiki zip again.
 
 ## Setup checklist
 
@@ -87,7 +94,7 @@ dice pool and roll-log name separately, so you can have several open at once.
    `wiki/content/img/`), run `python wiki/build.py`, zip the `wiki/docs`
    folder, then on the campaign's GM page → **Wiki → Upload wiki…** pick
    the zip. It shows on that campaign's Wiki tab straight away (and at
-   `/c/<campaign>/wiki/`). Upload again to replace it. No GitHub Pages
+   `/campaign/<campaign>/wiki/`). Upload again to replace it. No GitHub Pages
    needed.
 5. Ships: GM page → Vehicles (bottom of the page, click to expand) →
    + Add vehicle. Pick a stock ship (or start blank), rename it, adjust the

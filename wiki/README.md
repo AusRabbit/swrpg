@@ -19,7 +19,7 @@ wiki/content/*.md  ->  python wiki/build.py  ->  wiki/docs/  ->  zip  ->  GM pag
 - **Upload it to the campaign:** on that campaign's GM page, **Wiki → Upload
   wiki…**, pick the zip. The page unzips it and uploads each file, then
   switches the campaign over in one go. It's stored with that campaign only
-  and appears on its Wiki tab and at `/c/<campaign>/wiki/`. Uploading again
+  and appears on its Wiki tab and at `/campaign/<campaign>/wiki/`. Uploading again
   replaces the whole wiki (pictures you've deleted disappear too).
 - A wiki with no pictures can also be uploaded as just `index.html`.
 - **Limits:** 15 MB per file, 100 MB and 2,000 files per wiki. File names
