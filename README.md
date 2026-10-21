@@ -70,6 +70,10 @@ new deployment. The site never reads it directly.
   **Undo last edit** puts back the previous version.
 - **Tab order:** GM page → Character tab order (near the bottom): move
   characters up or down and **Save order**; everyone's tabs follow it.
+- **Battle map right-click:** anyone can right-click a player token to add
+  wounds or strain directly (no soak; minus numbers heal). The GM can
+  right-click an enemy token to rename it, hide/reveal it, apply damage
+  (after soak) or mark it as a friendly NPC (green token).
 - **Spending XP:** players open their sheet's XP box (Advancement Planner),
   choose skills and talents, and press **Submit for approval**. The
   ★ GM tab pulses with a count while anything is waiting. Approve or reject

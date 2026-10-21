@@ -276,6 +276,12 @@ async function preparePortrait(file) {
   return { blob, type: blob.type };
 }
 
+// Talents in display order: by tier (species abilities, with no tier,
+// last), then alphabetically within a tier.
+function compareTalents(a, b) {
+  return (a?.tier ?? 99) - (b?.tier ?? 99) || String(a?.name || "").localeCompare(String(b?.name || ""), undefined, { sensitivity: "base" });
+}
+
 function normalizeSkillName(s) {
   return String(s ?? "").toLowerCase().replace(/[^a-z]/g, "");
 }
@@ -7776,7 +7782,7 @@ function GmCharacterEditorSection({ store, initialId = "", onConsumed }) {
           </div>
           <div className="mb-2">
             {(draft.talents || []).length === 0 && <div className="text-[12px]" style={{ color: "#5a5f62" }}>No talents.</div>}
-            {(draft.talents || []).map((t, i) => {
+            {(draft.talents || []).map((t, i) => ({ t, i })).sort((x, y) => compareTalents(x.t, y.t)).map(({ t, i }) => {
               const tb = talentSkillBoosts(t);
               const setBoostSkills = (list) => edit((d) => { d.talents[i].boostsSkills = list; return d; });
               return (
@@ -8516,7 +8522,7 @@ function CreationReview({ build, draft }) {
             <div className={wz.label} style={wz.muted}>Career skills</div>
             <div className="mb-3">{c.skills.filter((s) => s.career).map((s) => s.name).join(", ")}</div>
             <div className={wz.label} style={wz.muted}>Talents</div>
-            <div>{c.talents.map((t) => `${t.name}${t.tier ? ` (T${t.tier})` : " (species)"}${t.rank > 1 ? ` ×${t.rank}` : ""}`).join(" · ") || "None"}</div>
+            <div>{[...c.talents].sort(compareTalents).map((t) => `${t.name}${t.tier ? ` (T${t.tier})` : " (species)"}${t.rank > 1 ? ` ×${t.rank}` : ""}`).join(" · ") || "None"}</div>
             {draft?.description && <><div className={`${wz.label} mt-3`} style={wz.muted}>Description</div><div>{draft.description}</div></>}
           </div>
         </div>
@@ -10136,6 +10142,12 @@ const DRAG_THRESHOLD_PX = 5;
 // Hovering shows the token's full name straight away in a small label — the
 // native title tooltip takes a second to appear, which is too slow when
 // you're scanning a board.
+// Token colours on the battle map: PCs blue, foes red, friendly NPCs green.
+function tokenColor(token) {
+  if (token?.kind === "pc") return "#3b82c2";
+  return token?.friendly ? "#4f9a45" : "#c23b3b";
+}
+
 function MapToken({ token, selected, onClick, onContextMenu, draggable = false, onPointerDown, dragging = false, onHoverStart, onHoverEnd, size = "full", stackOffset = 0, labelBelow = false }) {
   const [hover, setHover] = useState(false);
   const full = size === "full";
@@ -10144,7 +10156,7 @@ function MapToken({ token, selected, onClick, onContextMenu, draggable = false, 
   const pipColumns = full && aliveMinions > 10 ? Math.min(7, aliveMinions) : Math.min(5, aliveMinions);
   const pipRows = pipColumns ? Math.ceil(aliveMinions / pipColumns) : 0;
   const pipBlockHeight = pipRows ? pipRows * pipSize + (pipRows - 1) : 0;
-  const color = token.kind === "pc" ? "#3b82c2" : "#c23b3b";
+  const color = tokenColor(token);
   return (
     <button
       type="button"
@@ -10261,7 +10273,7 @@ function BattleSession({ roster, enemyStore, mapStore, isGm, gmKey, manual, init
       <SharedDicePoolTray pools={rollState.sharedPools} logStatus={rollState.logStatus} onRefresh={rollState.fetchLog} />
       <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_minmax(300px,420px)] gap-4 items-start">
         <div className="min-w-0 space-y-4">
-          <BattleMapPanel roster={roster} enemies={enemyStore.enemies} party={roster} isGm={isGm} mapStore={mapStore} onSaveEnemies={enemyStore.save} />
+          <BattleMapPanel roster={roster} enemies={enemyStore.enemies} party={roster} isGm={isGm} mapStore={mapStore} onSaveEnemies={enemyStore.save} manual={manual} />
           {isGm && <GmEnemyBoard enemyStore={enemyStore} />}
         </div>
         <div className="min-w-0 space-y-4">
@@ -10279,7 +10291,7 @@ function BattleRollLog({ rollState }) {
 }
 
 
-function BattleMapPanel({ roster, enemies, party, isGm, mapStore, onSaveEnemies }) {
+function BattleMapPanel({ roster, enemies, party, isGm, mapStore, onSaveEnemies, manual }) {
   const { zones, tokens, moveToken, setCompass, removeToken, addZone, removeZone, resetMap, loadState } = mapStore;
   const [selected, setSelected] = useState(null);
   // The token currently under the pointer (zone subcell or Distant ring),
@@ -10335,6 +10347,49 @@ function BattleMapPanel({ roster, enemies, party, isGm, mapStore, onSaveEnemies 
     closeEnemyDamage();
   }
 
+  function toggleEnemyFriendly() {
+    if (!damageEnemy || !onSaveEnemies) return;
+    onSaveEnemies(enemies.map((enemy) => enemy.id === damageEnemy.id ? { ...enemy, friendly: !enemy.friendly } : enemy));
+  }
+
+  // Right-click on a player token (anyone at the table): add wounds or
+  // strain straight to that character, no soak. Negative numbers heal.
+  const [pcPrompt, setPcPrompt] = useState(null);
+  const [pcWounds, setPcWounds] = useState("");
+  const [pcStrain, setPcStrain] = useState("");
+  const pcMember = pcPrompt ? roster.find((r) => (r.liveId || r.name) === pcPrompt.id) : null;
+  function openTokenMenu(token, event) {
+    if (token.kind === "pc") {
+      event.preventDefault();
+      event.stopPropagation();
+      setSelected(null);
+      setPcWounds("");
+      setPcStrain("");
+      setPcPrompt({
+        id: token.id,
+        x: Math.max(12, Math.min(event.clientX + 8, window.innerWidth - 262)),
+        y: Math.max(12, Math.min(event.clientY + 8, window.innerHeight - 300)),
+      });
+      return;
+    }
+    openEnemyDamage(token, event);
+  }
+  function closePcPrompt() {
+    setPcPrompt(null);
+    setPcWounds("");
+    setPcStrain("");
+  }
+  function applyPcDamage(event) {
+    event.preventDefault();
+    if (!pcMember || !manual) return closePcPrompt();
+    const id = pcMember.liveId || pcMember.name;
+    const w = Math.round(Number(pcWounds)) || 0;
+    const st = Math.round(Number(pcStrain)) || 0;
+    if (w) manual.adjustWound(id, w);
+    if (st) manual.adjustStrain(id, st);
+    closePcPrompt();
+  }
+
   function toggleEnemyHidden() {
     if (!damageEnemy || !onSaveEnemies) return;
     onSaveEnemies(enemies.map((enemy) => enemy.id === damageEnemy.id ? { ...enemy, hidden: !enemy.hidden } : enemy));
@@ -10351,7 +10406,7 @@ function BattleMapPanel({ roster, enemies, party, isGm, mapStore, onSaveEnemies 
     const pcs = roster.map((r) => ({ id: r.liveId || r.name, kind: "pc", label: r.name || r.liveId, down: false, hidden: false }));
     const foes = enemies
       .filter((e) => isGm || !e.hidden)
-      .map((e) => ({ id: e.id, kind: "enemy", label: e.name || "Unnamed", down: enemyDefeated(e), hidden: !!e.hidden, aliveMinions: e.type === "minion" ? minionsRemaining(e) : null }));
+      .map((e) => ({ id: e.id, kind: "enemy", label: e.name || "Unnamed", down: enemyDefeated(e), hidden: !!e.hidden, friendly: !!e.friendly, aliveMinions: e.type === "minion" ? minionsRemaining(e) : null }));
     return [...pcs, ...foes];
   }, [roster, enemies, isGm]);
 
@@ -10731,6 +10786,7 @@ function BattleMapPanel({ roster, enemies, party, isGm, mapStore, onSaveEnemies 
                       size="chip"
                       selected={selected === t.id}
                       onClick={() => canMove(t.id) && clickToken(t.id)}
+                      onContextMenu={(event) => openTokenMenu(t, event)}
                       draggable={canMove(t.id)}
                       onPointerDown={startPress(t.id)}
                       dragging={drag?.id === t.id}
@@ -10742,6 +10798,8 @@ function BattleMapPanel({ roster, enemies, party, isGm, mapStore, onSaveEnemies 
             <div className="flex flex-wrap items-center gap-x-5 gap-y-1.5 text-[11px]" style={{ color: "#5a5f62" }}>
               <div className="flex items-center gap-2"><span style={{ width: 14, height: 14, borderRadius: "50%", background: "#3b82c2", display: "inline-block" }} /> Player</div>
               <div className="flex items-center gap-2"><span style={{ width: 14, height: 14, borderRadius: 3, background: "#c23b3b", display: "inline-block" }} /> Enemy</div>
+              <div className="flex items-center gap-2"><span style={{ width: 14, height: 14, borderRadius: 3, background: "#4f9a45", display: "inline-block" }} /> Friendly NPC</div>
+              <div title="Right-click a player token to add wounds or strain; the GM can right-click any other token too.">Right-click a token for options</div>
               <div className="flex items-center gap-2"><span style={{ width: 14, height: 14, borderRadius: 3, background: "#c23b3b", opacity: 0.4, display: "inline-block" }} /> Down</div>
               <div title="The mouse wheel scrolls the page. To move around a map bigger than the screen, hold Shift while scrolling, swipe sideways on a trackpad, or drag the scrollbars.">Shift + scroll pans the map</div>
               {isGm && (
@@ -10774,7 +10832,7 @@ function BattleMapPanel({ roster, enemies, party, isGm, mapStore, onSaveEnemies 
                   onSelectSubcell={placeAt}
                   onSelectToken={clickToken}
                   onPressToken={startPress}
-                  onContextToken={openEnemyDamage}
+                  onContextToken={openTokenMenu}
                   canDrag={canMove}
                   draggingId={drag?.id}
                   dropTarget={drag?.target}
@@ -10860,7 +10918,7 @@ function BattleMapPanel({ roster, enemies, party, isGm, mapStore, onSaveEnemies 
                           token={t}
                           selected={selected === t.id}
                           onClick={() => clickToken(t.id)}
-                          onContextMenu={(event) => openEnemyDamage(t, event)}
+                          onContextMenu={(event) => openTokenMenu(t, event)}
                           draggable={canMove(t.id)}
                           onPointerDown={startPress(t.id)}
                           dragging={drag?.id === t.id}
@@ -10933,6 +10991,15 @@ function BattleMapPanel({ roster, enemies, party, isGm, mapStore, onSaveEnemies 
           >
             {damageEnemy.hidden ? "Hidden from players · Reveal" : "Visible to players · Hide"}
           </button>
+          <button
+            type="button"
+            onClick={toggleEnemyFriendly}
+            className="w-full -mt-1.5 mb-3 px-2 py-1.5 text-[11px] uppercase tracking-[0.1em] border"
+            style={{ borderColor: damageEnemy.friendly ? "#4f9a45" : "#3a3f42", color: damageEnemy.friendly ? "#6fae60" : "#8a8f93" }}
+            title={damageEnemy.friendly ? "Shown as a friendly NPC (green). Click to make it hostile again." : "Shown as a foe (red). Click to mark it as a friendly NPC (green)."}
+          >
+            {damageEnemy.friendly ? "Friendly NPC · Make hostile" : "Hostile · Mark as friendly"}
+          </button>
           <label className="block text-[10px] tracking-[0.12em] uppercase" style={{ color: "#8a8f93" }}>
             Incoming damage
             <input
@@ -10957,6 +11024,55 @@ function BattleMapPanel({ roster, enemies, party, isGm, mapStore, onSaveEnemies 
         </form>
       )}
 
+      {pcMember && pcPrompt && (
+        <form
+          role="dialog"
+          aria-label={`Wounds and strain for ${pcMember.name}`}
+          onSubmit={applyPcDamage}
+          onContextMenu={(event) => event.preventDefault()}
+          onPointerDown={(event) => event.stopPropagation()}
+          className="fixed border p-3"
+          style={{ left: pcPrompt.x, top: pcPrompt.y, width: 250, zIndex: 120, borderColor: "#3b82c2", background: "#101315", boxShadow: "0 10px 30px rgba(0,0,0,0.75)" }}
+        >
+          <div className="text-[15px] mb-1" style={{ color: "#e7e2d2", fontFamily: "'Rajdhani', sans-serif", fontWeight: 700 }}>{pcMember.name}</div>
+          {(() => {
+            const id = pcMember.liveId || pcMember.name;
+            const wNow = manual?.wounds?.[id] || 0;
+            const sNow = manual?.strain?.[id] || 0;
+            const wMax = pcMember.vitals?.wounds?.threshold ?? 0;
+            const sMax = pcMember.vitals?.strain?.threshold ?? 0;
+            const wAdd = Math.round(Number(pcWounds)) || 0;
+            const sAdd = Math.round(Number(pcStrain)) || 0;
+            const field = (label, value, set, now, max, add, color) => (
+              <label className="block text-[10px] tracking-[0.12em] uppercase mb-2" style={{ color: "#8a8f93" }}>
+                {label} <span className="mono-num normal-case tracking-normal" style={{ color: "#5a5f62" }}>now {now} / {max}{add ? <> → <span style={{ color }}>{Math.max(0, now + add)}</span></> : null}</span>
+                <input
+                  type="number"
+                  step="1"
+                  value={value}
+                  onChange={(event) => set(event.target.value)}
+                  onKeyDown={(event) => { if (event.key === "Escape") closePcPrompt(); }}
+                  placeholder="0"
+                  className="block w-full mt-1 border bg-transparent px-2 py-1.5 text-[15px] mono-num"
+                  style={{ borderColor: "#3a3f42", color: "#e7e2d2" }}
+                />
+              </label>
+            );
+            return (
+              <>
+                {field("Add wounds", pcWounds, setPcWounds, wNow, wMax, wAdd, "#c23b3b")}
+                {field("Add strain", pcStrain, setPcStrain, sNow, sMax, sAdd, "#ffb000")}
+              </>
+            );
+          })()}
+          <div className="text-[10px]" style={{ color: "#5a5f62" }}>Applied as is, no soak. Use a minus number to heal or recover.</div>
+          <div className="flex items-center gap-2 mt-3">
+            <button type="submit" className="px-3 py-1.5 text-[11px] uppercase tracking-[0.1em]" style={{ background: "#3b82c2", color: "#101315", fontWeight: 700 }}>Apply</button>
+            <button type="button" onClick={closePcPrompt} className="px-2 py-1.5 text-[11px] uppercase tracking-[0.1em]" style={{ color: "#8a8f93" }}>Cancel</button>
+          </div>
+        </form>
+      )}
+
       {/* The token being dragged, following the pointer. */}
       {dragToken && drag.clientX != null && (
         <div
@@ -10964,7 +11080,7 @@ function BattleMapPanel({ roster, enemies, party, isGm, mapStore, onSaveEnemies 
           style={{
             position: "fixed",
             left: drag.clientX - 16, top: drag.clientY - 16, width: 32, height: 32, zIndex: 100,
-            background: dragToken.kind === "pc" ? "#3b82c2" : "#c23b3b",
+            background: tokenColor(dragToken),
             color: "#101315",
             borderRadius: dragToken.kind === "pc" ? "50%" : 3,
             border: "2px solid #ffb000",
@@ -12167,7 +12283,7 @@ function CampaignDashboard() {
   const obligations = characterObligations(active);
   const chars = active.characteristics || {};
   const skills = buildSkills(active);
-  const talents = [...(active.talents || [])].sort((a, b) => (a.tier ?? 99) - (b.tier ?? 99));
+  const talents = [...(active.talents || [])].sort(compareTalents);
   const weapons = [...(active.weapons || []).filter((w) => !effectiveHidden("weapon", w)), ...gearWeapons];
   const armor = active.armor || {};
   const armorHidden = effectiveHidden("armor", armor);

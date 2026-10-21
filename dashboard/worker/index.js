@@ -1157,6 +1157,8 @@ function sanitizeEnemies(raw) {
       strainThreshold,
       strain: type === "nemesis" ? sInt(e?.strain, 0, strainThreshold + ENEMY_STAT_MAX, 0) : 0,
       hidden: !!e?.hidden,
+      // A friendly NPC on the board (green token) rather than a foe.
+      friendly: !!e?.friendly,
     };
   });
 }
@@ -1226,6 +1228,7 @@ function publicEnemyView(enemies) {
       wounds: e.wounds,
       strainThreshold: e.strainThreshold,
       strain: e.strain,
+      friendly: !!e.friendly,
     }));
 }
 
