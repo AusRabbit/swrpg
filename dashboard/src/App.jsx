@@ -1,5 +1,5 @@
 import { Component, useState, useEffect, useLayoutEffect, useRef, useCallback, useMemo } from "react";
-import { Swords } from "lucide-react";
+import { Swords, Shield } from "lucide-react";
 import {
   CHARACTERISTICS, CHAR_LABEL, ALL_SKILLS, CREATION_MAX_CHARACTERISTIC, CREATION_MAX_RANK, BASE_OBLIGATION,
   OBLIGATION_BONUSES, emptyDraft, computeBuild, characteristicCost, skillRankCost as creationSkillRankCost, talentCost, specializationsFor,
@@ -942,7 +942,7 @@ function parseLiveCredits(raw) {
   return null;
 }
 
-function LiveCreditsField({ characterId, ledgerCredits }) {
+function LiveCreditsField({ characterId, ledgerCredits, asBox = false }) {
   const ledger = Number(ledgerCredits) || 0;
   const [live, setLive] = useState(null);
   const [editing, setEditing] = useState(false);
@@ -1008,8 +1008,37 @@ function LiveCreditsField({ characterId, ledgerCredits }) {
     }
   }
 
-  if (editing) {
+  // As a whole box (the sheet's Credits tile): the entire tile is the
+  // click target, styled like the other stat boxes.
+  const boxStyle = { borderColor: "#2a2e31", background: "#131719", borderLeft: "4px solid #ffb000" };
+  const boxLabel = <div className="text-[11px] tracking-[0.2em] uppercase mb-1.5" style={{ color: "#8a8f93", fontFamily: "'Rajdhani', sans-serif" }}>Credits</div>;
+  const statusLine = (
+    <>
+      {status.state === "saving" && <span className="text-[11px] ml-2" style={{ color: "#5a5f62" }}>Saving…</span>}
+      {status.state === "saved" && <span className="text-[11px] ml-2" style={{ color: "#6fae60" }}>Saved ✔</span>}
+      {status.state === "error" && <div className="text-[11px] mt-1" style={{ color: "#c23b3b" }}>{status.msg}</div>}
+    </>
+  );
+  if (asBox && !editing) {
     return (
+      <button
+        type="button"
+        onClick={startEdit}
+        title="Click to change credits"
+        className="text-left w-full h-full border px-4 py-3 transition-colors"
+        style={boxStyle}
+        onMouseEnter={(e) => { e.currentTarget.style.borderColor = "#ffb000"; e.currentTarget.style.background = "#1a1813"; }}
+        onMouseLeave={(e) => { e.currentTarget.style.borderColor = "#2a2e31"; e.currentTarget.style.borderLeftColor = "#ffb000"; e.currentTarget.style.background = "#131719"; }}
+      >
+        {boxLabel}
+        <span className="text-xl mono-num" style={{ color: "#ffb000" }}>{current.toLocaleString()}</span>
+        {statusLine}
+      </button>
+    );
+  }
+
+  if (editing) {
+    const editor = (
       <div>
         <input
           autoFocus
@@ -1025,8 +1054,10 @@ function LiveCreditsField({ characterId, ledgerCredits }) {
           style={{ borderColor: "#ffb00088", color: "#ffb000" }}
         />
         <div className="text-[10px] mt-1" style={{ color: "#5a5f62" }}>New total, or +250 / -100. Enter to save, Esc to cancel.</div>
+        {status.state === "error" && <div className="text-[11px] mt-1" style={{ color: "#c23b3b" }}>{status.msg}</div>}
       </div>
     );
+    return asBox ? <div className="border px-4 py-3 h-full" style={boxStyle}>{boxLabel}{editor}</div> : editor;
   }
 
   return (
@@ -5431,6 +5462,59 @@ function SpecialChip({ text, placement = "above", ammoLeft = null }) {
       </span>
       {open && q && <HoverTip title={q.title} body={q.body} width={300} placement={placement} />}
     </span>
+  );
+}
+
+// One piece of armour as a card. Deliberately unlike the weapon cards: no
+// coloured side bar, no hover glow and no "Roll" button, since nothing here
+// rolls. A steel top edge and a shield emblem mark it as worn protection.
+function ArmorCard({ armor, def, worn, showWornToggle, onToggleWorn, soakTip, defTip }) {
+  const steel = "#9aa3a8";
+  const stat = (label, value, tipTitle, tipBody, big = false) => (
+    <div className="flex flex-col items-start gap-1">
+      <TipLabel text={label} title={tipTitle} body={tipBody} />
+      <span className={`${big ? "text-[26px]" : "text-[20px]"} leading-none mono-num`} style={{ color: worn ? "#e7e2d2" : "#8a8f93" }}>{value}</span>
+    </div>
+  );
+  const specials = splitSpecial(armor.special);
+  return (
+    <div
+      className="flex gap-3.5 px-4 py-3.5"
+      style={{ border: "1px solid #2a2e31", borderTop: `3px solid ${worn ? steel : "#3a3f42"}`, background: "#121618", opacity: worn ? 1 : 0.6 }}
+    >
+      <div className="flex-shrink-0 flex items-center justify-center" style={{ width: 44, height: 44, border: `1px solid ${worn ? steel + "88" : "#3a3f42"}`, background: "#0e1113" }} aria-hidden="true">
+        <Shield size={22} strokeWidth={1.6} color={worn ? steel : "#5a5f62"} />
+      </div>
+      <div className="flex-1 min-w-0 flex flex-col gap-2.5">
+        <div className="flex items-center gap-2.5 flex-wrap">
+          <span className="text-[18px] uppercase" style={{ color: "#e7e2d2", fontFamily: "'Rajdhani', sans-serif", fontWeight: 700, letterSpacing: "0.03em" }}>{armor.name}</span>
+          <span className="text-[10px] tracking-[0.12em] uppercase" style={{ color: "#8a8f93" }}>Armor</span>
+          {armor.isNew && <NewBadge size={20} />}
+          {showWornToggle && (
+            <button
+              type="button"
+              onClick={onToggleWorn}
+              className="ml-auto text-[10px] tracking-[0.12em] uppercase px-2 py-0.5 border"
+              style={{ borderColor: worn ? steel : "#3a3f42", color: worn ? "#e7e2d2" : "#8a8f93", fontFamily: "'Rajdhani', sans-serif", fontWeight: 700 }}
+              title={worn ? "Currently worn. Click to take it off." : "Wear this instead"}
+            >
+              {worn ? "✓ Worn" : "Wear"}
+            </button>
+          )}
+        </div>
+        <div className="flex items-end gap-7 flex-wrap">
+          {stat("Soak", `+${armor.soakBonus || 0}`, `${armor.name}: +${armor.soakBonus || 0} Soak`, soakTip, true)}
+          {stat("Ranged Def", def.ranged, `${armor.name}: ranged defense ${def.ranged}`, defTip("ranged", def.ranged))}
+          {stat("Melee Def", def.melee, `${armor.name}: melee defense ${def.melee}`, defTip("melee", def.melee))}
+        </div>
+        {specials.length > 0 && (
+          <div className="flex flex-wrap gap-1.5">
+            {specials.map((sp, k) => <SpecialChip key={k} text={sp} placement="below" />)}
+          </div>
+        )}
+        {armor.note && <ExpandableText text={armor.note} className="text-[12px] block" style={{ color: "#8a8f93" }} />}
+      </div>
+    </div>
   );
 }
 
@@ -13430,7 +13514,6 @@ function CampaignDashboard() {
                 )}
 
                 <div className="mb-5 pb-5 border-b" style={{ borderColor: "#2a2e31" }}>
-                  <div className="text-[11px] tracking-[0.2em] uppercase mb-2" style={{ color: "#8a8f93" }}>Hooks</div>
                   {Array.isArray(active.hooks) && active.hooks.length > 0 && (
                     <ul className="list-disc pl-4 space-y-1 mb-3">
                       {active.hooks.map((h, i) => (
@@ -13442,7 +13525,7 @@ function CampaignDashboard() {
                     characterId={active.liveId || active.name}
                     field="hooksNote"
                     label="Notes"
-                    placeholder="Flags, cooperation goals, or anything else that comes up in play"
+                    placeholder="Hooks, flags, cooperation goals, or anything else that comes up in play"
                     maxLength={800}
                   />
                 </div>
@@ -13573,9 +13656,7 @@ function CampaignDashboard() {
                       {weaponDefense("Defensive")[0] && <span className="text-[11px] ml-1.5" style={{ color: "#8fd3f4" }} title={`While holding ${weaponDefense("Defensive")[0].name}`}>+{weaponDefense("Defensive")[0].n} wielding</span>}
                     </MetricBox>
                     <XPUnspentStat available={xp.available} onOpen={() => setViewMode("advancement")} />
-                    <MetricBox label="Credits" accent="#ffb000">
-                      <LiveCreditsField characterId={active.liveId || active.name} ledgerCredits={active.credits ?? 0} />
-                    </MetricBox>
+                    <LiveCreditsField characterId={active.liveId || active.name} ledgerCredits={active.credits ?? 0} asBox />
                   </div>
                 </div>
 
@@ -13642,9 +13723,8 @@ function CampaignDashboard() {
                     <LiveNoteField
                       characterId={active.liveId || active.name}
                       field="weaponsNote"
-                      label="Field Notes"
+                      label="Notes"
                       placeholder="e.g. picked up a second holdout blaster"
-                      helper="Quick mid-session notes — not mechanical, just for the table to remember."
                     />
                   </div>
                 </div>
@@ -13659,55 +13739,33 @@ function CampaignDashboard() {
                   {armorOptions.length === 0 ? (
                     <span className="text-[13px]" style={{ color: "#5a5f62" }}>No armor recorded.</span>
                   ) : (
-                    armorOptions.map((a, i) => {
-                      const isWorn = wornArmor?.id === a.id;
-                      const showWornToggle = armorOptions.length > 1;
-                      const def = armorDefense(a);
-                      return (
-                        <div key={a.id || i} className="text-[13px] flex items-baseline justify-between flex-wrap gap-x-5 gap-y-1.5 py-1.5" style={{ borderBottom: i < armorOptions.length - 1 ? "1px solid #2a2e3166" : "none" }}>
-                          <span className="flex items-center gap-2" style={{ color: showWornToggle && !isWorn ? "#5a5f62" : "#e7e2d2" }}>
-                            {showWornToggle && (
-                              <input
-                                type="checkbox"
-                                checked={isWorn}
-                                onChange={() => manual.setWornArmor(activeId, isWorn ? "" : a.id)}
-                                title={isWorn ? "Currently worn — click to take it off" : "Mark as worn"}
-                                style={{ accentColor: "#5ec8d8", cursor: "pointer" }}
-                              />
-                            )}
-                            {a.name}
-                            {a.isNew && <NewBadge size={18} />}
-                            {showWornToggle && isWorn && (
-                              <span className="text-[9px] uppercase tracking-[0.15em]" style={{ color: "#5ec8d8" }}>Worn</span>
-                            )}
-                          </span>
-                          <span className="flex items-baseline gap-5">
-                            <span className="inline-flex items-baseline gap-1.5">
-                              <TipLabel text="Soak" title={`${a.name}: +${a.soakBonus || 0} Soak`} body={`Adds ${a.soakBonus || 0} to Soak ${isWorn || !showWornToggle ? `while worn (Soak is ${computedSoak} now)` : "if worn (it isn't now)"}: Brawn ${chars.brawn || 0} + ${a.soakBonus || 0} = ${(chars.brawn || 0) + (a.soakBonus || 0)}.`} />
-                              <span className="mono-num" style={{ color: "#e7e2d2" }}>+{a.soakBonus || 0}</span>
-                            </span>
-                            <span className="inline-flex items-baseline gap-1.5">
-                              <TipLabel text="Defense" title={`${a.name}: ${def.ranged} ranged / ${def.melee} melee`} body={`${isWorn || !showWornToggle ? "While worn" : "If worn"}, adds ${def.ranged} Setback to ranged attacks and ${def.melee} to melee attacks against this character. Makes them harder to hit, not harder to hurt.`} width={300} align="right" />
-                              <span className="mono-num" style={{ color: "#e7e2d2" }}>{def.ranged} Ranged / {def.melee} Melee</span>
-                            </span>
-                          </span>
-                          {splitSpecial(a.special).length > 0 && (
-                            <div className="w-full flex flex-wrap gap-1.5">
-                              {splitSpecial(a.special).map((sp, k) => <SpecialChip key={k} text={sp} placement="below" />)}
-                            </div>
-                          )}
-                          {a.note && <ExpandableText text={a.note} className="w-full text-[12px] block" style={{ color: "#5ec8d8" }} />}
-                        </div>
-                      );
-                    })
+                    <div className="space-y-2.5">
+                      {armorOptions.map((a, i) => {
+                        const isWorn = wornArmor?.id === a.id;
+                        const showWornToggle = armorOptions.length > 1;
+                        const def = armorDefense(a);
+                        const wornNow = isWorn || !showWornToggle;
+                        return (
+                          <ArmorCard
+                            key={a.id || i}
+                            armor={a}
+                            def={def}
+                            worn={wornNow}
+                            showWornToggle={showWornToggle}
+                            onToggleWorn={() => manual.setWornArmor(activeId, isWorn ? "" : a.id)}
+                            soakTip={`Adds ${a.soakBonus || 0} to Soak ${wornNow ? `while worn (Soak is ${computedSoak} now)` : "if worn (it isn't now)"}: Brawn ${chars.brawn || 0} + ${a.soakBonus || 0} = ${(chars.brawn || 0) + (a.soakBonus || 0)}.`}
+                            defTip={(kind, n) => `${wornNow ? "While worn" : "If worn"}, adds ${n} Setback ${n === 1 ? "die" : "dice"} to ${kind} attacks against this character. Harder to hit, not harder to hurt.`}
+                          />
+                        );
+                      })}
+                    </div>
                   )}
                   <div className="mt-3.5 pt-3.5 border-t" style={{ borderColor: "#2a2e3166" }}>
                     <LiveNoteField
                       characterId={active.liveId || active.name}
                       field="armorNote"
-                      label="Field Notes"
+                      label="Notes"
                       placeholder="e.g. patched a scorch mark, plating feels looser than it should"
-                      helper="Quick mid-session notes — not mechanical, just for the table to remember."
                     />
                   </div>
                 </div>
@@ -13729,7 +13787,7 @@ function CampaignDashboard() {
                           }}
                         >
                           <div className="text-[10px] tracking-widest" style={{ color: "#5a5f62" }}>{abbr}</div>
-                          <div className="text-xl mono-num" style={{ color: "#e7e2d2" }}>{chars[key] ?? "—"}</div>
+                          <div className="text-xl mono-num" style={{ color: "#5ec8d8", fontWeight: 700 }}>{chars[key] ?? "—"}</div>
                           {hoveredChar === key && (
                             <HoverTip
                               title={`${CHAR_LABEL[key] || abbr} ${chars[key] ?? "—"}`}
@@ -13861,9 +13919,8 @@ function CampaignDashboard() {
                     <LiveNoteField
                       characterId={active.liveId || active.name}
                       field="inventoryNote"
-                      label="Field Notes"
+                      label="Notes"
                       placeholder="e.g. traded the spare power cell for ration bars"
-                      helper="Quick mid-session notes — not mechanical, just for the table to remember."
                     />
                   </div>
                 </div>
