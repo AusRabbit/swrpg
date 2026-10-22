@@ -1410,10 +1410,15 @@ function zoneKey(x, y) {
 
 // Default/reset shape: a 3x3 block of zones rather than a single square —
 // keep this in sync with DEFAULT_ZONES in the dashboard's App.jsx.
-const DEFAULT_ZONES = Array.from({ length: 3 }, (_, y) => Array.from({ length: 3 }, (_, x) => ({ x, y }))).flat();
+// Always a fresh copy: the map later push()es into its zone list, and handing
+// out one shared array let added zones leak into this default (so "Reset
+// map" brought back every zone ever added since the Worker started).
+function defaultZones() {
+  return Array.from({ length: 3 }, (_, y) => Array.from({ length: 3 }, (_, x) => ({ x, y }))).flat();
+}
 
 function sanitizeZones(raw) {
-  if (!Array.isArray(raw)) return DEFAULT_ZONES;
+  if (!Array.isArray(raw)) return defaultZones();
   const seen = new Set();
   const out = [];
   raw.slice(0, ZONE_MAX * 2).forEach((z) => {
@@ -1424,14 +1429,14 @@ function sanitizeZones(raw) {
     seen.add(key);
     out.push({ x, y });
   });
-  return out.length ? out : DEFAULT_ZONES;
+  return out.length ? out : defaultZones();
 }
 
 export class ZoneMapLog {
   constructor(ctx, env) {
     this.ctx = ctx;
     this.env = env;
-    this.zones = DEFAULT_ZONES;
+    this.zones = defaultZones();
     this.tokens = {};
     this.ctx.blockConcurrencyWhile(async () => {
       this.zones = sanitizeZones((await this.ctx.storage.get("zones")) || null);
@@ -1520,7 +1525,7 @@ export class ZoneMapLog {
       // Full reset — GM-only (enforced by the route handler below). Wipes
       // every token and every zone back to the starting 3x3 block.
       if (body?.reset) {
-        this.zones = DEFAULT_ZONES;
+        this.zones = defaultZones();
         this.tokens = {};
         await this.persist();
         return new Response(JSON.stringify({ ok: true, zones: this.zones, tokens: this.tokens }), { status: 200, headers: { "content-type": "application/json", ...CORS_HEADERS } });
