@@ -1123,7 +1123,7 @@ export class ManualLog {
 // redacted read-only view with Soak and exact thresholds stripped — see
 // publicEnemyView.
 const ENEMY_MAX = 30;
-const ENEMY_KINDS = ["minion", "rival", "nemesis"];
+const ENEMY_KINDS = ["minion", "rival", "nemesis", "other"]; // other: a white token, soak and wounds only
 const ENEMY_STAT_MAX = 60;
 const ENEMY_MINION_COUNT_MAX = 20;
 
@@ -1266,6 +1266,7 @@ function sGearDamage(v) {
   return sInt(v, 0, GEAR_STAT_MAX, 0);
 }
 
+const CHARACTERISTIC_NAMES = ["brawn", "agility", "intellect", "cunning", "willpower", "presence"];
 function sanitizeGear(raw) {
   if (!Array.isArray(raw)) return [];
   return raw.slice(0, GEAR_MAX).map((g) => {
@@ -1291,6 +1292,12 @@ function sanitizeGear(raw) {
         crit: sInt(g?.crit, 0, GEAR_STAT_MAX, 0),
         range: sText(g?.range, 20),
         special: sText(g?.special, 200) || "—",
+        // A talent (Finesse, Precision…) letting this weapon use a different
+        // characteristic: e.g. { characteristicOverride: "Cunning", overrideTalent: "Precision" }.
+        ...(CHARACTERISTIC_NAMES.includes(String(g?.characteristicOverride || "").toLowerCase())
+          ? { characteristicOverride: String(g.characteristicOverride).slice(0, 1).toUpperCase() + String(g.characteristicOverride).slice(1).toLowerCase(), overrideTalent: sText(g?.overrideTalent, 40) }
+          : {}),
+        ...(sText(g?.note, GEAR_NOTE_MAX) ? { note: sText(g?.note, GEAR_NOTE_MAX) } : {}),
       };
     }
     if (category === "armor") {
@@ -1802,6 +1809,9 @@ function sanitizeVehicle(raw) {
   v.crewPositions = (Array.isArray(v.crewPositions) ? v.crewPositions : []).filter((c) => c && typeof c === "object" && c.id && c.name);
   v.specialFeatures = (Array.isArray(v.specialFeatures) ? v.specialFeatures : []).map((x) => String(x || "").trim()).filter(Boolean);
   v.hidden = !!v.hidden;
+  if (typeof v.image === "string" && /^upload:\d+$/.test(v.image.trim())) v.image = v.image.trim();
+  else if (typeof v.image === "string" && /^https?:\/\//i.test(v.image.trim())) v.image = v.image.trim().slice(0, 500);
+  else delete v.image;
   v.id = String(v.id || "").toLowerCase().replace(/[^a-z0-9-]/g, "").slice(0, 40);
   return { vehicle: v };
 }
@@ -2267,13 +2277,14 @@ export class CampaignLog {
   // to load it from /portrait/<id> and so a new upload busts the cache.
   async handlePortrait(request, url) {
     if (url.pathname === "/portraits/export" && request.method === "GET") {
-      const all = await this.ctx.storage.list({ prefix: "portrait:" });
+      const all = new Map([...(await this.ctx.storage.list({ prefix: "portrait:" })), ...(await this.ctx.storage.list({ prefix: "vimage:" }))]);
       const out = {};
       for (const [k, v] of all) {
         let bin = "";
         const bytes = v.bytes;
         for (let i = 0; i < bytes.length; i += 0x8000) bin += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000));
-        out[k.slice("portrait:".length)] = { type: v.type, data: btoa(bin) };
+        // Vehicle pictures travel as "vimage:<id>", portraits by character id.
+        out[k.startsWith("vimage:") ? k : k.slice("portrait:".length)] = { type: v.type, data: btoa(bin) };
       }
       return this.json({ portraits: out });
     }
@@ -2285,7 +2296,8 @@ export class CampaignLog {
         if (!PORTRAIT_TYPES.includes(p?.type) || typeof p?.data !== "string") continue;
         let bytes;
         try { bytes = Uint8Array.from(atob(p.data), (ch) => ch.charCodeAt(0)); } catch { continue; }
-        if (bytes.byteLength && bytes.byteLength <= PORTRAIT_MAX_BYTES) entries[`portrait:${String(id).slice(0, 80)}`] = { type: p.type, bytes };
+        const key = String(id).startsWith("vimage:") ? String(id).slice(0, 90) : `portrait:${String(id).slice(0, 80)}`;
+        if (bytes.byteLength && bytes.byteLength <= PORTRAIT_MAX_BYTES) entries[key] = { type: p.type, bytes };
       }
       if (Object.keys(entries).length) await this.ctx.storage.put(entries);
       return this.json({ ok: true, restored: Object.keys(entries).length });
@@ -2319,6 +2331,41 @@ export class CampaignLog {
     return this.json({ ok: true, revision: this.revision, portrait: characters[idx].portrait || null });
   }
 
+  // A vehicle's picture (shown at the top of its tab). Same storage pattern
+  // as portraits: "vimage:<vehicleId>", and the vehicle's `image` becomes
+  // "upload:<timestamp>".
+  async handleVehicleImage(request, url) {
+    const id = String(url.searchParams.get("id") || "").slice(0, 80);
+    if (!id) return this.json({ error: "Which vehicle?" }, 400);
+    if (request.method === "GET") {
+      const p = await this.ctx.storage.get(`vimage:${id}`);
+      if (!p) return new Response("Not found", { status: 404 });
+      return new Response(p.bytes, { status: 200, headers: { "content-type": p.type } });
+    }
+    const campaign = normalizeCampaignVehicles({ ...(this.campaign || { characters: [] }) });
+    const vehicles = [...campaign.vehicles];
+    const idx = vehicles.findIndex((v) => v.id === id);
+    if (idx === -1) return this.json({ error: "That vehicle isn't in the campaign." }, 404);
+    if (request.method === "PUT") {
+      const type = String(request.headers.get("content-type") || "").split(";")[0].trim().toLowerCase();
+      if (!PORTRAIT_TYPES.includes(type)) return this.json({ error: "Use a JPEG, PNG, WebP or GIF picture." }, 400);
+      const bytes = new Uint8Array(await request.arrayBuffer());
+      if (!bytes.byteLength) return this.json({ error: "That picture is empty." }, 400);
+      if (bytes.byteLength > PORTRAIT_MAX_BYTES) return this.json({ error: "That picture is too large (over 2 MB)." }, 413);
+      await this.ctx.storage.put(`vimage:${id}`, { type, bytes });
+      vehicles[idx] = { ...vehicles[idx], image: `upload:${Date.now()}` };
+    } else if (request.method === "DELETE") {
+      await this.ctx.storage.delete(`vimage:${id}`);
+      const { image, ...rest } = vehicles[idx];
+      vehicles[idx] = rest;
+    } else {
+      return this.json({ error: "Method not allowed" }, 405);
+    }
+    campaign.vehicles = vehicles;
+    await this.save(campaign, this.snapshot);
+    return this.json({ ok: true, revision: this.revision, image: vehicles[idx].image || null });
+  }
+
   async wikiDeleteLegacy() {
     const old = (await this.ctx.storage.get("wikiChunks")) || 0;
     if (old) await this.ctx.storage.delete(Array.from({ length: old }, (_, i) => `wiki:${i}`));
@@ -2329,6 +2376,7 @@ export class CampaignLog {
     const url = new URL(request.url);
     if (url.pathname === "/wiki" || url.pathname.startsWith("/wiki/")) return this.handleWiki(request, url);
     if (url.pathname === "/portrait" || url.pathname.startsWith("/portraits/")) return this.handlePortrait(request, url);
+    if (url.pathname === "/vimage") return this.handleVehicleImage(request, url);
     if (url.pathname.startsWith("/creation")) return this.handleCreation(request, url);
     if (url.pathname.startsWith("/advance") || url.pathname === "/xp") return this.handleXp(request, url);
     if (request.method === "GET") {
@@ -2867,14 +2915,14 @@ async function routeCampaign(request, env, ctx) {
     //   GET    /portrait/<id>      anyone with the campaign link
     //   PUT    /gm/portrait/<id>   GM: upload (body is the image)
     //   DELETE /gm/portrait/<id>   GM: remove
-    const portraitMatch = /^\/(gm\/)?portrait\/([^/]{1,200})$/.exec(url.pathname);
+    const portraitMatch = /^\/(gm\/)?(portrait|vehicle-image)\/([^/]{1,200})$/.exec(url.pathname);
     if (portraitMatch) {
       if (request.method === "OPTIONS") return new Response(null, { status: 204, headers: CORS_HEADERS });
       const isGm = !!portraitMatch[1];
       let id;
-      try { id = decodeURIComponent(portraitMatch[2]); } catch { id = ""; }
+      try { id = decodeURIComponent(portraitMatch[3]); } catch { id = ""; }
       const stub = env.CAMPAIGN_LOG.get(env.CAMPAIGN_LOG.idFromName(doName(env, "shared-campaign")));
-      const target = `https://campaign.internal/portrait?id=${encodeURIComponent(id)}`;
+      const target = `https://campaign.internal/${portraitMatch[2] === "vehicle-image" ? "vimage" : "portrait"}?id=${encodeURIComponent(id)}`;
       if (isGm) {
         if (!gmAuthorised(request, env)) return gmDenied(env);
         if (request.method !== "PUT" && request.method !== "DELETE") return new Response(JSON.stringify({ error: "Method not allowed" }), { status: 405, headers: { "content-type": "application/json", ...CORS_HEADERS } });

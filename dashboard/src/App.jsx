@@ -1,9 +1,9 @@
-import { useState, useEffect, useLayoutEffect, useRef, useCallback, useMemo } from "react";
+import { Component, useState, useEffect, useLayoutEffect, useRef, useCallback, useMemo } from "react";
 import { Swords } from "lucide-react";
 import {
   CHARACTERISTICS, CHAR_LABEL, ALL_SKILLS, CREATION_MAX_CHARACTERISTIC, CREATION_MAX_RANK, BASE_OBLIGATION,
   OBLIGATION_BONUSES, emptyDraft, computeBuild, characteristicCost, skillRankCost as creationSkillRankCost, talentCost, specializationsFor,
-  TALENT_EFFECTS, talentRankCounts, xpBreakdown, talentSkillBoosts,
+  TALENT_EFFECTS, talentRankCounts, xpBreakdown, talentSkillBoosts, talentThresholdBonus,
 } from "./chargen.js";
 
 // ---------------------------------------------------------------------------
@@ -88,6 +88,7 @@ const COPY_CONFIRM_MS = 1500;
 const BLUE_TOKEN = "/images/blue-token.png";
 const RED_TOKEN = "/images/red-token.png";
 const BOOST_ICON = "/images/boost-icon.png";
+const SETBACK_ICON = "/images/die-setback.png";
 const YELLOW_ICON = "/images/yellow-icon.png";
 const GREEN_ICON = "/images/green-icon.png";
 const NEW_BADGE = "/images/new-badge.png";
@@ -257,13 +258,21 @@ function portraitSrc(character) {
   return p;
 }
 
+// A vehicle's picture: uploaded ("upload:<time>") or a web address.
+function vehicleImageSrc(vehicle) {
+  const p = vehicle?.image;
+  if (typeof p !== "string" || !p) return "";
+  if (p.startsWith("upload:")) return `${campaignBase()}vehicle-image/${encodeURIComponent(vehicle.id)}?v=${p.slice(7)}`;
+  return p;
+}
+
 // Shrinks a chosen picture in the browser (longest side 800px) so uploads
 // stay small and quick. Animated GIFs are sent as they are.
-async function preparePortrait(file) {
+async function preparePortrait(file, maxSide = 800) {
   if (!/^image\//.test(file.type)) throw new Error("that isn't a picture");
   if (file.type === "image/gif" && file.size <= 2_000_000) return { blob: file, type: "image/gif" };
   const bitmap = await createImageBitmap(file);
-  const scale = Math.min(1, 800 / Math.max(bitmap.width, bitmap.height));
+  const scale = Math.min(1, maxSide / Math.max(bitmap.width, bitmap.height));
   const canvas = document.createElement("canvas");
   canvas.width = Math.max(1, Math.round(bitmap.width * scale));
   canvas.height = Math.max(1, Math.round(bitmap.height * scale));
@@ -553,7 +562,7 @@ const QUALITY_GLOSSARY = [
   ["unwieldy", "Unwieldy N", "Agility below N adds that many Setback dice to the check."],
   ["cortosis", "Cortosis", "Weapon: immune to Sunder. Armor: immune to Pierce and Breach."],
   ["inferior", "Inferior", "Adds an automatic Threat to every check made with it. Weapons deal 1 less damage; armor loses 1 defence (or 1 soak if it has no defence)."],
-  ["guided", "Guided N", "If the attack misses, spend 3 Advantage to make a guided attack at the end of the round with N Ability dice."],
+  ["guided", "Guided N", "Active (3 Advantage). If the attack misses, spend 3 Advantage: at the end of the round the missile makes its own attack, rolling N Ability dice (no skill or characteristic) against the usual difficulty for range, plus defense, spoofing and other modifiers. A hit deals base damage + net Successes; a miss with 3 Advantage can keep it chasing. Order 66 Genesys conversion: Guided ratings are 1 higher than the printed Star Wars value."],
   ["tractor", "Tractor N", "The target can't move unless it passes a Piloting check with difficulty N."],
   ["ion", "Ion", "Damage is dealt as system strain instead of wounds or hull trauma."],
 ];
@@ -569,8 +578,19 @@ const QUALITY_OPTIONS = QUALITY_GLOSSARY
 function QualityPicker({ value, onChange }) {
   const [choice, setChoice] = useState("");
   const [rating, setRating] = useState("1");
+  const [custom, setCustom] = useState("");
   const option = QUALITY_OPTIONS.find((o) => o.title === choice);
+  const narrative = choice === "__narrative";
   function add() {
+    if (narrative) {
+      // Anything not in the list: typed in as it should read on the sheet.
+      const text = custom.replace(/,/g, ";").trim().slice(0, 60);
+      if (!text) return;
+      onChange([...value.filter((q) => q.toLowerCase() !== text.toLowerCase()), text]);
+      setChoice("");
+      setCustom("");
+      return;
+    }
     if (!option) return;
     const n = Math.max(1, Math.min(20, Number(rating) || 1));
     const text = option.rated ? `${option.base} ${n}` : option.base;
@@ -590,11 +610,15 @@ function QualityPicker({ value, onChange }) {
       >
         <option value="">+ Quality…</option>
         {QUALITY_OPTIONS.map((o) => <option key={o.title} value={o.title}>{o.base}{o.rated ? " (N)" : ""}</option>)}
+        <option value="__narrative">Narrative (custom)…</option>
       </select>
+      {narrative && (
+        <input type="text" value={custom} onChange={(e) => setCustom(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); add(); } }} maxLength={60} placeholder="e.g. Silent, Collapsible" className="w-40 bg-transparent border px-1.5 py-1 text-[11px]" style={{ borderColor: "#3a3f42", color: "#e7e2d2" }} title="Any quality or feature not in the list, written as it should appear" />
+      )}
       {option?.rated && (
         <input type="number" min={1} max={20} value={rating} onChange={(e) => setRating(e.target.value)} className="w-12 bg-transparent border px-1.5 py-1 text-[11px] mono-num" style={{ borderColor: "#3a3f42", color: "#e7e2d2" }} title="Rating" />
       )}
-      {option && (
+      {(option || (narrative && custom.trim())) && (
         <button type="button" onClick={add} className="text-[10px] uppercase px-1.5 py-1 border" style={{ borderColor: "#5ec8d866", color: "#5ec8d8" }}>Add</button>
       )}
       {value.map((q) => (
@@ -4283,6 +4307,9 @@ function useCrewAssignments() {
 // Vehicle-scale range bands (Genesys vehicle rules add Strategic; "Close"
 // in some printed stat blocks is the same band as Short).
 const VEHICLE_RANGE_BANDS = ["Engaged", "Short", "Medium", "Long", "Extreme", "Strategic"];
+const FIRE_ARC_OPTIONS = ["Forward", "Aft", "Port", "Starboard", "Forward and Aft", "Port and Starboard", "All"];
+// Skills a vehicle weapon can be fired with (Gunnery for most).
+const VEHICLE_WEAPON_SKILLS = ["Gunnery", "Piloting: Space", "Piloting: Planetary", "Ranged: Heavy", "Ranged: Light", "Computers"];
 function vehicleRangeIndex(range) {
   const r = String(range || "").trim().toLowerCase();
   return VEHICLE_RANGE_BANDS.findIndex((b) => b.toLowerCase() === (r === "close" ? "short" : r));
@@ -4374,7 +4401,7 @@ function VehicleWeaponCard({ weapon, skill, onRoll, rollTitle, compact = false, 
           <span className={`${compact ? "text-[15px]" : "text-[18px]"} uppercase`} style={{ color: "#e7e2d2", fontFamily: "'Rajdhani', sans-serif", fontWeight: 700, letterSpacing: "0.03em" }}>
             {weapon.name}
           </span>
-          <span className="text-[10px] tracking-[0.12em] uppercase" style={{ color: "#8a8f93" }}>Gunnery</span>
+          <span className="text-[10px] tracking-[0.12em] uppercase" style={{ color: "#8a8f93" }}>{weapon.skill || "Gunnery"}</span>
           {ammo && (
             <span onClick={(e) => e.stopPropagation()} className="inline-flex items-center gap-1.5">
               <span className="text-[10px] tracking-[0.12em] uppercase" style={{ color: outOfAmmo ? "#c23b3b" : "#8a8f93" }}>Ammo</span>
@@ -4436,6 +4463,114 @@ function VehicleWeaponCard({ weapon, skill, onRoll, rollTitle, compact = false, 
   );
 }
 
+// The generic crew positions (and their actions) every vehicle draws from.
+let vehicleTemplateCache = null;
+function useVehicleTemplate() {
+  const [template, setTemplate] = useState(vehicleTemplateCache);
+  useEffect(() => {
+    if (vehicleTemplateCache) return undefined;
+    let cancelled = false;
+    fetch("/data/vehicle-template.json").then((r) => r.json()).then((t) => {
+      vehicleTemplateCache = Array.isArray(t?.crewPositions) ? t.crewPositions : [];
+      if (!cancelled) setTemplate(vehicleTemplateCache);
+    }).catch(() => {});
+    return () => { cancelled = true; };
+  }, []);
+  return template || [];
+}
+
+// Small craft with only a Pilot (and maybe a Co-pilot) seat: everything the
+// missing seats would normally do, in one box, for whichever of the seated
+// crew attempts it. Taking one uses that character's action for the turn.
+function VehicleOtherActions({ vehicle, party, partySkillSets, crew, loadSkillIntoRoller, manual }) {
+  const template = useVehicleTemplate();
+  const positions = vehicle.crewPositions || [];
+  const smallCraft = positions.length > 0 && positions.every((p) => p.id === "pilot" || p.id === "copilot");
+  const seated = [...new Set(positions.map((p) => crew[`${vehicle.id}:${p.id}`]).filter(Boolean))]
+    .map((key) => ({ key, idx: party.findIndex((c) => (c.liveId || c.name) === key) }))
+    .filter((x) => x.idx > -1);
+  const [doerKey, setDoerKey] = useState("");
+  if (!smallCraft || !template.length) return null;
+  const doer = seated.find((x) => x.key === doerKey) || seated[0] || null;
+  const seatIds = new Set(positions.map((p) => p.id));
+  const covered = new Set(positions.flatMap((p) => (p.actions || []).map((a) => a.name)));
+  const groups = [];
+  for (const tp of template) {
+    if (seatIds.has(tp.id)) continue;
+    const actions = (tp.actions || []).filter((a) => !covered.has(a.name));
+    actions.forEach((a) => covered.add(a.name));
+    if (actions.length) groups.push({ label: `${tp.name} actions`, actions });
+  }
+  if (!groups.length) return null;
+  const weapons = vehicle.weapons || [];
+  // A "Fire…" action with no gunner seat uses the first forward weapon for
+  // forward fire, otherwise the first weapon that isn't forward-only (a
+  // turret), falling back to the first weapon at all.
+  const weaponFor = (action) => {
+    if (!/^fire\b/i.test(action.name) || !/gunnery/i.test(action.skill || "")) return null;
+    const fwd = weapons.find((w) => fireArcSet(w.fireArc)?.fore);
+    const other = weapons.find((w) => { const a = fireArcSet(w.fireArc); return a && (a.aft || a.port || a.starboard); });
+    return /forward/i.test(action.name) ? fwd || weapons[0] || null : other || weapons[0] || null;
+  };
+  const label = (c) => (c ? party[c.idx]?.name || c.key : "");
+  return (
+    <div className="mt-4 border p-3.5" style={{ borderColor: "#5ec8d866", background: "#101315" }}>
+      <div className="flex flex-wrap items-baseline justify-between gap-2 mb-1">
+        <span className="text-[15px]" style={{ color: "#e7e2d2", fontFamily: "'Rajdhani', sans-serif", fontWeight: 700 }}>Other actions</span>
+        <span className="text-[10px] uppercase tracking-[0.12em]" style={{ color: "#5ec8d8" }}>No one else aboard</span>
+      </div>
+      <p className="text-[12px] leading-relaxed mb-2.5" style={{ color: "#8a8f93" }}>
+        Everything the empty seats would normally do. Taking one uses that character's action for the turn.
+      </p>
+      <div className="flex flex-wrap items-center gap-2 mb-3 text-[12px]">
+        <span style={{ color: "#8a8f93" }}>Who's doing it</span>
+        {seated.length === 0 ? (
+          <span style={{ color: "#5a5f62" }}>Seat someone as {positions.map((p) => p.name).join(" or ")} first.</span>
+        ) : (
+          <select value={doer?.key || ""} onChange={(e) => setDoerKey(e.target.value)} className="bg-transparent border px-2 py-1 text-[13px]" style={{ borderColor: "#3a3f42", color: "#e7e2d2", background: "#101315" }}>
+            {seated.map((c) => <option key={c.key} value={c.key}>{label(c)}</option>)}
+          </select>
+        )}
+      </div>
+      <div className="grid gap-x-4 sm:grid-cols-2">
+        {groups.map((g) => (
+          <div key={g.label} className="mb-2">
+            <div className="text-[10px] tracking-[0.15em] uppercase mb-1.5" style={{ color: "#5a5f62" }}>{g.label}</div>
+            <div className="space-y-1.5">
+              {g.actions.map((action) => {
+                const skill = doer ? partySkillSets[doer.idx]?.find((s) => s.name === action.skill) : null;
+                const w = weaponFor(action);
+                const ammo = w ? vehicleAmmo(manual, vehicle, w, weapons.indexOf(w)) : null;
+                const noAmmo = !!ammo && ammo.value <= 0;
+                const damage = w ? Math.max(0, (Number(w.damage) || 0) + weaponRollAdjustments(w.qualities || "").damage) : null;
+                const clickable = !!skill && !noAmmo;
+                const tip = [action.description, action.requirement ? `Requirement: ${action.requirement}` : null, w ? `Fires: ${w.name}` : null].filter(Boolean).join("\n\n");
+                return (
+                  <button
+                    key={action.name}
+                    type="button"
+                    disabled={!clickable}
+                    onClick={clickable ? () => loadSkillIntoRoller(skill, label(doer), w ? w.qualities || null : null, damage) : undefined}
+                    title={clickable ? `${tip}\n\nClick to load ${label(doer)}'s ${action.skill} into the Dice Roller.` : noAmmo ? `${tip}\n\n${w.name} is out of ammo.` : tip}
+                    className="w-full flex items-center justify-between gap-3 text-left px-2.5 py-1.5 border transition-colors disabled:cursor-not-allowed"
+                    style={{ borderColor: clickable ? "#2a2e31" : "#2a2e3155", background: clickable ? "#131719" : "transparent" }}
+                  >
+                    <span className="text-[13px]" style={{ color: clickable ? "#e7e2d2" : "#5a5f62" }}>
+                      {action.name} <span className="text-[10px]" style={{ color: "#5a5f62" }}>{action.skill}</span>
+                    </span>
+                    {skill ? <SkillPips rank={skill.rank} characteristic={skill.characteristic} boost={skill.boost} setback={skill.setback || 0} /> : <span className="text-[10px] tracking-[0.1em] uppercase" style={{ color: "#5a5f62" }}>{doer ? "—" : "no crew"}</span>}
+                    {noAmmo && <span className="text-[10px] tracking-[0.1em] uppercase" style={{ color: "#c23b3b" }}>out of ammo</span>}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function VehicleTab({ vehicle, party, partySkillSets, live, loadSkillIntoRoller, manual }) {
   const { crew, assign } = useCrewAssignments();
 
@@ -4471,6 +4606,12 @@ function VehicleTab({ vehicle, party, partySkillSets, live, loadSkillIntoRoller,
           {vehicle.name}
         </h1>
         <p className="text-[12px] mb-5" style={{ color: "#8a8f93" }}>{vehicle.class}</p>
+
+        {vehicleImageSrc(vehicle) && (
+          <div className="mb-5 border flex items-center justify-center" style={{ borderColor: "#2a2e31", background: "#0b0d0e" }}>
+            <img src={vehicleImageSrc(vehicle)} alt={`${vehicle.name}`} className="w-full h-auto object-contain" style={{ maxHeight: 360 }} />
+          </div>
+        )}
 
         <div className="grid grid-cols-2 sm:grid-cols-5 gap-4 mb-5 pb-5 border-b" style={{ borderColor: "#2a2e31" }}>
           <Stat label="Silhouette"><span className="text-xl mono-num" style={{ color: "#e7e2d2" }}>{vehicle.silhouette ?? "—"}</span></Stat>
@@ -4576,7 +4717,7 @@ function VehicleTab({ vehicle, party, partySkillSets, live, loadSkillIntoRoller,
                   </select>
 
                   {weapon && (() => {
-                    const gunnery = assignedIdx > -1 ? partySkillSets[assignedIdx].find((s) => s.name === "Gunnery") : null;
+                    const gunnery = assignedIdx > -1 ? partySkillSets[assignedIdx].find((s) => s.name === (weapon.skill || "Gunnery")) : null;
                     return (
                       <div className="mb-3">
                         <VehicleWeaponCard
@@ -4585,7 +4726,7 @@ function VehicleTab({ vehicle, party, partySkillSets, live, loadSkillIntoRoller,
                           compact
                           ammo={vehicleAmmo(manual, vehicle, weapon, pos.weaponIndex)}
                           onRoll={gunnery ? (dmg) => loadSkillIntoRoller(gunnery, characterLabel(assignedKey), weapon.qualities || null, dmg) : undefined}
-                          rollTitle={`Load ${characterLabel(assignedKey)}'s Gunnery pool for ${weapon.name} into the Dice Roller`}
+                          rollTitle={`Load ${characterLabel(assignedKey)}'s ${weapon.skill || "Gunnery"} pool for ${weapon.name} into the Dice Roller`}
                         />
                       </div>
                     );
@@ -4673,6 +4814,7 @@ function VehicleTab({ vehicle, party, partySkillSets, live, loadSkillIntoRoller,
               );
             })}
           </div>
+          <VehicleOtherActions vehicle={vehicle} party={party} partySkillSets={partySkillSets} crew={crew} loadSkillIntoRoller={loadSkillIntoRoller} manual={manual} />
         </div>
       </div>
     </div>
@@ -4685,7 +4827,9 @@ function VehicleTab({ vehicle, party, partySkillSets, live, loadSkillIntoRoller,
 // left to right; clicking a pip sets the count to that pip's number
 // directly (per FFG convention, clicking an already-lit pip un-lights it and
 // everything after it, same as clicking pip 1 while at 1 empties the bar).
-function PipRow({ current, threshold, colorClass, size = "normal", onSet, onAdjust, scale = 1, overLabel }) {
+// bonusFrom: pips from this index on come from talents (Toughened, Grit…),
+// marked with a divider and a pale outline; bonusTitle explains them.
+function PipRow({ current, threshold, colorClass, size = "normal", onSet, onAdjust, scale = 1, overLabel, bonusFrom = null, bonusTitle = "" }) {
   // Hooks must run unconditionally, so this is declared before the
   // early-return below (current == null renders a "Connecting…" message
   // instead of pips at all).
@@ -4723,11 +4867,13 @@ function PipRow({ current, threshold, colorClass, size = "normal", onSet, onAdju
           const previewing = editable && previewCount != null;
           const previewFilled = previewing ? i < previewCount : filled;
           const changing = previewing && previewFilled !== filled;
+          const fromTalent = bonusFrom != null && i >= bonusFrom;
           const common = {
             className: "border relative",
             style: {
               width: pipPx, height: pipPx,
-              borderColor: previewFilled ? colorClass : "#3a3f42",
+              borderColor: previewFilled ? colorClass : fromTalent ? "#8fd3f4aa" : "#3a3f42",
+              borderStyle: fromTalent && !previewFilled ? "dashed" : "solid",
               background: previewFilled ? colorClass : "transparent",
               opacity: changing ? 0.45 : 1,
               boxShadow: filled && !previewing ? `0 0 6px ${colorClass}99` : "none",
@@ -4743,22 +4889,26 @@ function PipRow({ current, threshold, colorClass, size = "normal", onSet, onAdju
               {i + 1}
             </span>
           );
-          return editable ? (
+          const divider = fromTalent && i === bonusFrom ? (
+            <span key={`d${i}`} aria-hidden="true" title={bonusTitle} className="self-stretch" style={{ width: 2, background: "#8fd3f4", margin: "0 1px", cursor: "help" }} />
+          ) : null;
+          const pip = editable ? (
             <button
               key={i}
               type="button"
               onClick={() => onSet(current === i + 1 ? i : i + 1)}
               onMouseEnter={() => setHoverIndex(i)}
-              title={`Set to ${i + 1} of ${threshold}`}
+              title={`Set to ${i + 1} of ${threshold}${fromTalent ? ` (from talents: ${bonusTitle})` : ""}`}
               {...common}
             >
               {numberLabel}
             </button>
           ) : (
-            <span key={i} {...common}>
+            <span key={i} {...common} title={fromTalent ? `From talents: ${bonusTitle}` : undefined}>
               {numberLabel}
             </span>
           );
+          return divider ? [divider, pip] : pip;
         })}
       </div>
       <span className="text-[11px] mono-num" style={{ color: over ? overflowColor : "#8a8f93" }}>
@@ -5007,7 +5157,7 @@ function SkillPips({ rank, characteristic, boost = 0, setback = 0 }) {
       )}
       {setback > 0 && (
         <span className="text-[10px] leading-none inline-flex items-center gap-0.5" style={{ color: "#8a8f93" }} title={`+${setback} Setback dice`}>
-          <img src={BLACK_ICON} alt="Setback" style={{ width: 10, height: 10, display: "inline-block" }} />
+          <img src={SETBACK_ICON} alt="Setback" style={{ width: 10, height: 10, display: "inline-block" }} />
           {setback > 1 ? `×${setback}` : ""}
         </span>
       )}
@@ -5968,6 +6118,7 @@ const ENEMY_TYPES = [
   { key: "minion", label: "Minion" },
   { key: "rival", label: "Rival" },
   { key: "nemesis", label: "Nemesis" },
+  { key: "other", label: "Other" },
 ];
 
 // How many GM Inbox messages haven't been ticked as actioned yet. Polled from
@@ -6142,7 +6293,7 @@ function useUnactionedNoteCount(enabled) {
 function parseEnemyLines(text) {
   const rows = [];
   const errors = [];
-  const kinds = { m: "minion", minion: "minion", r: "rival", rival: "rival", n: "nemesis", nemesis: "nemesis" };
+  const kinds = { m: "minion", minion: "minion", r: "rival", rival: "rival", n: "nemesis", nemesis: "nemesis", o: "other", other: "other" };
   const num = (v) => (/^\d+$/.test(v) ? Number(v) : NaN);
   text.split(/\r?\n/).forEach((raw, i) => {
     const line = raw.trim();
@@ -6151,7 +6302,7 @@ function parseEnemyLines(text) {
     if (i === 0 && parts[0].toLowerCase() === "type") return; // header row
     const lineNo = i + 1;
     const type = kinds[(parts[0] || "").toLowerCase()];
-    if (!type) { errors.push({ lineNo, line, msg: "type must be m, r or n" }); return; }
+    if (!type) { errors.push({ lineNo, line, msg: "type must be m, r, n or o" }); return; }
     const name = parts[1] || "";
     if (!name) { errors.push({ lineNo, line, msg: "name is missing" }); return; }
     const soak = num(parts[2]);
@@ -6211,28 +6362,29 @@ function EnemyBulkEntry({ enemyStore }) {
     const lines = text.split(/\r?\n/);
     const leftover = [...errors.map((e) => e.lineNo), ...rows.slice(room).map((r) => r.lineNo)].sort((x, y) => x - y);
     setText(leftover.map((n) => lines[n - 1]).join("\n"));
-    setResult(`Added ${toAdd.length} enem${toAdd.length === 1 ? "y" : "ies"} (hidden from players until revealed).${rows.length > toAdd.length ? ` ${rows.length - toAdd.length} skipped: the board holds ${ENEMY_BOARD_MAX}.` : ""}`);
+    setResult(`Added ${toAdd.length} NPC${toAdd.length === 1 ? "" : "s"} (hidden from players until revealed).${rows.length > toAdd.length ? ` ${rows.length - toAdd.length} skipped: the board holds ${ENEMY_BOARD_MAX}.` : ""}`);
   }
 
-  const typeLabel = { minion: "Minion", rival: "Rival", nemesis: "Nemesis" };
+  const typeLabel = { minion: "Minion", rival: "Rival", nemesis: "Nemesis", other: "Other" };
   return (
     <div className="border p-4" style={{ borderColor: "#3a3f42", background: "#16191b" }}>
       <button type="button" onClick={() => setOpen((o) => !o)} className="w-full flex items-center justify-between text-[11px] tracking-[0.2em] uppercase" style={{ color: "#8a8f93" }}>
-        <span>Quick add enemies (text)</span>
+        <span>Quick add NPCs (text)</span>
         <span style={{ fontSize: 10 }}>{open ? "▲ Hide" : "▼ Show"}</span>
       </button>
       {open && (
         <div className="mt-3">
           <p className="text-[11px] leading-relaxed mb-2" style={{ color: "#5a5f62" }}>
             One enemy per line: <span className="mono-num" style={{ color: "#c7c2b2" }}>type,name,soak,wounds,strain</span>.
-            Type is m, r or n. Minions use the last field for how many are in the group (defaults to 1); rivals stop after wounds; nemeses need strain.
+            Type is m, r, n or o. Minions use the last field for how many are in the group (defaults to 1); rivals and others (o: a white token,
+            soak and wounds only) stop after wounds; nemeses need strain.
           </p>
           <textarea
             value={text}
             onChange={(e) => { setText(e.target.value); setResult(null); }}
             rows={6}
             spellCheck={false}
-            placeholder={"m,Stormtrooper,5,5,5\nr,Supervisor,4,12\nn,Jedi,5,14,16"}
+            placeholder={"m,Stormtrooper,5,5,5\nr,Supervisor,4,12\nn,Jedi,5,14,16\no,Cargo droid,2,6"}
             className="w-full bg-transparent border px-2 py-1.5 text-[13px] mono-num"
             style={{ borderColor: "#3a3f42", color: "#e7e2d2" }}
           />
@@ -6272,7 +6424,7 @@ function EnemyBulkEntry({ enemyStore }) {
             >
               Add {rows.length || ""} to enemy board
             </button>
-            {room === 0 && <span className="text-[12px]" style={{ color: "#c23b3b" }}>Enemy board is full ({ENEMY_BOARD_MAX}).</span>}
+            {room === 0 && <span className="text-[12px]" style={{ color: "#c23b3b" }}>NPC board is full ({ENEMY_BOARD_MAX}).</span>}
             {result && <span className="text-[12px]" style={{ color: "#6fae60" }}>{result}</span>}
           </div>
         </div>
@@ -6453,6 +6605,20 @@ function useCampaignStore(gmKey) {
     },
     async uploadPortrait(characterId, blob, type) {
       const res = await apiFetch(`/gm/portrait/${encodeURIComponent(characterId)}`, { method: "PUT", headers: { "content-type": type, "x-gm-key": keyRef.current || "" }, body: blob });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || data.error) throw new Error(data.error || `The Worker said ${res.status}`);
+      await fetchCampaign(true);
+      return data;
+    },
+    async uploadVehicleImage(vehicleId, blob, type) {
+      const res = await apiFetch(`/gm/vehicle-image/${encodeURIComponent(vehicleId)}`, { method: "PUT", headers: { "content-type": type, "x-gm-key": keyRef.current || "" }, body: blob });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || data.error) throw new Error(data.error || `The Worker said ${res.status}`);
+      await fetchCampaign(true);
+      return data;
+    },
+    async removeVehicleImage(vehicleId) {
+      const res = await apiFetch(`/gm/vehicle-image/${encodeURIComponent(vehicleId)}`, { method: "DELETE", headers: { "x-gm-key": keyRef.current || "" } });
       const data = await res.json().catch(() => ({}));
       if (!res.ok || data.error) throw new Error(data.error || `The Worker said ${res.status}`);
       await fetchCampaign(true);
@@ -7011,6 +7177,58 @@ function GmVehicleSection({ store }) {
   );
 }
 
+// Vehicle editor → Picture: shown large at the top of the vehicle's tab.
+function GmVehicleImageEditor({ store, vehicle }) {
+  const fileRef = useRef(null);
+  const [status, setStatus] = useState({ state: "idle", msg: "" });
+  const src = vehicleImageSrc(vehicle);
+  const btn = "text-[11px] tracking-[0.15em] uppercase px-3 py-1.5 border transition-colors disabled:opacity-40";
+  async function choose(e) {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    setStatus({ state: "busy", msg: "Uploading…" });
+    try {
+      const { blob, type } = await preparePortrait(file, 1600);
+      await store.uploadVehicleImage(vehicle.id, blob, type);
+      setStatus({ state: "ok", msg: `Picture updated (${Math.max(1, Math.round(blob.size / 1000))} KB).` });
+    } catch (err) {
+      setStatus({ state: "error", msg: `Couldn't use ${file.name}: ${err.message}` });
+    }
+  }
+  async function remove() {
+    if (!window.confirm(`Remove ${vehicle.name}'s picture?`)) return;
+    setStatus({ state: "busy", msg: "Removing…" });
+    try {
+      await store.removeVehicleImage(vehicle.id);
+      setStatus({ state: "ok", msg: "Picture removed." });
+    } catch (err) {
+      setStatus({ state: "error", msg: err.message });
+    }
+  }
+  return (
+    <div className="flex flex-wrap items-start gap-3 mb-3">
+      {src ? (
+        <img src={src} alt="" className="h-28 w-auto max-w-[14rem] object-contain border" style={{ borderColor: "#3a3f42", background: "#101315" }} />
+      ) : (
+        <div className="h-28 w-44 border flex items-center justify-center text-[10px] uppercase tracking-[0.1em]" style={{ borderColor: "#3a3f42", color: "#5a5f62" }}>No picture</div>
+      )}
+      <div className="flex-1 min-w-[200px]">
+        <div className="block text-[10px] tracking-[0.15em] uppercase mb-1" style={{ color: "#8a8f93" }}>Picture</div>
+        <div className="flex flex-wrap items-center gap-2">
+          <input ref={fileRef} type="file" accept="image/*" onChange={choose} className="hidden" />
+          <button type="button" onClick={() => fileRef.current?.click()} disabled={status.state === "busy"} className={btn} style={{ color: "#101315", background: "#5ec8d8", borderColor: "#5ec8d8", fontFamily: "'Rajdhani', sans-serif", fontWeight: 700 }}>
+            {src ? "Replace picture…" : "Add image…"}
+          </button>
+          {src && <button type="button" onClick={remove} disabled={status.state === "busy"} className={btn} style={{ color: "#c23b3b", borderColor: "#c23b3b66", fontFamily: "'Rajdhani', sans-serif" }}>Remove</button>}
+        </div>
+        <div className="text-[10px] mt-1" style={{ color: "#5a5f62" }}>Shown large at the top of the vehicle's tab. Shrunk to 1600px and saved straight away.</div>
+        {status.msg && <p className="mt-1 text-[12px]" style={{ color: status.state === "error" ? "#c23b3b" : status.state === "busy" ? "#8a8f93" : "#6fae60" }}>{status.msg}</p>}
+      </div>
+    </div>
+  );
+}
+
 function GmVehicleEditor({ store, saved, onClose }) {
   const ref = useVehicleReference();
   const [draft, setDraft] = useState(saved);
@@ -7127,6 +7345,7 @@ function GmVehicleEditor({ store, saved, onClose }) {
       {draft && (
         <>
           {picker}
+          {saved ? <GmVehicleImageEditor store={store} vehicle={saved} /> : <p className="text-[11px] mb-3" style={{ color: "#5a5f62" }}>Add the vehicle first, then you can give it a picture.</p>}
           <div className="grid gap-3 sm:grid-cols-2 mb-3">
             <div>
               <label className={lbl} style={{ color: "#8a8f93" }}>Name</label>
@@ -7160,26 +7379,47 @@ function GmVehicleEditor({ store, saved, onClose }) {
 
           <div className="mb-3">
             <div className={lbl} style={{ color: "#8a8f93" }}>Weapons</div>
-            {(draft.weapons || []).map((w, i) => (
-              <div key={i} className="grid grid-cols-12 gap-1.5 mb-1.5 items-center">
-                <input value={w.name} onChange={(e) => edit((d) => { d.weapons[i].name = e.target.value; return d; })} className={`${field} col-span-12 sm:col-span-4`} style={fs} placeholder="Weapon name" />
-                <input value={w.fireArc || ""} onChange={(e) => edit((d) => { d.weapons[i].fireArc = e.target.value; return d; })} className={`${field} col-span-3 sm:col-span-2`} style={fs} placeholder="Arc" title="Fire arc" />
-                <input value={w.range || ""} onChange={(e) => edit((d) => { d.weapons[i].range = e.target.value; return d; })} className={`${field} col-span-3 sm:col-span-1`} style={fs} placeholder="Range" title="Range" />
-                <input type="number" value={w.damage ?? 0} onChange={(e) => edit((d) => { d.weapons[i].damage = Number(e.target.value); return d; })} className={`${field} col-span-2 sm:col-span-1`} style={fs} title="Damage" />
-                <input type="number" value={w.crit ?? 0} onChange={(e) => edit((d) => { d.weapons[i].crit = Number(e.target.value); return d; })} className={`${field} col-span-2 sm:col-span-1`} style={fs} title="Critical" />
-                <input value={w.qualities || ""} onChange={(e) => edit((d) => { d.weapons[i].qualities = e.target.value; return d; })} className={`${field} col-span-10 sm:col-span-2`} style={fs} placeholder="Qualities" title="Qualities, comma separated" />
-                <button type="button" onClick={() => edit((d) => {
-                  d.weapons.splice(i, 1);
-                  for (const p of d.crewPositions || []) {
-                    if (p.weaponIndex == null) continue;
-                    if (p.weaponIndex === i) p.weaponIndex = d.weapons.length ? 0 : null;
-                    else if (p.weaponIndex > i) p.weaponIndex -= 1;
-                  }
-                  return d;
-                })} className="col-span-2 sm:col-span-1 text-[12px]" style={{ color: "#c23b3b" }} title="Remove weapon">✕</button>
-              </div>
-            ))}
-            <div className="text-[10px] mb-1.5" style={{ color: "#5a5f62" }}>Columns: name · fire arc · range · damage · critical · qualities</div>
+            {(draft.weapons || []).map((w, i) => {
+              const sel = `${field} bg-[#0b0d0e]`;
+              const quals = String(w.qualities || "").split(/\s*,\s*/).map((q) => q.trim()).filter(Boolean);
+              return (
+                <div key={i} className="border p-2 mb-1.5" style={{ borderColor: "#2a2e31" }}>
+                  <div className="flex flex-wrap items-center gap-1.5 mb-1.5">
+                    <input value={w.name} onChange={(e) => edit((d) => { d.weapons[i].name = e.target.value; return d; })} className={`${field} flex-1 min-w-[180px]`} style={fs} placeholder="Weapon name" />
+                    <select value={w.skill || "Gunnery"} onChange={(e) => edit((d) => { d.weapons[i].skill = e.target.value; return d; })} className={sel} style={fs} title="Skill used to fire it">
+                      {VEHICLE_WEAPON_SKILLS.map((sk) => <option key={sk} value={sk}>{sk}</option>)}
+                    </select>
+                    <button type="button" onClick={() => edit((d) => {
+                      d.weapons.splice(i, 1);
+                      for (const p of d.crewPositions || []) {
+                        if (p.weaponIndex == null) continue;
+                        if (p.weaponIndex === i) p.weaponIndex = d.weapons.length ? 0 : null;
+                        else if (p.weaponIndex > i) p.weaponIndex -= 1;
+                      }
+                      return d;
+                    })} className="text-[12px] px-1" style={{ color: "#c23b3b" }} title="Remove weapon">✕</button>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    <select value={w.fireArc || ""} onChange={(e) => edit((d) => { d.weapons[i].fireArc = e.target.value; return d; })} className={sel} style={fs} title="Fire arc">
+                      <option value="">Arc…</option>
+                      {FIRE_ARC_OPTIONS.map((a) => <option key={a} value={a}>{a}</option>)}
+                      {w.fireArc && !FIRE_ARC_OPTIONS.includes(w.fireArc) && <option value={w.fireArc}>{w.fireArc}</option>}
+                    </select>
+                    <select value={w.range || ""} onChange={(e) => edit((d) => { d.weapons[i].range = e.target.value; return d; })} className={sel} style={fs} title="Range band">
+                      <option value="">Range…</option>
+                      {VEHICLE_RANGE_BANDS.map((r) => <option key={r} value={r}>{r}</option>)}
+                      {w.range && !VEHICLE_RANGE_BANDS.includes(w.range) && <option value={w.range}>{w.range}</option>}
+                    </select>
+                    <label className="text-[10px]" style={{ color: "#5a5f62" }}>Dmg</label>
+                    <input type="number" value={w.damage ?? 0} onChange={(e) => edit((d) => { d.weapons[i].damage = Number(e.target.value); return d; })} className={`${field} w-14`} style={fs} title="Damage" />
+                    <label className="text-[10px]" style={{ color: "#5a5f62" }}>Crit</label>
+                    <input type="number" value={w.crit ?? 0} onChange={(e) => edit((d) => { d.weapons[i].crit = Number(e.target.value); return d; })} className={`${field} w-14`} style={fs} title="Critical" />
+                    <QualityPicker value={quals} onChange={(list) => edit((d) => { d.weapons[i].qualities = list.join(", "); return d; })} />
+                  </div>
+                </div>
+              );
+            })}
+
             <div className="flex flex-wrap gap-2 items-center">
               <button type="button" onClick={() => edit((d) => { d.weapons = [...(d.weapons || []), { ...BLANK_VEHICLE_WEAPON }]; return d; })} className={btn} style={ghost}>+ Blank weapon</button>
               {ref.weapons.length > 0 && (
@@ -8797,8 +9037,13 @@ function EnemyWoundBar({ current, threshold, colorClass = "#c23b3b", onSet, onAd
 // Player-facing tab: name, type, and a wound bar — nothing GM-only leaks in
 // here for players, who receive the redacted public payload. Signed-in GMs
 // also see hidden enemies and can toggle visibility using the protected save path.
-function EnemyPanel({ enemies, loadState, isGm, onSave }) {
-  const canToggleVisibility = isGm && typeof onSave === "function";
+// The NPC space next to the battle map. Everyone, the GM included, sees it
+// as players do: only revealed NPCs, with a general read on their health.
+// The GM hides and reveals NPCs by right-clicking their map token.
+function EnemyPanel({ enemies: allEnemies, loadState }) {
+  const enemies = (allEnemies || []).filter((e) => !e.hidden);
+  const isGm = false;
+  const canToggleVisibility = false;
   const toggleVisibility = (id) => {
     if (!canToggleVisibility) return;
     onSave(enemies.map((enemy) => enemy.id === id ? { ...enemy, hidden: !enemy.hidden } : enemy));
@@ -8809,15 +9054,14 @@ function EnemyPanel({ enemies, loadState, isGm, onSave }) {
       <div className="p-5 sm:p-7">
         <div className="text-[11px] tracking-[0.25em] uppercase mb-1" style={{ color: "#c23b3b" }}>SHARED SESSION TOOL</div>
         <h1 className="text-2xl sm:text-3xl uppercase tracking-wide mb-2" style={{ color: "#e7e2d2", fontFamily: "'Rajdhani', sans-serif", fontWeight: 700 }}>
-          Enemies
+          NPC
         </h1>
         <p className="text-[11px] leading-relaxed mb-5" style={{ color: "#5a5f62" }}>
-          What you're up against, and how much fight is left in it — a general read, not the GM's exact numbers.
-          {canToggleVisibility && <span className="block mt-1" style={{ color: "#8a8f93" }}>GM: click an enemy tile to hide or reveal it to players.</span>}
+          Who's in the scene, and how much fight is left in them — a general read, not the GM's exact numbers.
         </p>
 
         {loadState.state === "error" && (
-          <p className="text-[12px] mb-3" style={{ color: "#c23b3b" }}>Couldn't reach the enemy board: {loadState.msg}</p>
+          <p className="text-[12px] mb-3" style={{ color: "#c23b3b" }}>Couldn't reach the NPC board: {loadState.msg}</p>
         )}
 
         {enemies.length === 0 ? (
@@ -8862,18 +9106,18 @@ function EnemyPanel({ enemies, loadState, isGm, onSave }) {
                       if (!event.repeat) toggleVisibility(e.id);
                     }
                   } : undefined}
-                  style={{ border: `1px ${hiddenFromPlayers ? "dashed" : "solid"} ${hiddenFromPlayers ? "#c9a15a" : defeated ? "#3a3f42" : borderIsStatus ? meta.color + "66" : "#3a3f42"}`, background: hiddenFromPlayers ? "#1a1710" : "#101315", opacity: defeated ? 0.6 : 1 }}>
+                  style={{ border: `1px ${hiddenFromPlayers ? "dashed" : "solid"} ${hiddenFromPlayers ? "#c9a15a" : e.friendly ? "#4f9a4599" : defeated ? "#3a3f42" : borderIsStatus ? meta.color + "66" : "#3a3f42"}`, background: hiddenFromPlayers ? "#1a1710" : e.friendly ? "#12261a" : "#101315", opacity: defeated ? 0.6 : 1 }}>
                   <div className="flex items-center justify-between gap-3 flex-wrap">
                     <span className="text-[15px] flex items-center gap-2" style={{ color: "#e7e2d2", fontFamily: "'Rajdhani', sans-serif", fontWeight: 700 }}>
                       <span
                         className="inline-flex items-center justify-center flex-shrink-0"
-                        style={{ width: 20, height: 20, borderRadius: 3, background: "#c23b3b", color: "#101315", fontSize: 9, fontWeight: 700 }}
+                        style={{ width: 20, height: 20, borderRadius: 3, background: tokenColor({ kind: "enemy", friendly: e.friendly, etype: e.type }), color: "#101315", fontSize: 9, fontWeight: 700 }}
                         title="Abbreviation shown on the Battle Map"
                       >
                         {abbr}
                       </span>
                       {e.name || "Unnamed"}
-                      <span className="text-[10px] uppercase tracking-[0.15em]" style={{ color: "#8a8f93" }}>{e.type}</span>
+                      <span className="text-[10px] uppercase tracking-[0.15em]" style={{ color: e.friendly ? "#6fae60" : "#8a8f93" }}>{e.friendly ? `friendly · ${e.type}` : e.type}</span>
                     </span>
                   </div>
                   {canToggleVisibility && (
@@ -9473,6 +9717,161 @@ function GearEquipmentLookup({ characterId, onPick }) {
 
 const GEAR_LOOKUPS = { weapon: GearWeaponLookup, armor: GearArmorLookup, equipment: GearEquipmentLookup };
 
+// --- Gear fields shared by the manual add form and Edit -----------------------
+const PERSONAL_RANGES = ["Engaged", "Short", "Medium", "Long", "Extreme"];
+// Skills whose weapons add the wielder's Brawn to damage ("+2" = Brawn + 2).
+const BRAWN_DAMAGE_SKILLS = ["brawl", "melee"];
+const isBrawnSkill = (skill) => BRAWN_DAMAGE_SKILLS.includes(normalizeSkillName(skill));
+// Talents that let a weapon use a different characteristic. "Other" lets the
+// GM name any talent and pick the characteristic by hand.
+const CHARACTERISTIC_TALENTS = [
+  { name: "Finesse", characteristic: "Agility", note: "Brawl or Melee (Light): Agility instead of Brawn" },
+  { name: "Precision", characteristic: "Cunning", note: "Brawl or Ranged: Cunning instead of Brawn and Agility" },
+];
+
+function emptyGearDraft(category) {
+  return { category, name: "", skill: "", damage: "", crit: "", range: "", qualities: [], soakBonus: "", rangedDefense: "", meleeDefense: "", note: "", characteristicOverride: "", overrideTalent: "" };
+}
+
+function gearToDraft(item) {
+  const d = emptyGearDraft(item.category);
+  const parsed = parseWeaponDamage(item.damage);
+  return {
+    ...d,
+    name: item.name || "",
+    skill: item.skill || "",
+    damage: item.damage == null || item.damage === "" ? "" : String(parsed.brawnBonus ?? parsed.flat),
+    crit: item.crit ?? "",
+    range: item.range || "",
+    qualities: String(item.special || "").split(/\s*,\s*/).map((q) => q.trim()).filter((q) => q && q !== "—"),
+    soakBonus: item.soakBonus ?? "",
+    rangedDefense: item.rangedDefense ?? item.defenseBonus ?? "",
+    meleeDefense: item.meleeDefense ?? item.defenseBonus ?? "",
+    note: item.note || "",
+    characteristicOverride: item.characteristicOverride || "",
+    overrideTalent: item.overrideTalent || "",
+  };
+}
+
+// Turns the form back into a gear item. `base` carries id/characterId/hidden etc.
+function draftToGear(d, base) {
+  const n = (v) => Math.max(0, Number(v) || 0);
+  const out = { ...base, category: d.category, name: d.name.trim() };
+  if (d.category === "weapon") {
+    Object.assign(out, {
+      skill: d.skill.trim(),
+      // Brawl/Melee damage is stored as "+N" so it adds the wielder's Brawn.
+      damage: isBrawnSkill(d.skill) ? `+${n(d.damage)}` : n(d.damage),
+      crit: n(d.crit),
+      range: d.range.trim(),
+      special: d.qualities.join(", ") || "—",
+      note: d.note.trim(),
+    });
+    if (d.characteristicOverride) {
+      out.characteristicOverride = d.characteristicOverride;
+      out.overrideTalent = d.overrideTalent.trim() || "Talent";
+    } else {
+      delete out.characteristicOverride;
+      delete out.overrideTalent;
+    }
+  } else if (d.category === "armor") {
+    const ranged = n(d.rangedDefense);
+    const melee = n(d.meleeDefense);
+    Object.assign(out, { soakBonus: n(d.soakBonus), rangedDefense: ranged, meleeDefense: melee, defenseBonus: Math.max(ranged, melee), special: d.qualities.join(", "), note: d.note.trim() });
+  } else {
+    out.note = d.note.trim();
+  }
+  return out;
+}
+
+function GearFields({ draft, onChange }) {
+  const set = (patch) => onChange({ ...draft, ...patch });
+  const inp = "bg-transparent border px-2 py-1 text-[11px]";
+  const st = { borderColor: "#3a3f42", color: "#e7e2d2" };
+  const sel = { borderColor: "#3a3f42", background: "#101315" };
+  const talentPreset = CHARACTERISTIC_TALENTS.find((t) => t.name === draft.overrideTalent);
+  return (
+    <div className="flex flex-wrap items-center gap-2">
+      <input
+        type="text"
+        value={draft.name}
+        onChange={(e) => set({ name: e.target.value })}
+        placeholder={`${draft.category === "weapon" ? "Weapon" : draft.category === "armor" ? "Armor" : "Equipment"} name…`}
+        className={`w-44 ${inp}`}
+        style={{ borderColor: "#5ec8d866", color: "#e7e2d2" }}
+      />
+      {draft.category === "weapon" && (
+        <>
+          <select value={draft.skill} onChange={(e) => set({ skill: e.target.value })} className="w-40 bg-transparent border px-1.5 py-1 text-[11px]" style={{ ...sel, color: draft.skill ? "#e7e2d2" : "#8a8f93" }} title="Skill used to attack with this weapon">
+            <option value="">Skill…</option>
+            {["Combat", "General", "Knowledge"].map((group) => (
+              <optgroup key={group} label={group}>
+                {FULL_SKILL_LIST.filter((s) => s.group === group).map((s) => <option key={s.name} value={s.name}>{s.name}</option>)}
+              </optgroup>
+            ))}
+          </select>
+          {isBrawnSkill(draft.skill) ? (
+            <span className="inline-flex items-center gap-1 text-[11px]" style={{ color: "#8a8f93" }} title="Brawl and Melee weapons add the wielder's Brawn: enter the bonus (the +N printed on the weapon)">
+              Brawn +
+              <input type="number" min={0} value={draft.damage} onChange={(e) => set({ damage: e.target.value })} placeholder="0" className={`w-12 ${inp} mono-num`} style={st} />
+            </span>
+          ) : (
+            <input type="number" min={0} value={draft.damage} onChange={(e) => set({ damage: e.target.value })} placeholder="Dmg" className={`w-16 ${inp} mono-num`} style={st} />
+          )}
+          <input type="number" min={0} value={draft.crit} onChange={(e) => set({ crit: e.target.value })} placeholder="Crit" className={`w-16 ${inp} mono-num`} style={st} />
+          <select value={draft.range} onChange={(e) => set({ range: e.target.value })} className="w-24 bg-transparent border px-1.5 py-1 text-[11px]" style={{ ...sel, color: draft.range ? "#e7e2d2" : "#8a8f93" }} title="Range band">
+            <option value="">Range…</option>
+            {PERSONAL_RANGES.map((r) => <option key={r} value={r}>{r}</option>)}
+            {draft.range && !PERSONAL_RANGES.includes(draft.range) && <option value={draft.range}>{draft.range}</option>}
+          </select>
+          <QualityPicker value={draft.qualities} onChange={(qualities) => set({ qualities })} />
+          <span className="inline-flex flex-wrap items-center gap-1.5 text-[11px]" style={{ color: "#8a8f93" }} title="A talent that lets this weapon use a different characteristic (Finesse, Precision…). The character sheet then builds this weapon's pool from it.">
+            <select
+              value={draft.characteristicOverride ? (talentPreset ? talentPreset.name : "__other") : ""}
+              onChange={(e) => {
+                const v = e.target.value;
+                if (!v) set({ characteristicOverride: "", overrideTalent: "" });
+                else if (v === "__other") set({ characteristicOverride: draft.characteristicOverride || "Agility", overrideTalent: talentPreset ? "" : draft.overrideTalent });
+                else { const t = CHARACTERISTIC_TALENTS.find((x) => x.name === v); set({ characteristicOverride: t.characteristic, overrideTalent: t.name }); }
+              }}
+              className="bg-transparent border px-1.5 py-1 text-[11px]"
+              style={{ ...sel, color: draft.characteristicOverride ? "#ffb000" : "#8a8f93" }}
+            >
+              <option value="">Usual characteristic</option>
+              {CHARACTERISTIC_TALENTS.map((t) => <option key={t.name} value={t.name}>{t.name} ({t.characteristic})</option>)}
+              <option value="__other">Other talent…</option>
+            </select>
+            {draft.characteristicOverride && !talentPreset && (
+              <>
+                <input type="text" value={draft.overrideTalent} onChange={(e) => set({ overrideTalent: e.target.value })} placeholder="Talent name" className={`w-28 ${inp}`} style={st} />
+                <select value={draft.characteristicOverride} onChange={(e) => set({ characteristicOverride: e.target.value })} className="bg-transparent border px-1.5 py-1 text-[11px]" style={{ ...sel, color: "#e7e2d2" }}>
+                  {CHARACTERISTICS.map((c) => <option key={c} value={CHAR_LABEL[c]}>{CHAR_LABEL[c]}</option>)}
+                </select>
+              </>
+            )}
+          </span>
+        </>
+      )}
+      {draft.category === "armor" && (
+        <>
+          <input type="number" min={0} value={draft.soakBonus} onChange={(e) => set({ soakBonus: e.target.value })} placeholder="Soak" className={`w-16 ${inp} mono-num`} style={st} />
+          <input type="number" min={0} value={draft.rangedDefense} onChange={(e) => set({ rangedDefense: e.target.value })} placeholder="Ranged def" title="Ranged defence" className={`w-24 ${inp} mono-num`} style={st} />
+          <input type="number" min={0} value={draft.meleeDefense} onChange={(e) => set({ meleeDefense: e.target.value })} placeholder="Melee def" title="Melee defence" className={`w-24 ${inp} mono-num`} style={st} />
+          <QualityPicker value={draft.qualities} onChange={(qualities) => set({ qualities })} />
+        </>
+      )}
+      <input type="text" value={draft.note} onChange={(e) => set({ note: e.target.value })} placeholder="Note (optional)" className={`${draft.category === "equipment" ? "w-44" : "w-36"} ${inp}`} style={st} />
+    </div>
+  );
+}
+
+// Field-acquired gear in display order: weapons, then armor, then
+// equipment, each alphabetical.
+const GEAR_CATEGORY_ORDER = { weapon: 0, armor: 1, equipment: 2 };
+function compareGear(a, b) {
+  return (GEAR_CATEGORY_ORDER[a.category] ?? 9) - (GEAR_CATEGORY_ORDER[b.category] ?? 9) || String(a.name || "").localeCompare(String(b.name || ""), undefined, { sensitivity: "base" });
+}
+
 // One character's row in the GM page's gear board — a category switcher
 // (Weapon/Armor/Equipment) crossed with a Search/Manual switcher: Search
 // fuzzy-looks-up the matching reference index above, Manual is a hand-
@@ -9484,40 +9883,17 @@ const GEAR_LOOKUPS = { weapon: GearWeaponLookup, armor: GearArmorLookup, equipme
 function GmGearAddForm({ characterId, onAdd }) {
   const [category, setCategory] = useState("weapon");
   const [mode, setMode] = useState("search");
-  const [name, setName] = useState("");
-  const [skill, setSkill] = useState("");
-  const [damage, setDamage] = useState("");
-  const [crit, setCrit] = useState("");
-  const [range, setRange] = useState("");
-  const [qualities, setQualities] = useState([]);
-  const [soakBonus, setSoakBonus] = useState("");
-  const [rangedDefense, setRangedDefense] = useState("");
-  const [meleeDefense, setMeleeDefense] = useState("");
-  const [note, setNote] = useState("");
-
-  function reset() {
-    setName(""); setSkill(""); setDamage(""); setCrit(""); setRange(""); setQualities([]);
-    setSoakBonus(""); setRangedDefense(""); setMeleeDefense(""); setNote("");
-  }
+  const [draft, setDraft] = useState(emptyGearDraft("weapon"));
 
   function selectCategory(next) {
     setCategory(next);
-    reset();
+    setDraft(emptyGearDraft(next));
   }
 
   function addManual() {
-    if (!name.trim()) return;
-    const base = { id: crypto.randomUUID(), characterId, category, name: name.trim(), hidden: true, addedAt: Date.now() };
-    const item =
-      category === "weapon" ? { ...base, skill: skill.trim(), damage: Math.max(0, Number(damage) || 0), crit: Math.max(0, Number(crit) || 0), range: range.trim(), special: qualities.join(", ") || "—" } :
-      category === "armor" ? (() => {
-        const ranged = Math.max(0, Number(rangedDefense) || 0);
-        const melee = Math.max(0, Number(meleeDefense) || 0);
-        return { ...base, soakBonus: Math.max(0, Number(soakBonus) || 0), rangedDefense: ranged, meleeDefense: melee, defenseBonus: Math.max(ranged, melee), special: qualities.join(", "), note: note.trim() };
-      })() :
-      { ...base, note: note.trim() };
-    onAdd(item);
-    reset();
+    if (!draft.name.trim()) return;
+    onAdd(draftToGear(draft, { id: crypto.randomUUID(), characterId, hidden: true, addedAt: Date.now() }));
+    setDraft(emptyGearDraft(category));
   }
 
   const Lookup = GEAR_LOOKUPS[category];
@@ -9569,46 +9945,11 @@ function GmGearAddForm({ characterId, onAdd }) {
         <Lookup characterId={characterId} onPick={onAdd} />
       ) : (
         <div className="flex flex-wrap items-center gap-2">
-          <input
-            type="text"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder={`${category === "weapon" ? "Weapon" : category === "armor" ? "Armor" : "Equipment"} name…`}
-            className="w-44 bg-transparent border px-2 py-1 text-[11px]"
-            style={{ borderColor: "#5ec8d866", color: "#e7e2d2" }}
-          />
-          {category === "weapon" && (
-            <>
-              <select value={skill} onChange={(e) => setSkill(e.target.value)} className="w-40 bg-transparent border px-1.5 py-1 text-[11px]" style={{ borderColor: "#3a3f42", color: skill ? "#e7e2d2" : "#8a8f93", background: "#101315" }} title="Skill used to attack with this weapon">
-                <option value="">Skill…</option>
-                {["Combat", "General", "Knowledge"].map((group) => (
-                  <optgroup key={group} label={group}>
-                    {FULL_SKILL_LIST.filter((s) => s.group === group).map((s) => <option key={s.name} value={s.name}>{s.name}</option>)}
-                  </optgroup>
-                ))}
-              </select>
-              <input type="number" min={0} value={damage} onChange={(e) => setDamage(e.target.value)} placeholder="Dmg" className="w-16 bg-transparent border px-2 py-1 text-[11px] mono-num" style={{ borderColor: "#3a3f42", color: "#e7e2d2" }} />
-              <input type="number" min={0} value={crit} onChange={(e) => setCrit(e.target.value)} placeholder="Crit" className="w-16 bg-transparent border px-2 py-1 text-[11px] mono-num" style={{ borderColor: "#3a3f42", color: "#e7e2d2" }} />
-              <input type="text" value={range} onChange={(e) => setRange(e.target.value)} placeholder="Range" className="w-24 bg-transparent border px-2 py-1 text-[11px]" style={{ borderColor: "#3a3f42", color: "#e7e2d2" }} />
-              <QualityPicker value={qualities} onChange={setQualities} />
-            </>
-          )}
-          {category === "armor" && (
-            <>
-              <input type="number" min={0} value={soakBonus} onChange={(e) => setSoakBonus(e.target.value)} placeholder="Soak" className="w-16 bg-transparent border px-2 py-1 text-[11px] mono-num" style={{ borderColor: "#3a3f42", color: "#e7e2d2" }} />
-              <input type="number" min={0} value={rangedDefense} onChange={(e) => setRangedDefense(e.target.value)} placeholder="Ranged def" title="Ranged defence" className="w-24 bg-transparent border px-2 py-1 text-[11px] mono-num" style={{ borderColor: "#3a3f42", color: "#e7e2d2" }} />
-              <input type="number" min={0} value={meleeDefense} onChange={(e) => setMeleeDefense(e.target.value)} placeholder="Melee def" title="Melee defence" className="w-24 bg-transparent border px-2 py-1 text-[11px] mono-num" style={{ borderColor: "#3a3f42", color: "#e7e2d2" }} />
-              <QualityPicker value={qualities} onChange={setQualities} />
-              <input type="text" value={note} onChange={(e) => setNote(e.target.value)} placeholder="Note (optional)" className="w-36 bg-transparent border px-2 py-1 text-[11px]" style={{ borderColor: "#3a3f42", color: "#e7e2d2" }} />
-            </>
-          )}
-          {category === "equipment" && (
-            <input type="text" value={note} onChange={(e) => setNote(e.target.value)} placeholder="Note (optional)" className="w-44 bg-transparent border px-2 py-1 text-[11px]" style={{ borderColor: "#3a3f42", color: "#e7e2d2" }} />
-          )}
+          <GearFields draft={draft} onChange={setDraft} />
           <button
             type="button"
             onClick={addManual}
-            disabled={!name.trim()}
+            disabled={!draft.name.trim()}
             className="text-[10px] tracking-wide uppercase px-2 py-1.5 disabled:opacity-40"
             style={{ background: "#5ec8d8", color: "#101315", fontFamily: "'Rajdhani', sans-serif", fontWeight: 700 }}
           >
@@ -9676,6 +10017,7 @@ function ExpandableText({ text, collapsedLength = 180, className, style }) {
 }
 
 function GmGearRow({ item, onChange, onRemove, qty, onAdjustQty, brawn }) {
+  const [editing, setEditing] = useState(null); // a draft while editing
   const summary =
     item.category === "weapon" ? `${item.skill || "—"} · ${weaponDamageTotal(item.damage, brawn)}dmg · Crit ${item.crit} · ${item.range}${item.special && item.special !== "—" ? ` · ${item.special}` : ""}` :
     item.category === "armor" ? (() => {
@@ -9703,8 +10045,29 @@ function GmGearRow({ item, onChange, onRemove, qty, onAdjustQty, brawn }) {
           <input type="checkbox" checked={!item.hidden} onChange={(e) => onChange({ ...item, hidden: !e.target.checked })} />
           <span style={{ color: item.hidden ? "#c9a15a" : "#8a8f93" }}>{item.hidden ? "Hidden" : "Revealed"}</span>
         </label>
+        <button type="button" onClick={() => setEditing(editing ? null : gearToDraft(item))} className="text-[10px] uppercase tracking-[0.08em] px-1.5 shrink-0" style={{ color: editing ? "#ffb000" : "#5ec8d8" }} title="Edit this item">{editing ? "Close" : "Edit"}</button>
         <button type="button" onClick={onRemove} className="text-[11px] px-1.5 shrink-0" style={{ color: "#8a8f93" }} title="Remove this item">✕</button>
       </div>
+      {item.characteristicOverride && !editing && (
+        <div className="text-[10px] mt-0.5" style={{ color: "#ffb000" }}>{item.overrideTalent || "Talent"}: uses {item.characteristicOverride}</div>
+      )}
+      {editing && (
+        <div className="mt-2 p-2 border" style={{ borderColor: "#5ec8d866", background: "#0e1113" }}>
+          <GearFields draft={editing} onChange={setEditing} />
+          <div className="flex gap-2 mt-2">
+            <button
+              type="button"
+              disabled={!editing.name.trim()}
+              onClick={() => { onChange(draftToGear(editing, item)); setEditing(null); }}
+              className="text-[10px] tracking-wide uppercase px-2 py-1.5 disabled:opacity-40"
+              style={{ background: "#5ec8d8", color: "#101315", fontFamily: "'Rajdhani', sans-serif", fontWeight: 700 }}
+            >
+              Save
+            </button>
+            <button type="button" onClick={() => setEditing(null)} className="text-[10px] uppercase px-2 py-1.5" style={{ color: "#8a8f93" }}>Cancel</button>
+          </div>
+        </div>
+      )}
       {item.note && (
         <ExpandableText text={item.note} className="text-[11px] block mt-1" style={{ color: "#5a5f62" }} />
       )}
@@ -9735,7 +10098,7 @@ function GmGearBoard({ party, gearStore, manual }) {
       {loadState.state === "error" && <p className="text-[12px] mb-3" style={{ color: "#c23b3b" }}>Couldn't reach the gear board: {loadState.msg}</p>}
       {party.map((c) => {
         const cid = c.liveId || c.name;
-        const items = gear.filter((g) => g.characterId === cid);
+        const items = gear.filter((g) => g.characterId === cid).sort(compareGear);
         return (
           <div key={cid} className="mb-4 pb-4 border-b" style={{ borderColor: "#2a2e31" }}>
             <div className="text-[13px] mb-2" style={{ color: "#e7e2d2", fontFamily: "'Rajdhani', sans-serif", fontWeight: 700 }}>{c.name}</div>
@@ -9864,7 +10227,7 @@ function GmEnemyBoard({ enemyStore }) {
   return (
     <div className="border p-4" style={{ borderColor: "#3a3f4266", background: "#101315" }}>
       <div className="flex items-center justify-between gap-3 mb-3 flex-wrap">
-        <div className="text-[11px] tracking-[0.2em] uppercase" style={{ color: "#e0763a" }}>Enemy Board</div>
+        <div className="text-[11px] tracking-[0.2em] uppercase" style={{ color: "#e0763a" }}>NPC Board</div>
         <div className="flex items-center gap-2 flex-wrap">
           <EnemyLookup onPick={(enemy) => save([...enemies, enemy])} />
           <button
@@ -9872,7 +10235,7 @@ function GmEnemyBoard({ enemyStore }) {
             onClick={() => save(enemies.map((e) => ({ ...e, hidden: false })))}
             className="text-[10px] tracking-[0.1em] uppercase px-2.5 py-1 border"
             style={{ borderColor: "#c9a15a66", color: "#c9a15a", fontFamily: "'Rajdhani', sans-serif", fontWeight: 700 }}
-            title="Reveal every hidden enemy at once"
+            title="Reveal every hidden NPC at once"
           >
             Reveal all
           </button>
@@ -10145,7 +10508,8 @@ const DRAG_THRESHOLD_PX = 5;
 // Token colours on the battle map: PCs blue, foes red, friendly NPCs green.
 function tokenColor(token) {
   if (token?.kind === "pc") return "#3b82c2";
-  return token?.friendly ? "#4f9a45" : "#c23b3b";
+  if (token?.friendly) return "#4f9a45";
+  return token?.etype === "other" ? "#e7e2d2" : "#c23b3b";
 }
 
 function MapToken({ token, selected, onClick, onContextMenu, draggable = false, onPointerDown, dragging = false, onHoverStart, onHoverEnd, size = "full", stackOffset = 0, labelBelow = false }) {
@@ -10226,6 +10590,8 @@ function tokenInitials(name, kind = "enemy") {
   const letter = (w) => ((w.match(/[A-Za-z0-9]/) || ["?"])[0]).toUpperCase();
   if (kind !== "pc" && words.length > 1 && /^the$/i.test(words[0])) words = words.slice(1);
   if (!words.length) return "??";
+  // A name that's just a number or a single character ("1", "B") shows as itself.
+  if (words.length === 1 && (/^\d+$/.test(words[0]) || words[0].length === 1)) return words[0].toUpperCase();
   if (kind === "pc") return words.length === 1 ? letter(words[0]) : letter(words[0]) + letter(words[words.length - 1]);
   const numbers = raw.match(/\d+/g);
   if (numbers?.length) return letter(words[0]) + numbers[numbers.length - 1];
@@ -10278,7 +10644,7 @@ function BattleSession({ roster, enemyStore, mapStore, isGm, gmKey, manual, init
         </div>
         <div className="min-w-0 space-y-4">
           <BattleRollLog rollState={rollState} />
-          <EnemyPanel enemies={enemyStore.enemies} loadState={enemyStore.loadState} isGm={isGm} onSave={isGm ? enemyStore.save : undefined} />
+          <EnemyPanel enemies={enemyStore.enemies} loadState={enemyStore.loadState} />
         </div>
       </div>
       {isGm && <EnemyBulkEntry enemyStore={enemyStore} />}
@@ -10406,7 +10772,7 @@ function BattleMapPanel({ roster, enemies, party, isGm, mapStore, onSaveEnemies,
     const pcs = roster.map((r) => ({ id: r.liveId || r.name, kind: "pc", label: r.name || r.liveId, down: false, hidden: false }));
     const foes = enemies
       .filter((e) => isGm || !e.hidden)
-      .map((e) => ({ id: e.id, kind: "enemy", label: e.name || "Unnamed", down: enemyDefeated(e), hidden: !!e.hidden, friendly: !!e.friendly, aliveMinions: e.type === "minion" ? minionsRemaining(e) : null }));
+      .map((e) => ({ id: e.id, kind: "enemy", label: e.name || "Unnamed", down: enemyDefeated(e), hidden: !!e.hidden, friendly: !!e.friendly, etype: e.type, aliveMinions: e.type === "minion" ? minionsRemaining(e) : null }));
     return [...pcs, ...foes];
   }, [roster, enemies, isGm]);
 
@@ -10765,40 +11131,12 @@ function BattleMapPanel({ roster, enemies, party, isGm, mapStore, onSaveEnemies,
         {loadState.state === "error" && <p className="text-[12px] mb-3" style={{ color: "#c23b3b" }}>Couldn't reach the map: {loadState.msg}</p>}
 
         <div className="mb-4 pb-4 border-b" style={{ borderColor: "#2a2e31" }}>
-          <div className="flex flex-wrap items-start gap-6">
-            <div
-              data-drop-tray="1"
-              className="flex-1 min-w-[180px] p-2 -m-2"
-              style={{
-                border: `1px dashed ${drag?.target?.type === "tray" && tokens[drag.id] ? "#ffb000" : "transparent"}`,
-                background: drag?.target?.type === "tray" && tokens[drag.id] ? "#ffb00011" : "transparent",
-              }}
-            >
-              <div className="text-[10px] tracking-[0.15em] uppercase mb-2" style={{ color: "#8a8f93", fontFamily: "'Rajdhani', sans-serif", fontWeight: 600 }}>Off the map</div>
-              {offBoard.length === 0 ? (
-                <span className="text-[12px]" style={{ color: "#5a5f62" }}>{drag && tokens[drag.id] ? "Drop here to take it off the map." : "Everyone's on the map."}</span>
-              ) : (
-                <div className="flex flex-wrap gap-1.5">
-                  {offBoard.map((t) => (
-                    <MapToken
-                      key={t.id}
-                      token={t}
-                      size="chip"
-                      selected={selected === t.id}
-                      onClick={() => canMove(t.id) && clickToken(t.id)}
-                      onContextMenu={(event) => openTokenMenu(t, event)}
-                      draggable={canMove(t.id)}
-                      onPointerDown={startPress(t.id)}
-                      dragging={drag?.id === t.id}
-                    />
-                  ))}
-                </div>
-              )}
-            </div>
+          <div className="flex flex-col gap-3">
             <div className="flex flex-wrap items-center gap-x-5 gap-y-1.5 text-[11px]" style={{ color: "#5a5f62" }}>
               <div className="flex items-center gap-2"><span style={{ width: 14, height: 14, borderRadius: "50%", background: "#3b82c2", display: "inline-block" }} /> Player</div>
               <div className="flex items-center gap-2"><span style={{ width: 14, height: 14, borderRadius: 3, background: "#c23b3b", display: "inline-block" }} /> Enemy</div>
               <div className="flex items-center gap-2"><span style={{ width: 14, height: 14, borderRadius: 3, background: "#4f9a45", display: "inline-block" }} /> Friendly NPC</div>
+              <div className="flex items-center gap-2"><span style={{ width: 14, height: 14, borderRadius: 3, background: "#e7e2d2", display: "inline-block" }} /> Other NPC</div>
               <div title="Right-click a player token to add wounds or strain; the GM can right-click any other token too.">Right-click a token for options</div>
               <div className="flex items-center gap-2"><span style={{ width: 14, height: 14, borderRadius: 3, background: "#c23b3b", opacity: 0.4, display: "inline-block" }} /> Down</div>
               <div title="The mouse wheel scrolls the page. To move around a map bigger than the screen, hold Shift while scrolling, swipe sideways on a trackpad, or drag the scrollbars.">Shift + scroll pans the map</div>
@@ -10809,9 +11147,42 @@ function BattleMapPanel({ roster, enemies, party, isGm, mapStore, onSaveEnemies,
                 </div>
               )}
             </div>
+            <div
+              data-drop-tray="1"
+              className="p-2.5"
+              style={{
+                border: `1px dashed ${drag?.target?.type === "tray" && tokens[drag.id] ? "#ffb000" : "#2a2e31"}`,
+                background: drag?.target?.type === "tray" && tokens[drag.id] ? "#ffb00011" : "transparent",
+              }}
+            >
+              <div className="text-[10px] tracking-[0.15em] uppercase mb-2" style={{ color: "#8a8f93", fontFamily: "'Rajdhani', sans-serif", fontWeight: 600 }}>Off the map</div>
+              {offBoard.length === 0 ? (
+                <span className="text-[12px]" style={{ color: "#5a5f62" }}>{drag && tokens[drag.id] ? "Drop here to take it off the map." : "Everyone's on the map."}</span>
+              ) : (
+                <div className="space-y-1.5">
+                  {[["Players", offBoard.filter((t) => t.kind === "pc")], ["NPCs", offBoard.filter((t) => t.kind !== "pc")]].filter(([, list]) => list.length).map(([groupLabel, list]) => (
+                    <div key={groupLabel} className="flex flex-wrap items-center gap-1.5">
+                      <span className="text-[10px] uppercase tracking-[0.12em] w-14 flex-shrink-0" style={{ color: "#5a5f62" }}>{groupLabel}</span>
+                      {list.map((t) => (
+                        <MapToken
+                          key={t.id}
+                          token={t}
+                          size="chip"
+                          selected={selected === t.id}
+                          onClick={() => canMove(t.id) && clickToken(t.id)}
+                          onContextMenu={(event) => openTokenMenu(t, event)}
+                          draggable={canMove(t.id)}
+                          onPointerDown={startPress(t.id)}
+                          dragging={drag?.id === t.id}
+                        />
+                      ))}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         </div>
-
         {/* Only as tall as the map needs (up to most of the screen), so a
             small map has no scroll box at all. */}
         <div ref={scrollRef} className="overflow-auto" style={{ maxHeight: "min(90vh, 1000px)" }}>
@@ -11926,10 +12297,46 @@ function CampaignGate({ children }) {
   return children;
 }
 
+// If something on a page fails to draw, show what happened and a way back
+// instead of a blank screen.
+class PageErrorBoundary extends Component {
+  constructor(props) {
+    super(props);
+    this.state = { error: null };
+  }
+  static getDerivedStateFromError(error) {
+    return { error };
+  }
+  componentDidCatch(error, info) {
+    console.error("Page failed to draw:", error, info?.componentStack);
+  }
+  render() {
+    if (!this.state.error) return this.props.children;
+    return (
+      <div className="min-h-screen px-4 py-16" style={{ background: "#0b0d0e", color: "#e7e2d2" }}>
+        <div className="max-w-xl mx-auto border p-6" style={{ borderColor: "#c23b3b66", background: "#16191b" }}>
+          <div className="text-[11px] tracking-[0.25em] uppercase mb-1" style={{ color: "#c23b3b" }}>Something went wrong</div>
+          <p className="text-[13px] mb-2">This page hit an error while drawing. Reloading usually fixes it; if it keeps happening, tell your GM what you clicked.</p>
+          <p className="text-[11px] mb-4 mono-num" style={{ color: "#8a8f93" }}>{String(this.state.error?.message || this.state.error)}</p>
+          <button type="button" onClick={() => window.location.reload()} className="text-[11px] tracking-[0.15em] uppercase px-3 py-1.5" style={{ background: "#5ec8d8", color: "#101315", fontWeight: 700 }}>Reload</button>
+        </div>
+      </div>
+    );
+  }
+}
+
 // The front page (/) lists campaigns; a campaign address (/campaign/<slug>/) opens
 // that campaign's dashboard, or its character creation wizard when the link
 // carries ?create=<code>.
 export default function App() {
+  return (
+    <PageErrorBoundary>
+      <AppPages />
+    </PageErrorBoundary>
+  );
+}
+
+function AppPages() {
   if (!CAMPAIGN_SLUG) return <SiteHome />;
   const createCode = typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("create") : null;
   return (
@@ -12271,12 +12678,15 @@ function CampaignDashboard() {
   const revealedGear = (gearStore?.gear || []).filter((g) => g.characterId === activeId && !g.hidden);
   const gearWeapons = revealedGear
     .filter((g) => g.category === "weapon")
-    .map((g) => ({ id: g.id, name: g.name, skill: g.skill, damage: g.damage, crit: g.crit, range: g.range, special: g.special, isNew: isRecentlyAdded(g.addedAt) }));
+    .sort(compareGear)
+    .map((g) => ({ id: g.id, name: g.name, skill: g.skill, damage: g.damage, crit: g.crit, range: g.range, special: g.special, characteristicOverride: g.characteristicOverride, overrideTalent: g.overrideTalent, isNew: isRecentlyAdded(g.addedAt) }));
   const gearArmor = revealedGear
     .filter((g) => g.category === "armor")
+    .sort(compareGear)
     .map((g) => ({ id: g.id, name: g.name, soakBonus: g.soakBonus || 0, defenseBonus: g.defenseBonus || 0, rangedDefense: g.rangedDefense ?? undefined, meleeDefense: g.meleeDefense ?? undefined, special: g.special || "", note: g.note, isNew: isRecentlyAdded(g.addedAt) }));
   const gearInventory = revealedGear
     .filter((g) => g.category === "equipment")
+    .sort(compareGear)
     .map((g) => ({ id: g.id, name: g.name, note: g.note || undefined, isNew: isRecentlyAdded(g.addedAt) }));
   const inv = [...(active.inventory || []).filter((i) => !effectiveHidden("inventory", i)), ...gearInventory];
   const mo = active.motivationObligation || {};
@@ -12298,6 +12708,13 @@ function CampaignDashboard() {
   ];
   const wornArmor = pickWornArmor(armorOptions, manual.wornArmorOf(activeId));
   const activeDefense = armorDefense(wornArmor);
+  // Wound/strain threshold that comes from talents (Toughened, Grit…), so
+  // the pip rows can mark where the natural threshold ends.
+  const talentBonus = talentThresholdBonus(active.talents || []);
+  const talentBonusNote = (key, perRank) => (active.talents || [])
+    .filter((t) => TALENT_EFFECTS[String(t.name || "").toLowerCase()]?.[key])
+    .map((t) => `${t.name}${(Number(t.rank) || 1) > 1 ? ` ×${t.rank}` : ""} +${TALENT_EFFECTS[String(t.name).toLowerCase()][key] * Math.max(1, Number(t.rank) || 1)}`)
+    .join(", ");
   const computedSoak = (chars.brawn || 0) + armorSoakBonus(wornArmor);
 
   const CHAR_LABELS = [
@@ -12907,6 +13324,8 @@ function CampaignDashboard() {
                         onSet={active.liveId ? (n) => manual.setWound(active.liveId, n) : undefined}
                         onAdjust={active.liveId ? (d) => manual.adjustWound(active.liveId, d) : undefined}
                         overLabel="Incapacitated"
+                        bonusFrom={talentBonus.wounds > 0 ? Math.max(0, wounds.threshold - talentBonus.wounds) : null}
+                        bonusTitle={talentBonusNote("wounds")}
                       />
                       <SweepOverlay active={woundsSweepOn} dir={woundsDir} color="#c23b3b" />
                     </div>
@@ -12928,11 +13347,13 @@ function CampaignDashboard() {
                         onSet={active.liveId ? (n) => manual.setStrain(active.liveId, n) : undefined}
                         onAdjust={active.liveId ? (d) => manual.adjustStrain(active.liveId, d) : undefined}
                         overLabel="Unconscious"
+                        bonusFrom={talentBonus.strain > 0 && (strain.baseThreshold ?? strain.threshold) - talentBonus.strain < strain.threshold ? Math.max(0, (strain.baseThreshold ?? strain.threshold) - talentBonus.strain) : null}
+                        bonusTitle={talentBonusNote("strain")}
                       />
                       <SweepOverlay active={strainSweepOn} dir={strainDir} color="#ffb000" />
                     </div>
                   </Stat>
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4 items-stretch">
+                  <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 mb-4 items-stretch">
                     <MetricBox
                       label={
                         <HoverLabel
@@ -12944,6 +13365,30 @@ function CampaignDashboard() {
                       }
                     >
                       <span className="text-xl mono-num" style={{ color: "#e7e2d2" }}>{computedSoak}</span>
+                    </MetricBox>
+                    <MetricBox
+                      label={
+                        <HoverLabel
+                          title="Ranged Defense"
+                          body={`Adds ${activeDefense.ranged || "no"} Setback ${activeDefense.ranged === 1 ? "die" : "dice"} to every ranged attack made against this character. Comes from worn armor${wornArmor?.name ? ` (${wornArmor.name})` : ""}; cover, talents like Side Step, and weapons with Defensive or Deflection can add more in play.`}
+                        >
+                          Ranged Def
+                        </HoverLabel>
+                      }
+                    >
+                      <span className="text-xl mono-num" style={{ color: "#e7e2d2" }}>{activeDefense.ranged || 0}</span>
+                    </MetricBox>
+                    <MetricBox
+                      label={
+                        <HoverLabel
+                          title="Melee Defense"
+                          body={`Adds ${activeDefense.melee || "no"} Setback ${activeDefense.melee === 1 ? "die" : "dice"} to every melee or Brawl attack made against this character. Comes from worn armor${wornArmor?.name ? ` (${wornArmor.name})` : ""}; a parrying weapon (Defensive) or talents can add more in play.`}
+                        >
+                          Melee Def
+                        </HoverLabel>
+                      }
+                    >
+                      <span className="text-xl mono-num" style={{ color: "#e7e2d2" }}>{activeDefense.melee || 0}</span>
                     </MetricBox>
                     <XPUnspentStat available={xp.available} onOpen={() => setViewMode("advancement")} />
                     <MetricBox label="Credits" accent="#ffb000">

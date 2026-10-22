@@ -74,6 +74,16 @@ new deployment. The site never reads it directly.
   wounds or strain directly (no soak; minus numbers heal). The GM can
   right-click an enemy token to rename it, hide/reveal it, apply damage
   (after soak) or mark it as a friendly NPC (green token).
+- **NPCs:** GM page → NPC Board (types: minion, rival, nemesis, and
+  "other" — a white token with soak and wounds only; quick-add code `o`).
+  The NPC space next to the battle map shows everyone, GM included, only the
+  revealed NPCs; hide/reveal from a token's right-click menu.
+- **Field-acquired gear:** listed weapons → armour → equipment, each
+  alphabetical. **Edit** changes an item in place. Manual entry has range
+  and skill drop-downs, a "Narrative (custom)" quality, Brawn +N damage for
+  Brawl/Melee, and a talent option (Finesse → Agility, Precision → Cunning,
+  or any other talent and characteristic) that changes which characteristic
+  the weapon rolls with.
 - **Spending XP:** players open their sheet's XP box (Advancement Planner),
   choose skills and talents, and press **Submit for approval**. The
   ★ GM tab pulses with a count while anything is waiting. Approve or reject
@@ -119,7 +129,10 @@ dice pool and roll-log name separately, so you can have several open at once.
 5. Ships: GM page → Vehicles (bottom of the page, click to expand) →
    + Add vehicle. Pick a stock ship (or start blank), rename it, adjust the
    numbers and crew seats, then Add vehicle. Each vehicle gets its own
-   dashboard tab named after it; add as many as you need.
+   dashboard tab named after it; add as many as you need. Edit a vehicle to
+   **Add image…** (shown large on its tab). Ships with only a Pilot (and
+   Co-pilot) seat get an **Other actions** box listing every other crew
+   action for whoever is seated.
 
 ## Privacy
 
