@@ -179,12 +179,23 @@ const SKILL_DESCRIPTIONS = {
 
 // Skill name with a short hover description. Opens after a brief pause so
 // running the mouse down the list doesn't flash every tooltip.
-function SkillNameTip({ name, children }) {
+function SkillNameTip({ name, children, skill = null }) {
   const [open, setOpen] = useState(false);
   const timer = useRef(null);
   useEffect(() => () => clearTimeout(timer.current), []);
-  const body = SKILL_DESCRIPTIONS[name];
-  if (!body) return children;
+  const desc = SKILL_DESCRIPTIONS[name];
+  if (!desc) return children;
+  // With a character's skill entry: their actual pool under the description.
+  const body = skill ? (
+    <>
+      {desc}
+      <div className="mt-1.5" style={{ color: "#e7e2d2" }}>
+        {CHAR_LABEL[skill.char] || "Characteristic"} {skill.characteristic}, rank {skill.rank} → {Math.min(skill.rank, skill.characteristic)} yellow, {Math.max(skill.rank, skill.characteristic) - Math.min(skill.rank, skill.characteristic)} green
+        {skill.boost ? `, +${skill.boost} Boost` : ""}{skill.setback ? `, +${skill.setback} Setback` : ""}
+        {skill.career ? <span style={{ color: "#5ec8d8" }}> · career skill</span> : null}
+      </div>
+    </>
+  ) : desc;
   return (
     <span
       className="relative inline-flex items-baseline"
@@ -241,6 +252,19 @@ function splitSpecial(special) {
 // A character's Obligations as a list. Sheets edited on the GM page keep
 // `motivationObligation.obligations` (any number); older sheets and new
 // characters from the creation wizard have a single `obligation`.
+// The party's Obligation table in the same order the Obligation check uses:
+// [{ id, name, type, value, from, to }] with each row's d100 range.
+function obligationRanges(party) {
+  let cursor = 0;
+  return (party || []).flatMap((c) => characterObligations(c).map((ob) => {
+    const value = Number(ob?.value) || 0;
+    if (value <= 0) return null;
+    const row = { id: c.liveId || c.name, name: c.name, type: ob.type || "Obligation", value, from: cursor + 1, to: cursor + value };
+    cursor += value;
+    return row;
+  })).filter(Boolean);
+}
+
 function characterObligations(character) {
   const mo = character?.motivationObligation || {};
   if (Array.isArray(mo.obligations)) return mo.obligations.filter((o) => o && typeof o === "object");
@@ -308,11 +332,13 @@ function buildSkills(character) {
   // Talents boost through talentSkillBoosts (src/chargen.js): known talents
   // like Physical Training work automatically, and the GM can set any
   // talent's skills by hand on the GM page.
+  const boostSourceMap = new Map();
   [...(character?.talents || []), ...(character?.speciesAbilities || [])].forEach((t) => {
     const { skills, dice } = talentSkillBoosts(t);
     skills.forEach((skillName) => {
       const key = normalizeSkillName(skillName);
       boostMap.set(key, (boostMap.get(key) || 0) + dice);
+      boostSourceMap.set(key, [...(boostSourceMap.get(key) || []), { label: t.name, dice }]);
     });
   });
   // Extra dice the GM added to a skill by hand (gear, species, story):
@@ -330,6 +356,12 @@ function buildSkills(character) {
       characteristic: chars[canon.char] ?? 0,
       boost: (boostMap.get(normalizeSkillName(canon.name)) || 0) + Math.max(0, Number(manualDice.get(normalizeSkillName(canon.name))?.boost) || 0),
       setback: Math.max(0, Number(manualDice.get(normalizeSkillName(canon.name))?.setback) || 0),
+      // Where the extra dice come from, for tooltips.
+      boostSources: [
+        ...(boostSourceMap.get(normalizeSkillName(canon.name)) || []),
+        ...(Number(manualDice.get(normalizeSkillName(canon.name))?.boost) > 0 ? [{ label: "added by GM", dice: Number(manualDice.get(normalizeSkillName(canon.name)).boost) }] : []),
+      ],
+      setbackSources: Number(manualDice.get(normalizeSkillName(canon.name))?.setback) > 0 ? [{ label: "added by GM", dice: Number(manualDice.get(normalizeSkillName(canon.name)).setback) }] : [],
     };
   });
 }
@@ -631,10 +663,54 @@ function QualityPicker({ value, onChange }) {
   );
 }
 
+// A quality's glossary entry with the weapon's own rating filled in:
+// "Pierce N / Ignores N points" becomes "Pierce 3 / Ignores 3 points",
+// "10 x N" becomes the product, and Limited Ammo says how many shots are left.
+function personalQuality(q, text, ammoLeft = null) {
+  if (!q) return q;
+  const m = /(\d+)/.exec(String(text || ""));
+  const n = m ? Number(m[1]) : null;
+  let { title, body } = q;
+  if (n != null && / N$/.test(title)) {
+    title = title.replace(/ N$/, ` ${n}`);
+    body = body.replace(/10 x N/g, `${10 * n}`).replace(/\bN\b/g, String(n));
+  }
+  body = body.replace(/\b1 (Boost|Setback|Difficulty|Ability) dice\b/g, "1 $1 die");
+  if (ammoLeft != null && /^limited ammo/i.test(title)) body = `${body} ${ammoLeft} shot${ammoLeft === 1 ? "" : "s"} left.`;
+  return { title, body };
+}
+
 function lookupQuality(text) {
   const lower = (text || "").toLowerCase();
   const hit = QUALITY_GLOSSARY.find(([key]) => lower.includes(key));
   return hit ? { title: hit[1], body: hit[2] } : null;
+}
+
+// Live tooltip text for a weapon's Dmg / Crit / Pool, built from the actual
+// numbers on the card.
+function weaponDamageTip(damage, brawn, adjustments, total) {
+  const { brawnBonus, flat } = parseWeaponDamage(damage);
+  const parts = brawnBonus != null ? `Brawn ${brawn || 0} + ${brawnBonus}` : `${flat}`;
+  const adj = adjustments?.damage ? (adjustments.damage > 0 ? ", +1 Superior" : ", −1 Inferior") : "";
+  return `${parts}${adj} = ${total} base damage. Each uncancelled Success adds 1 more, then the target's soak comes off.`;
+}
+function weaponCritTip(crit, special) {
+  const vicious = weaponQualityRank(special, "Vicious");
+  return `${crit} Advantage (or a Triumph) triggers a Critical Injury once the attack hits.${vicious ? ` The Critical Injury roll gets +${vicious * 10} (Vicious ${vicious}).` : ""}`;
+}
+function poolTip(skill, adjustments = {}, override = null) {
+  if (!skill) return "This weapon's skill isn't on the sheet.";
+  const charLabel = CHAR_LABEL[skill.char] || "Characteristic";
+  const yellow = Math.min(skill.rank, skill.characteristic);
+  const green = Math.max(skill.rank, skill.characteristic) - yellow;
+  const bits = [
+    `${skill.name} rank ${skill.rank}, ${override ? `${override.characteristic} ${skill.characteristic} (${override.talent}: ${override.characteristic} instead of ${charLabel})` : `${charLabel} ${skill.characteristic}`} → ${yellow} yellow, ${green} green`,
+  ];
+  for (const src of skill.boostSources || []) bits.push(`+${src.dice} Boost from ${src.label}`);
+  if (adjustments.boost) bits.push(`+${adjustments.boost} Boost from Accurate ${adjustments.boost}`);
+  for (const src of skill.setbackSources || []) bits.push(`+${src.dice} Setback from ${src.label}`);
+  if (adjustments.setback) bits.push(`+${adjustments.setback} Setback from Inaccurate ${adjustments.setback}`);
+  return `${bits.join(" · ")}. Click the card to load it.`;
 }
 
 const STAT_TIPS = {
@@ -2911,6 +2987,7 @@ function SharedRollLog({ log, logStatus, soundOn, setSoundOn, animationsOn, setA
                                   <th className="pr-3 py-0.5">Character</th>
                                   <th className="pr-3 py-0.5">Type</th>
                                   <th className="pr-3 py-0.5">Value</th>
+                                  <th className="pr-3 py-0.5">Rolls</th>
                                 </tr>
                               </thead>
                               <tbody>
@@ -2919,6 +2996,7 @@ function SharedRollLog({ log, logStatus, soundOn, setSoundOn, animationsOn, setA
                                     <td className="pr-3 py-0.5">{o.name}</td>
                                     <td className="pr-3 py-0.5">{o.type}</td>
                                     <td className="pr-3 py-0.5">{o.value}</td>
+                                    <td className="pr-3 py-0.5 mono-num">{(() => { const from = entry.utility.table.slice(0, i).reduce((n, x) => n + (Number(x.value) || 0), 0) + 1; return `${from}–${from + (Number(o.value) || 0) - 1}`; })()}</td>
                                   </tr>
                                 ))}
                               </tbody>
@@ -3637,7 +3715,7 @@ function DiceRollerPanel({ playerName, setPlayerName, preset, partyDestiny, dest
         {partyDestiny && (
           <div className="border p-3 mb-4 flex items-center gap-6 flex-wrap" style={{ borderColor: "#ffb00055", background: "#ffb00009" }}>
             <div className="text-[11px] tracking-[0.2em] uppercase flex items-center gap-1.5" style={{ color: "#ffb000" }}>
-              <DestinyRulesTip>
+              <DestinyRulesTip pool={partyDestiny}>
                 Party Destiny Pool
               </DestinyRulesTip>
             </div>
@@ -4412,12 +4490,12 @@ function VehicleWeaponCard({ weapon, skill, onRoll, rollTitle, compact = false, 
         </div>
         <div className="flex items-center gap-5 flex-wrap">
           <div className="flex items-baseline gap-1.5">
-            <TipLabel text="Dmg" title={STAT_TIPS.dmg[0]} body={STAT_TIPS.dmg[1]} />
+            <TipLabel text="Dmg" title={STAT_TIPS.dmg[0]} body={weaponDamageTip(weapon.damage, 0, adjustments, totalDamage)} />
             <span className={`${compact ? "text-[22px]" : "text-[26px]"} leading-none mono-num`} style={{ color: "#ffb000" }}>{totalDamage}</span>
             {adjustments.damage !== 0 && <span className="text-[9px] uppercase tracking-wide" style={{ color: adjustments.damage > 0 ? "#6fae60" : "#c23b3b" }}>{adjustments.damage > 0 ? "+1 Superior" : "−1 Inferior"}</span>}
           </div>
           <div className="flex items-baseline gap-1.5">
-            <TipLabel text="Crit" title={STAT_TIPS.crit[0]} body={STAT_TIPS.crit[1]} />
+            <TipLabel text="Crit" title={STAT_TIPS.crit[0]} body={weaponCritTip(weapon.crit, weapon.qualities || "")} />
             <span className="text-[16px] leading-none mono-num" style={{ color: "#e7e2d2" }}>{weapon.crit ?? "—"}</span>
           </div>
           {arc && (
@@ -4440,14 +4518,14 @@ function VehicleWeaponCard({ weapon, skill, onRoll, rollTitle, compact = false, 
           )}
           {skill && (
             <div className="flex items-center gap-2">
-              <TipLabel text="Pool" title={STAT_TIPS.pool[0]} body={STAT_TIPS.pool[1]} width={290} />
-              <SkillPips rank={skill.rank} characteristic={skill.characteristic} boost={(skill.boost || 0) + adjustments.boost} setback={(skill.setback || 0) + adjustments.setback} />
+              <TipLabel text="Pool" title={STAT_TIPS.pool[0]} body={poolTip(skill, adjustments)} width={290} />
+              <SkillPips rank={skill.rank} characteristic={skill.characteristic} boost={(skill.boost || 0) + adjustments.boost} setback={(skill.setback || 0) + adjustments.setback} boostTitle={diceSourceText(skill.boostSources, adjustments.boost ? `Accurate ${adjustments.boost}` : null, adjustments.boost)} setbackTitle={diceSourceText(skill.setbackSources, adjustments.setback ? `Inaccurate ${adjustments.setback}` : null, adjustments.setback)} />
             </div>
           )}
         </div>
         {specials.length > 0 && (
           <div className="flex flex-wrap gap-1.5">
-            {specials.map((sp, i) => <SpecialChip key={i} text={sp} />)}
+            {specials.map((sp, i) => <SpecialChip key={i} text={sp} ammoLeft={ammo ? ammo.value : null} />)}
           </div>
         )}
         {blockedMsg && <div className="text-[11px]" style={{ color: "#c23b3b" }}>{blockedMsg}</div>}
@@ -4461,6 +4539,24 @@ function VehicleWeaponCard({ weapon, skill, onRoll, rollTitle, compact = false, 
       </div>
     </div>
   );
+}
+
+// "Gunnery rank 2, Agility 3 → 2 yellow, 1 green, +1 Boost"
+function poolText(skill) {
+  const y = Math.min(skill.rank, skill.characteristic);
+  const g = Math.max(skill.rank, skill.characteristic) - y;
+  return `${skill.name} rank ${skill.rank}, ${CHAR_LABEL[skill.char] || "characteristic"} ${skill.characteristic} → ${y} yellow, ${g} green${skill.boost ? `, +${skill.boost} Boost` : ""}${skill.setback ? `, +${skill.setback} Setback` : ""}`;
+}
+// Numbers from this ship that matter for a crew action.
+function vehicleActionNote(action, vehicle) {
+  const n = String(action?.name || "").toLowerCase();
+  const sil = Number(vehicle?.silhouette) || 0;
+  const spd = Number(vehicle?.speed) || 0;
+  const hnd = Number(vehicle?.handling) || 0;
+  const handling = hnd ? ` Handling ${hnd > 0 ? `+${hnd}` : hnd} adds ${Math.abs(hnd)} ${hnd > 0 ? "Boost" : "Setback"}.` : "";
+  if (n.startsWith("gain the advantage")) return `This ship (Speed ${spd}): faster than the target ◆, same speed ◆◆, one slower ◆◆◆, two or more slower ◆◆◆◆.${spd < 4 ? " Needs Speed 4+, so not possible right now." : ""}${handling}`;
+  if (n.startsWith("dangerous driving")) return `Base difficulty ${sil} (Silhouette), modified by current speed.${handling}`;
+  return /piloting/i.test(action?.skill || "") ? handling.trim() || null : null;
 }
 
 // The generic crew positions (and their actions) every vehicle draws from.
@@ -4544,7 +4640,7 @@ function VehicleOtherActions({ vehicle, party, partySkillSets, crew, loadSkillIn
                 const noAmmo = !!ammo && ammo.value <= 0;
                 const damage = w ? Math.max(0, (Number(w.damage) || 0) + weaponRollAdjustments(w.qualities || "").damage) : null;
                 const clickable = !!skill && !noAmmo;
-                const tip = [action.description, action.requirement ? `Requirement: ${action.requirement}` : null, w ? `Fires: ${w.name}` : null].filter(Boolean).join("\n\n");
+                const tip = [action.description, action.requirement ? `Requirement: ${action.requirement}` : null, vehicleActionNote(action, vehicle), w ? `Fires: ${w.name}` : null, skill ? `${label(doer)}: ${poolText(skill)}` : null].filter(Boolean).join("\n\n");
                 return (
                   <button
                     key={action.name}
@@ -4558,7 +4654,7 @@ function VehicleOtherActions({ vehicle, party, partySkillSets, crew, loadSkillIn
                     <span className="text-[13px]" style={{ color: clickable ? "#e7e2d2" : "#5a5f62" }}>
                       {action.name} <span className="text-[10px]" style={{ color: "#5a5f62" }}>{action.skill}</span>
                     </span>
-                    {skill ? <SkillPips rank={skill.rank} characteristic={skill.characteristic} boost={skill.boost} setback={skill.setback || 0} /> : <span className="text-[10px] tracking-[0.1em] uppercase" style={{ color: "#5a5f62" }}>{doer ? "—" : "no crew"}</span>}
+                    {skill ? <SkillPips rank={skill.rank} characteristic={skill.characteristic} boost={skill.boost} setback={skill.setback || 0} boostTitle={diceSourceText(skill.boostSources)} setbackTitle={diceSourceText(skill.setbackSources)} /> : <span className="text-[10px] tracking-[0.1em] uppercase" style={{ color: "#5a5f62" }}>{doer ? "—" : "no crew"}</span>}
                     {noAmmo && <span className="text-[10px] tracking-[0.1em] uppercase" style={{ color: "#c23b3b" }}>out of ammo</span>}
                   </button>
                 );
@@ -4614,15 +4710,31 @@ function VehicleTab({ vehicle, party, partySkillSets, live, loadSkillIntoRoller,
         )}
 
         <div className="grid grid-cols-2 sm:grid-cols-5 gap-4 mb-5 pb-5 border-b" style={{ borderColor: "#2a2e31" }}>
-          <Stat label="Silhouette"><span className="text-xl mono-num" style={{ color: "#e7e2d2" }}>{vehicle.silhouette ?? "—"}</span></Stat>
-          <Stat label="Speed"><span className="text-xl mono-num" style={{ color: "#e7e2d2" }}>{vehicle.speed ?? "—"}</span></Stat>
-          <Stat label="Handling"><span className="text-xl mono-num" style={{ color: "#e7e2d2" }}>{vehicle.handling ?? "—"}</span></Stat>
-          <Stat label="Defense"><span className="text-xl mono-num" style={{ color: "#e7e2d2" }}>{vehicle.defense ?? "—"}</span></Stat>
-          <Stat label="Armor"><span className="text-xl mono-num" style={{ color: "#e7e2d2" }}>{vehicle.armor ?? "—"}</span></Stat>
+          {(() => {
+            const sil = Number(vehicle.silhouette) || 0;
+            const spd = Number(vehicle.speed) || 0;
+            const hnd = Number(vehicle.handling) || 0;
+            const def = Number(vehicle.defense) || 0;
+            const arm = Number(vehicle.armor) || 0;
+            const box = (label, value, title, body) => (
+              <Stat label={<HoverLabel title={title} body={body} width={280}>{label}</HoverLabel>}>
+                <span className="text-xl mono-num" style={{ color: "#e7e2d2" }}>{value ?? "—"}</span>
+              </Stat>
+            );
+            return (
+              <>
+                {box("Silhouette", vehicle.silhouette, `Silhouette ${sil}`, `Size class. Dangerous Driving's base difficulty is ${sil} (then modified by speed). Brace for Impact can move up to ${sil} damage into System Strain. Silhouette ${sil <= 4 ? "0–4 craft can Evade and Gain the Advantage" : "5+ ships are too big to Evade or Gain the Advantage"}.`)}
+                {box("Speed", vehicle.speed, `Speed ${spd}`, `Top speed. Reposition needs Speed 1+, Evade needs Speed 3+${spd >= 3 ? " (OK)" : " (too slow)"}, Gain the Advantage needs Speed 4+${spd >= 4 ? " (OK)" : " (too slow)"}. Gain the Advantage gets easier the faster you are than the target.`)}
+                {box("Handling", hnd > 0 ? `+${hnd}` : vehicle.handling, `Handling ${hnd > 0 ? `+${hnd}` : hnd}`, hnd > 0 ? `Add ${hnd} Boost ${hnd === 1 ? "die" : "dice"} to every Piloting check in this vehicle.` : hnd < 0 ? `Add ${-hnd} Setback ${-hnd === 1 ? "die" : "dice"} to every Piloting check in this vehicle.` : "No bonus or penalty to Piloting checks.")}
+                {box("Defense", vehicle.defense, `Defense ${def}`, `Adds ${def} Setback ${def === 1 ? "die" : "dice"} to attacks against this vehicle. Evade and Boost Defenses can raise it for a round.`)}
+                {box("Armor", vehicle.armor, `Armor ${arm}`, `Subtracted from each hit before it becomes Hull Trauma, like Soak: a ${arm + 4}-damage hit does 4. Breach ignores 1 Armor per rating.`)}
+              </>
+            );
+          })()}
         </div>
 
         <div className="mb-5 pb-5 border-b" style={{ borderColor: "#2a2e31" }}>
-          <Stat label="Hull Trauma">
+          <Stat label={<HoverLabel title={`Hull Trauma ${hull.current ?? 0} of ${hull.threshold}`} body={`${hull.current ?? 0} of ${hull.threshold}. Past ${hull.threshold} the vehicle is wrecked or out of action. Brace for Impact lets the pilot move up to ${Number(vehicle.silhouette) || 0} of a hit into System Strain instead.`} width={300}>Hull Trauma</HoverLabel>}>
             <PipRow
               current={hull.current}
               threshold={hull.threshold}
@@ -4631,7 +4743,7 @@ function VehicleTab({ vehicle, party, partySkillSets, live, loadSkillIntoRoller,
               onAdjust={manual ? (d) => manual.adjustVehicleHull(vehicle.id, d) : undefined}
             />
           </Stat>
-          <Stat label="System Strain">
+          <Stat label={<HoverLabel title={`System Strain ${systemStrain.current ?? 0} of ${systemStrain.threshold}`} body={`${systemStrain.current ?? 0} of ${systemStrain.threshold}. Past ${systemStrain.threshold} the systems overload and the vehicle is disabled until repaired. Extra manoeuvres, speed changes and Brace for Impact (up to ${Number(vehicle.silhouette) || 0}) all cost System Strain; Damage Control recovers it.`} width={300}>System Strain</HoverLabel>}>
             <PipRow
               current={systemStrain.current}
               threshold={systemStrain.threshold}
@@ -4770,7 +4882,7 @@ function VehicleTab({ vehicle, party, partySkillSets, live, loadSkillIntoRoller,
                       const actionAmmo = actionWeapon ? vehicleAmmo(manual, vehicle, actionWeapon, (vehicle.weapons || []).indexOf(actionWeapon)) : null;
                       const noAmmo = !!actionAmmo && actionAmmo.value <= 0;
                       const clickable = !!skill && !noAmmo;
-                      const tooltip = [action.description, action.requirement ? `Requirement: ${action.requirement}` : null]
+                      const tooltip = [action.description, action.requirement ? `Requirement: ${action.requirement}` : null, vehicleActionNote(action, vehicle), skill ? `${characterLabel(assignedKey)}: ${poolText(skill)}` : null]
                         .filter(Boolean)
                         .join("\n\n");
                       return (
@@ -4801,7 +4913,7 @@ function VehicleTab({ vehicle, party, partySkillSets, live, loadSkillIntoRoller,
                         >
                           <span className="text-[13px]" style={{ color: clickable ? "#e7e2d2" : "#5a5f62" }}>{action.name}</span>
                           {skill ? (
-                            <SkillPips rank={skill.rank} characteristic={skill.characteristic} boost={skill.boost} setback={skill.setback || 0} />
+                            <SkillPips rank={skill.rank} characteristic={skill.characteristic} boost={skill.boost} setback={skill.setback || 0} boostTitle={diceSourceText(skill.boostSources)} setbackTitle={diceSourceText(skill.setbackSources)} />
                           ) : (
                             <span className="text-[10px] tracking-[0.1em] uppercase" style={{ color: "#5a5f62" }}>unassigned</span>
                           )}
@@ -5129,7 +5241,15 @@ function GmDestinyCountControls({ destiny, onSet }) {
   );
 }
 
-function SkillPips({ rank, characteristic, boost = 0, setback = 0 }) {
+// "Physical Training ×1, added by GM ×1" for a skill's extra dice. `extra`
+// (e.g. "Accurate 1") is a weapon's own contribution.
+function diceSourceText(sources, extraLabel = null, extraDice = 0) {
+  const parts = (sources || []).map((s) => `${s.label} ×${s.dice}`);
+  if (extraLabel && extraDice) parts.push(`${extraLabel} ×${extraDice}`);
+  return parts.join(", ");
+}
+
+function SkillPips({ rank, characteristic, boost = 0, setback = 0, boostTitle = "", setbackTitle = "" }) {
   const total = Math.max(rank, characteristic);
   const yellow = Math.min(rank, characteristic);
   return (
@@ -5150,13 +5270,13 @@ function SkillPips({ rank, characteristic, boost = 0, setback = 0 }) {
         </span>
       )}
       {boost > 0 && (
-        <span className="text-[10px] leading-none inline-flex items-center gap-0.5" style={{ color: "#5ec8d8" }} title={`+${boost} Boost dice`}>
+        <span className="text-[10px] leading-none inline-flex items-center gap-0.5" style={{ color: "#5ec8d8" }} title={`+${boost} Boost ${boost === 1 ? "die" : "dice"}${boostTitle ? `: ${boostTitle}` : ""}`}>
           <img src={BOOST_ICON} alt="Boost" style={{ width: 10, height: 10, display: "inline-block" }} />
           {boost > 1 ? `×${boost}` : ""}
         </span>
       )}
       {setback > 0 && (
-        <span className="text-[10px] leading-none inline-flex items-center gap-0.5" style={{ color: "#8a8f93" }} title={`+${setback} Setback dice`}>
+        <span className="text-[10px] leading-none inline-flex items-center gap-0.5" style={{ color: "#8a8f93" }} title={`+${setback} Setback ${setback === 1 ? "die" : "dice"}${setbackTitle ? `: ${setbackTitle}` : ""}`}>
           <img src={SETBACK_ICON} alt="Setback" style={{ width: 10, height: 10, display: "inline-block" }} />
           {setback > 1 ? `×${setback}` : ""}
         </span>
@@ -5226,7 +5346,7 @@ function TipLabel({ text, title, body, width, align = "left" }) {
 // a Destiny Pool is shown (Dice Roller tab, Party tab, Character tab) — each
 // usage is its own component instance, so the hover state never bleeds
 // between them even though only one is ever mounted at a time.
-function DestinyRulesTip({ children }) {
+function DestinyRulesTip({ children, pool = null }) {
   const [open, setOpen] = useState(false);
   return (
     <span
@@ -5238,7 +5358,7 @@ function DestinyRulesTip({ children }) {
       {children}
       {open && (
         <HoverTip
-          title="Spending a Destiny Point"
+          title={pool ? `Destiny: ${pool.light || 0} light (players) · ${pool.dark || 0} dark (GM)` : "Spending a Destiny Point"}
           width={320}
           placement="below"
           body={
@@ -5289,9 +5409,9 @@ function HoverLabel({ children, title, body, width = 260 }) {
 // or the copy-to-clipboard handler (roll log). Shared by both call sites - the roll
 // log passes placement="below" since its entries sit near the top of a scrollable
 // panel, where an upward tooltip gets clipped by the panel's edge.
-function SpecialChip({ text, placement = "above" }) {
+function SpecialChip({ text, placement = "above", ammoLeft = null }) {
   const [open, setOpen] = useState(false);
-  const q = lookupQuality(text);
+  const q = personalQuality(lookupQuality(text), text, ammoLeft);
   return (
     <span className="relative inline-flex">
       <span
@@ -5469,19 +5589,19 @@ function WeaponCard({ weapon, skill, onLoad, qty, onAdjustQty, brawn }) {
 
         <div className="flex items-center gap-5 flex-wrap">
           <div className="flex items-baseline gap-1.5">
-            <TipLabel text="Dmg" title={STAT_TIPS.dmg[0]} body={STAT_TIPS.dmg[1]} />
+            <TipLabel text="Dmg" title={STAT_TIPS.dmg[0]} body={weaponDamageTip(weapon.damage, brawn, rollAdjustments, totalDamage)} />
             <span className="text-[26px] leading-none mono-num" style={{ color: "#ffb000" }}>{totalDamage}</span>
             {rollAdjustments.damage !== 0 && <span className="text-[9px] uppercase tracking-wide" style={{ color: rollAdjustments.damage > 0 ? "#6fae60" : "#c23b3b" }}>{rollAdjustments.damage > 0 ? "+1 Superior" : "−1 Inferior"}</span>}
           </div>
           <div className="flex items-baseline gap-1.5">
-            <TipLabel text="Crit" title={STAT_TIPS.crit[0]} body={STAT_TIPS.crit[1]} />
+            <TipLabel text="Crit" title={STAT_TIPS.crit[0]} body={weaponCritTip(weapon.crit, combinedSpecial)} />
             <span className="text-[16px] leading-none mono-num" style={{ color: "#e7e2d2" }}>{weapon.crit}</span>
           </div>
           <div className="flex items-center gap-2">
-            <TipLabel text="Pool" title={STAT_TIPS.pool[0]} body={STAT_TIPS.pool[1]} width={290} />
+            <TipLabel text="Pool" title={STAT_TIPS.pool[0]} body={poolTip(skill, rollAdjustments, weapon.characteristicOverride ? { characteristic: weapon.characteristicOverride, talent: talentLabel } : null)} width={290} />
             {skill ? (
               <span className="inline-flex items-center gap-2 flex-wrap">
-                <SkillPips rank={skill.rank} characteristic={skill.characteristic} boost={(skill.boost || 0) + rollAdjustments.boost} setback={(skill.setback || 0) + rollAdjustments.setback} />
+                <SkillPips rank={skill.rank} characteristic={skill.characteristic} boost={(skill.boost || 0) + rollAdjustments.boost} setback={(skill.setback || 0) + rollAdjustments.setback} boostTitle={diceSourceText(skill.boostSources, rollAdjustments.boost ? `Accurate ${rollAdjustments.boost}` : null, rollAdjustments.boost)} setbackTitle={diceSourceText(skill.setbackSources, rollAdjustments.setback ? `Inaccurate ${rollAdjustments.setback}` : null, rollAdjustments.setback)} />
                 {rollAdjustments.advantage > 0 && <span className="inline-flex items-center gap-0.5 text-[10px]" style={{ color: "#6fae60" }}><SymbolIcon sym="a" size={13} /> +1</span>}
                 {rollAdjustments.threat > 0 && <span className="inline-flex items-center gap-0.5 text-[10px]" style={{ color: "#c23b3b" }}><SymbolIcon sym="t" size={13} /> +1</span>}
               </span>
@@ -5511,7 +5631,7 @@ function WeaponCard({ weapon, skill, onLoad, qty, onAdjustQty, brawn }) {
 
         {specials.length > 0 && (
           <div className="flex flex-wrap gap-1.5">
-            {specials.map((sp, i) => <SpecialChip key={i} text={sp} />)}
+            {specials.map((sp, i) => <SpecialChip key={i} text={sp} ammoLeft={hasLimitedAmmo ? (qty ?? 1) : null} />)}
           </div>
         )}
         {blockedMsg && (
@@ -9040,7 +9160,7 @@ function EnemyWoundBar({ current, threshold, colorClass = "#c23b3b", onSet, onAd
 // The NPC space next to the battle map. Everyone, the GM included, sees it
 // as players do: only revealed NPCs, with a general read on their health.
 // The GM hides and reveals NPCs by right-clicking their map token.
-function EnemyPanel({ enemies: allEnemies, loadState }) {
+function EnemyPanel({ enemies: allEnemies, loadState, gmDetail = false }) {
   const enemies = (allEnemies || []).filter((e) => !e.hidden);
   const isGm = false;
   const canToggleVisibility = false;
@@ -9098,7 +9218,7 @@ function EnemyPanel({ enemies: allEnemies, loadState }) {
                   tabIndex={canToggleVisibility ? 0 : undefined}
                   aria-label={canToggleVisibility ? (e.name || "Unnamed") + ": visible to players" : undefined}
                   aria-pressed={canToggleVisibility ? !e.hidden : undefined}
-                  title={canToggleVisibility ? (e.hidden ? "Click to reveal to players" : "Click to hide from players") : undefined}
+                  title={gmDetail ? `${e.name || "Unnamed"}: ${npcGmDetail(e)}` : undefined}
                   onClick={canToggleVisibility ? () => toggleVisibility(e.id) : undefined}
                   onKeyDown={canToggleVisibility ? (event) => {
                     if (event.key === "Enter" || event.key === " ") {
@@ -9219,6 +9339,14 @@ const ENEMY_STATUS_META = {
   wounded: { label: "Wounded", color: ENEMY_STATUS_COLORS.wounded },
   defeated: { label: "Defeated", color: ENEMY_STATUS_COLORS.defeated },
 };
+// "6 of 10 wounds · Soak 3" (+ strain for a nemesis, minions left for a group).
+function npcGmDetail(e) {
+  const parts = [`${e.wounds || 0} of ${enemyWoundCapacity(e)} wounds`, `Soak ${e.soak ?? 0}`];
+  if (e.type === "nemesis") parts.push(`${e.strain || 0} of ${e.strainThreshold || 0} strain`);
+  if (e.type === "minion") parts.push(`${minionsRemaining(e)} of ${e.minionCount || 1} left`);
+  return parts.join(" · ");
+}
+
 function enemyStatus(enemy) {
   const capacity = enemyWoundCapacity(enemy);
   if (capacity <= 0) return "unharmed";
@@ -10530,6 +10658,7 @@ function MapToken({ token, selected, onClick, onContextMenu, draggable = false, 
       onMouseEnter={() => { setHover(true); onHoverStart && onHoverStart(); }}
       onMouseLeave={() => { setHover(false); onHoverEnd && onHoverEnd(); }}
       aria-label={`${token.label}${token.aliveMinions != null ? ` — ${token.aliveMinions} minions alive` : ""}${token.down ? " (down)" : ""}${token.hidden ? " — hidden from players" : ""}`}
+      title={!full && token.detail ? `${token.label}: ${token.detail}` : undefined}
       className={`${full ? "absolute inset-0.5" : "px-2 py-1 relative whitespace-nowrap"} flex items-center justify-center`}
       style={{
         background: token.down ? `${color}66` : color,
@@ -10572,6 +10701,7 @@ function MapToken({ token, selected, onClick, onContextMenu, draggable = false, 
         >
           {token.aliveMinions != null ? `${token.aliveMinions} x ${token.label || "Unnamed"}` : token.label || "Unnamed"}
           {token.down && <span style={{ color: "#5a5f62" }}> · down</span>}
+          {token.detail && <span className="block text-[11px]" style={{ color: "#8a8f93", fontWeight: 400 }}>{token.detail}</span>}
           {token.hidden && <span style={{ color: "#ffb000" }}> · hidden</span>}
         </span>
       )}
@@ -10607,7 +10737,7 @@ const MAP_ZOOM_MIN = 0.5;
 const MAP_ZOOM_MAX = 1.75;
 const MAP_ZOOM_STEP = 0.05;
 
-function BattleSession({ roster, enemyStore, mapStore, isGm, gmKey, manual, initiative, partyDestiny }) {
+function BattleSession({ roster, enemyStore, mapStore, isGm, gmKey, manual, initiative, partyDestiny, gear = [] }) {
   const rollState = useRollLog();
   return (
     <div className="space-y-4">
@@ -10618,7 +10748,7 @@ function BattleSession({ roster, enemyStore, mapStore, isGm, gmKey, manual, init
           )}
         </div>
         <div className="border p-4 h-full" style={{ borderColor: "#ffb00055", background: "#16191b" }}>
-          <div className="text-[11px] tracking-[0.2em] uppercase mb-3" style={{ color: "#ffb000" }}><DestinyRulesTip>Party Destiny Pool</DestinyRulesTip></div>
+          <div className="text-[11px] tracking-[0.2em] uppercase mb-3" style={{ color: "#ffb000" }}><DestinyRulesTip pool={partyDestiny}>Party Destiny Pool</DestinyRulesTip></div>
           {partyDestiny ? (
             <div className="flex items-end gap-5 flex-wrap">
               <div className="grid grid-cols-2 flex-1 min-w-[220px] max-w-[420px]" data-centred-destiny-pool="1">
@@ -10639,12 +10769,12 @@ function BattleSession({ roster, enemyStore, mapStore, isGm, gmKey, manual, init
       <SharedDicePoolTray pools={rollState.sharedPools} logStatus={rollState.logStatus} onRefresh={rollState.fetchLog} />
       <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_minmax(300px,420px)] gap-4 items-start">
         <div className="min-w-0 space-y-4">
-          <BattleMapPanel roster={roster} enemies={enemyStore.enemies} party={roster} isGm={isGm} mapStore={mapStore} onSaveEnemies={enemyStore.save} manual={manual} />
+          <BattleMapPanel roster={roster} enemies={enemyStore.enemies} party={roster} isGm={isGm} mapStore={mapStore} onSaveEnemies={enemyStore.save} manual={manual} gear={gear} />
           {isGm && <GmEnemyBoard enemyStore={enemyStore} />}
         </div>
         <div className="min-w-0 space-y-4">
           <BattleRollLog rollState={rollState} />
-          <EnemyPanel enemies={enemyStore.enemies} loadState={enemyStore.loadState} />
+          <EnemyPanel enemies={enemyStore.enemies} loadState={enemyStore.loadState} gmDetail={isGm} />
         </div>
       </div>
       {isGm && <EnemyBulkEntry enemyStore={enemyStore} />}
@@ -10657,7 +10787,7 @@ function BattleRollLog({ rollState }) {
 }
 
 
-function BattleMapPanel({ roster, enemies, party, isGm, mapStore, onSaveEnemies, manual }) {
+function BattleMapPanel({ roster, enemies, party, isGm, mapStore, onSaveEnemies, manual, gear = [] }) {
   const { zones, tokens, moveToken, setCompass, removeToken, addZone, removeZone, resetMap, loadState } = mapStore;
   const [selected, setSelected] = useState(null);
   // The token currently under the pointer (zone subcell or Distant ring),
@@ -10769,12 +10899,20 @@ function BattleMapPanel({ roster, enemies, party, isGm, mapStore, onSaveEnemies,
   }
 
   const cast = useMemo(() => {
-    const pcs = roster.map((r) => ({ id: r.liveId || r.name, kind: "pc", label: r.name || r.liveId, down: false, hidden: false }));
+    // Hover details: players' vitals, soak and defence for everyone; an NPC's
+    // exact wounds and soak for the GM, its general condition for players.
+    const pcs = roster.map((r) => {
+      const id = r.liveId || r.name;
+      const worn = pickWornArmor(armorOptionsFor(id, r, gear), manual?.wornArmorOf ? manual.wornArmorOf(id) : undefined);
+      const def = armorDefense(worn);
+      const detail = `Wounds ${manual?.wounds?.[id] || 0}/${r.vitals?.wounds?.threshold ?? "?"} · Strain ${manual?.strain?.[id] || 0}/${r.vitals?.strain?.threshold ?? "?"} · Soak ${(r.characteristics?.brawn || 0) + armorSoakBonus(worn)} · Def ${def.ranged}/${def.melee}`;
+      return { id, kind: "pc", label: r.name || r.liveId, down: false, hidden: false, detail };
+    });
     const foes = enemies
       .filter((e) => isGm || !e.hidden)
-      .map((e) => ({ id: e.id, kind: "enemy", label: e.name || "Unnamed", down: enemyDefeated(e), hidden: !!e.hidden, friendly: !!e.friendly, etype: e.type, aliveMinions: e.type === "minion" ? minionsRemaining(e) : null }));
+      .map((e) => ({ id: e.id, kind: "enemy", label: e.name || "Unnamed", down: enemyDefeated(e), hidden: !!e.hidden, friendly: !!e.friendly, etype: e.type, aliveMinions: e.type === "minion" ? minionsRemaining(e) : null, detail: isGm ? npcGmDetail(e) : ENEMY_STATUS_META[enemyStatus(e)]?.label }));
     return [...pcs, ...foes];
-  }, [roster, enemies, isGm]);
+  }, [roster, enemies, isGm, gear, manual?.wounds, manual?.strain, manual?.wornArmor]);
 
   const byId = useMemo(() => Object.fromEntries(cast.map((t) => [t.id, t])), [cast]);
   const tokensByZone = useMemo(() => {
@@ -11715,7 +11853,7 @@ function GmManualModeSection({ manual, party, vehicles = [] }) {
       </div>
 
       <div className="border p-4 mb-5" style={{ borderColor: "#ffb00055", background: "#16191b" }}>
-        <div className="text-[11px] tracking-[0.2em] uppercase mb-3" style={{ color: "#ffb000" }}><DestinyRulesTip>Party Destiny Pool</DestinyRulesTip></div>
+        <div className="text-[11px] tracking-[0.2em] uppercase mb-3" style={{ color: "#ffb000" }}><DestinyRulesTip pool={manual.destiny}>Party Destiny Pool</DestinyRulesTip></div>
         <div className="flex items-end gap-5 flex-wrap">
           <div><DestinyTokens count={manual.destiny.light} src={BLUE_TOKEN} alt="Light Side Destiny Point" onFlip={() => manual.flipDestiny("light")} /><span className="text-[11px]" style={{ color: "#8a8f93" }}>Light</span></div>
           <div><DestinyTokens count={manual.destiny.dark} src={RED_TOKEN} alt="Dark Side Destiny Point" onFlip={() => manual.flipDestiny("dark")} /><span className="text-[11px]" style={{ color: "#8a8f93" }}>Dark</span></div>
@@ -12708,6 +12846,11 @@ function CampaignDashboard() {
   ];
   const wornArmor = pickWornArmor(armorOptions, manual.wornArmorOf(activeId));
   const activeDefense = armorDefense(wornArmor);
+  // Defence a wielded weapon would add (Deflection = ranged, Defensive = melee).
+  const weaponDefense = (quality) => weapons
+    .map((w) => ({ name: w.name, n: weaponQualityRank(w.special || "", quality) }))
+    .filter((x) => x.n > 0)
+    .sort((a, b) => b.n - a.n);
   // Wound/strain threshold that comes from talents (Toughened, Grit…), so
   // the pip rows can mark where the natural threshold ends.
   const talentBonus = talentThresholdBonus(active.talents || []);
@@ -12951,7 +13094,7 @@ function CampaignDashboard() {
             manual={manual}
           />
         ) : viewMode === "map" ? (
-          <BattleSession roster={party} enemyStore={enemyStore} mapStore={mapStore} isGm={gmAuth.state === "in"} gmKey={gmAuth.key} manual={manual} initiative={live.initiative} partyDestiny={partyDestinyUnknown ? null : partyDestiny} />
+          <BattleSession roster={party} enemyStore={enemyStore} mapStore={mapStore} isGm={gmAuth.state === "in"} gmKey={gmAuth.key} manual={manual} initiative={live.initiative} partyDestiny={partyDestinyUnknown ? null : partyDestiny} gear={gearStore?.gear || []} />
         ) : viewMode === "notes" ? (
           <GMNotesPanel />
         ) : viewMode === "gm" ? (
@@ -13001,7 +13144,7 @@ function CampaignDashboard() {
 
               <div className="border p-3 mb-4 flex items-center gap-6 flex-wrap" style={{ borderColor: "#ffb00055", background: "#ffb00009" }}>
                 <div className="text-[11px] tracking-[0.2em] uppercase flex items-center gap-1.5" style={{ color: "#ffb000" }}>
-                  <DestinyRulesTip>
+                  <DestinyRulesTip pool={partyDestinyUnknown ? null : partyDestiny}>
                     Party Destiny Pool
                   </DestinyRulesTip>
                 </div>
@@ -13169,7 +13312,7 @@ function CampaignDashboard() {
                                     title="Load into Dice Roller"
                                     className="hover:opacity-80 transition-opacity"
                                   >
-                                    <SkillPips rank={s?.rank ?? 0} characteristic={s?.characteristic ?? 0} boost={s?.boost ?? 0} setback={s?.setback ?? 0} />
+                                    <SkillPips rank={s?.rank ?? 0} characteristic={s?.characteristic ?? 0} boost={s?.boost ?? 0} setback={s?.setback ?? 0} boostTitle={diceSourceText(s?.boostSources)} setbackTitle={diceSourceText(s?.setbackSources)} />
                                   </button>
                                 </td>
                               );
@@ -13257,7 +13400,22 @@ function CampaignDashboard() {
                       <Stat label="Motivation"><span className="text-[13px] whitespace-pre-line" style={{ color: "#e7e2d2" }}>{mo.motivation}</span></Stat>
                     )}
                     {obligations.length > 0 && (
-                      <Stat label={obligations.length > 1 ? `Obligations (total ${obligations.reduce((n, o) => n + (Number(o.value) || 0), 0)})` : "Obligation"}>
+                      <Stat label={(() => {
+                        const label = obligations.length > 1 ? `Obligations (total ${obligations.reduce((n, o) => n + (Number(o.value) || 0), 0)})` : "Obligation";
+                        const rows = obligationRanges(party);
+                        const partyTotal = rows.reduce((n, r) => n + r.value, 0);
+                        const mine = rows.filter((r) => r.id === activeId);
+                        const myTotal = mine.reduce((n, r) => n + r.value, 0);
+                        if (!partyTotal || !mine.length) return label;
+                        return (
+                          <HoverLabel
+                            title={`${myTotal} of the party's ${partyTotal} (${Math.round((myTotal / partyTotal) * 100)}%)`}
+                            body={`On the Obligation check (d100), ${mine.map((r) => `rolls of ${r.from}–${r.to} trigger ${r.type}`).join("; ")}. Above ${partyTotal}, nothing triggers.`}
+                          >
+                            {label}
+                          </HoverLabel>
+                        );
+                      })()}>
                         <div className="space-y-1">
                           {obligations.map((o, i) => (
                             <div key={i} className="text-[13px]" style={{ color: "#e7e2d2" }}>
@@ -13293,7 +13451,7 @@ function CampaignDashboard() {
 
                 <div className="border p-3 mb-4 flex items-center gap-6 flex-wrap" style={{ borderColor: "#ffb00055", background: "#ffb00009" }}>
                   <div className="text-[11px] tracking-[0.2em] uppercase flex items-center gap-1.5" style={{ color: "#ffb000" }}>
-                    <DestinyRulesTip>
+                    <DestinyRulesTip pool={destinyUnknown ? null : destiny}>
                       Destiny Pool (party)
                     </DestinyRulesTip>
                   </div>
@@ -13314,7 +13472,14 @@ function CampaignDashboard() {
                 </div>
 
                 <div className="mb-5 pb-5 border-b" style={{ borderColor: "#2a2e31" }}>
-                  <Stat label={`Wounds — ${wounds.current ?? "—"} / ${wounds.threshold}`}>
+                  <Stat label={(
+                    <HoverLabel
+                      title={`Wound threshold ${wounds.threshold}`}
+                      body={`${wounds.threshold} = species ${Math.max(0, wounds.threshold - (chars.brawn || 0) - talentBonus.wounds)} + Brawn ${chars.brawn || 0}${talentBonus.wounds ? ` (+${talentBonus.wounds} ${talentBonusNote("wounds").replace(/ \+\d+/g, "")})` : ""}. Incapacitated past ${wounds.threshold}.`}
+                    >
+                      Wounds — {wounds.current ?? "—"} / {wounds.threshold}
+                    </HoverLabel>
+                  )}>
                     <div className="relative">
                       <PipRow
                         current={wounds.current}
@@ -13332,7 +13497,17 @@ function CampaignDashboard() {
                   </Stat>
                   <Stat label={(
                     <>
-                      <span>Strain — {strain.current ?? "—"} / {strain.threshold}</span>
+                      <HoverLabel
+                        title={`Strain threshold ${strain.threshold}`}
+                        body={(() => {
+                          const base = strain.baseThreshold ?? strain.threshold;
+                          const text = `${base} = species ${Math.max(0, base - (chars.willpower || 0) - talentBonus.strain)} + Willpower ${chars.willpower || 0}${talentBonus.strain ? ` (+${talentBonus.strain} ${talentBonusNote("strain").replace(/ \+\d+/g, "")})` : ""}.`;
+                          const ob = strain.obligationPenalty > 0 ? ` Obligation triggered: threshold reduced ${base} → ${strain.threshold} this session.` : "";
+                          return `${text}${ob} Unconscious past ${strain.threshold}.`;
+                        })()}
+                      >
+                        Strain — {strain.current ?? "—"} / {strain.threshold}
+                      </HoverLabel>
                       {strain.obligationPenalty > 0 && (
                         <ObligationStrainBadge base={strain.baseThreshold} penalty={strain.obligationPenalty} triggered={manual.obligationStrain?.triggeredId === activeId} />
                       )}
@@ -13357,8 +13532,13 @@ function CampaignDashboard() {
                     <MetricBox
                       label={
                         <HoverLabel
-                          title="Soak"
-                          body="Reduces incoming damage before it becomes wounds. Equal to Brawn, plus armor/gear bonuses. Subtracted from each hit individually."
+                          title={`Soak ${computedSoak}`}
+                          body={(() => {
+                            const bonus = armorSoakBonus(wornArmor);
+                            const parts = [`Brawn ${chars.brawn || 0}`, ...(bonus ? [`${wornArmor?.name || "armor"} ${bonus}`] : [])];
+                            const hit = computedSoak < 7 ? 7 : computedSoak + 3;
+                            return `${computedSoak} = ${parts.join(" + ")}. Subtracted from each hit before it becomes wounds: a ${hit}-damage hit does ${Math.max(0, hit - computedSoak)} wound${hit - computedSoak === 1 ? "" : "s"}.`;
+                          })()}
                         >
                           Soak
                         </HoverLabel>
@@ -13370,25 +13550,27 @@ function CampaignDashboard() {
                       label={
                         <HoverLabel
                           title="Ranged Defense"
-                          body={`Adds ${activeDefense.ranged || "no"} Setback ${activeDefense.ranged === 1 ? "die" : "dice"} to every ranged attack made against this character. Comes from worn armor${wornArmor?.name ? ` (${wornArmor.name})` : ""}; cover, talents like Side Step, and weapons with Defensive or Deflection can add more in play.`}
+                          body={`Adds ${activeDefense.ranged || "no"} Setback ${activeDefense.ranged === 1 ? "die" : "dice"} to every ranged attack made against this character, from worn armor${wornArmor?.name ? ` (${wornArmor.name})` : ""}.${weaponDefense("Deflection").map((x) => ` +${x.n} while holding ${x.name} (Deflection ${x.n}).`).join("")} Cover and talents like Side Step can add more in play.`}
                         >
                           Ranged Def
                         </HoverLabel>
                       }
                     >
                       <span className="text-xl mono-num" style={{ color: "#e7e2d2" }}>{activeDefense.ranged || 0}</span>
+                      {weaponDefense("Deflection")[0] && <span className="text-[11px] ml-1.5" style={{ color: "#8fd3f4" }} title={`While holding ${weaponDefense("Deflection")[0].name}`}>+{weaponDefense("Deflection")[0].n} wielding</span>}
                     </MetricBox>
                     <MetricBox
                       label={
                         <HoverLabel
                           title="Melee Defense"
-                          body={`Adds ${activeDefense.melee || "no"} Setback ${activeDefense.melee === 1 ? "die" : "dice"} to every melee or Brawl attack made against this character. Comes from worn armor${wornArmor?.name ? ` (${wornArmor.name})` : ""}; a parrying weapon (Defensive) or talents can add more in play.`}
+                          body={`Adds ${activeDefense.melee || "no"} Setback ${activeDefense.melee === 1 ? "die" : "dice"} to every melee or Brawl attack made against this character, from worn armor${wornArmor?.name ? ` (${wornArmor.name})` : ""}.${weaponDefense("Defensive").map((x) => ` +${x.n} while holding ${x.name} (Defensive ${x.n}).`).join("")} Talents like Parry can add more in play.`}
                         >
                           Melee Def
                         </HoverLabel>
                       }
                     >
                       <span className="text-xl mono-num" style={{ color: "#e7e2d2" }}>{activeDefense.melee || 0}</span>
+                      {weaponDefense("Defensive")[0] && <span className="text-[11px] ml-1.5" style={{ color: "#8fd3f4" }} title={`While holding ${weaponDefense("Defensive")[0].name}`}>+{weaponDefense("Defensive")[0].n} wielding</span>}
                     </MetricBox>
                     <XPUnspentStat available={xp.available} onOpen={() => setViewMode("advancement")} />
                     <MetricBox label="Credits" accent="#ffb000">
@@ -13501,11 +13683,11 @@ function CampaignDashboard() {
                           </span>
                           <span className="flex items-baseline gap-5">
                             <span className="inline-flex items-baseline gap-1.5">
-                              <TipLabel text="Soak" title={STAT_TIPS.soak[0]} body={STAT_TIPS.soak[1]} />
+                              <TipLabel text="Soak" title={`${a.name}: +${a.soakBonus || 0} Soak`} body={`Adds ${a.soakBonus || 0} to Soak ${isWorn || !showWornToggle ? `while worn (Soak is ${computedSoak} now)` : "if worn (it isn't now)"}: Brawn ${chars.brawn || 0} + ${a.soakBonus || 0} = ${(chars.brawn || 0) + (a.soakBonus || 0)}.`} />
                               <span className="mono-num" style={{ color: "#e7e2d2" }}>+{a.soakBonus || 0}</span>
                             </span>
                             <span className="inline-flex items-baseline gap-1.5">
-                              <TipLabel text="Defense" title={STAT_TIPS.defense[0]} body={STAT_TIPS.defense[1]} width={300} align="right" />
+                              <TipLabel text="Defense" title={`${a.name}: ${def.ranged} ranged / ${def.melee} melee`} body={`${isWorn || !showWornToggle ? "While worn" : "If worn"}, adds ${def.ranged} Setback to ranged attacks and ${def.melee} to melee attacks against this character. Makes them harder to hit, not harder to hurt.`} width={300} align="right" />
                               <span className="mono-num" style={{ color: "#e7e2d2" }}>{def.ranged} Ranged / {def.melee} Melee</span>
                             </span>
                           </span>
@@ -13539,7 +13721,7 @@ function CampaignDashboard() {
                           key={key}
                           onMouseEnter={() => setHoveredChar(key)}
                           onMouseLeave={() => setHoveredChar(null)}
-                          className="text-center border py-2"
+                          className="relative text-center border py-2"
                           style={{
                             borderColor: hoveredChar === key ? "#5ec8d8" : "#2a2e31",
                             cursor: "default",
@@ -13548,6 +13730,14 @@ function CampaignDashboard() {
                         >
                           <div className="text-[10px] tracking-widest" style={{ color: "#5a5f62" }}>{abbr}</div>
                           <div className="text-xl mono-num" style={{ color: "#e7e2d2" }}>{chars[key] ?? "—"}</div>
+                          {hoveredChar === key && (
+                            <HoverTip
+                              title={`${CHAR_LABEL[key] || abbr} ${chars[key] ?? "—"}`}
+                              width={260}
+                              align={CHAR_LABELS.findIndex(([k]) => k === key) > 2 ? "right" : "left"}
+                              body={`Used by ${skills.filter((sk) => sk.char === key).map((sk) => `${sk.name}${sk.rank ? ` (rank ${sk.rank})` : ""}`).join(", ") || "no skills"}.`}
+                            />
+                          )}
                         </div>
                       ))}
                     </div>
@@ -13587,12 +13777,12 @@ function CampaignDashboard() {
                                 transition: "opacity 150ms ease",
                               }}
                             >
-                              <SkillNameTip name={s.name}>
+                              <SkillNameTip name={s.name} skill={s}>
                                 <span style={{ color: s.career ? "#5ec8d8" : "#e7e2d2" }}>
                                   {s.name} <span style={{ color: "#5a5f62" }}>({CHAR_ABBR[s.char] || "?"})</span>
                                 </span>
                               </SkillNameTip>
-                              <SkillPips rank={s.rank} characteristic={s.characteristic} boost={s.boost} setback={s.setback || 0} />
+                              <SkillPips rank={s.rank} characteristic={s.characteristic} boost={s.boost} setback={s.setback || 0} boostTitle={diceSourceText(s.boostSources)} setbackTitle={diceSourceText(s.setbackSources)} />
                             </button>
                           ))}
                         </div>
